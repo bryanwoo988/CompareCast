@@ -1,0 +1,18 @@
+{
+  "name": "天气预测 · Predict Weather · Ramalan Cuaca",
+  "short_name": "天气预测",
+  "description": "Compare ECMWF, GFS, ICON, GEM, ARPEGE, JMA and UKMO forecasts side by side for any field or plantation block.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1430",
+  "theme_color": "#101736",
+  "lang": "zh",
+  "categories": ["weather", "utilities", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
