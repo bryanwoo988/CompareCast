@@ -702,16 +702,26 @@ $('#btn-manual').addEventListener('click', () => {
   $('#m-name').value = $('#m-lat').value = $('#m-lon').value = '';
 });
 
-function addLocation(o){
-  const dup = S.locations.find(x => Math.abs(x.lat - o.lat) < 1e-4 && Math.abs(x.lon - o.lon) < 1e-4);
+/* opts.stay keeps the caller where it is — the map pins several places in a
+   row, and jumping to the saved list after each one is unusable there.
+   Returns the new location, or null when it duplicates an existing pin. */
+function addLocation(o, opts){
+  const stay = !!(opts && opts.stay);
+  const dup = findNearby(S.locations, +o.lat, +o.lon);
   if(dup){
-    toast(t('dupLoc')); hide();
-    $('#m-name').value = $('#m-lat').value = $('#m-lon').value = '';
-    return;
+    toast(t('dupLoc'));
+    if(!stay){
+      hide();
+      $('#m-name').value = $('#m-lat').value = $('#m-lon').value = '';
+    }
+    return null;
   }
   const l = {id:'l' + Date.now() + Math.floor(Math.random()*99), name:o.name, region:o.region || '',
              lat:+o.lat, lon:+o.lon, model:S.defaultModel};
-  S.locations.push(l); save(); renderList(); refreshPins(); hide(); setTab('saved'); loadCard(l);
+  S.locations.push(l); save(); renderList(); refreshPins();
+  if(!stay){ hide(); setTab('saved'); }
+  loadCard(l);
+  return l;
 }
 
 /* ---------- 11. Detail page ---------- */
