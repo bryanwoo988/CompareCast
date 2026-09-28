@@ -706,13 +706,13 @@ function addLocation(o){
 }
 
 /* ---------- 11. Detail page ---------- */
-let D = {loc:null, main:null, cmp:null, ext:null, acc:null, day:0, tab:'forecast', span:'hourly', vari:'temp', busy:false, seq:0};
+let D = {loc:null, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, tab:'forecast', span:'hourly', vari:'temp', busy:false, seq:0};
 let detailSeq = 0;
 
 function openDetail(id){
   const loc = S.locations.find(x => x.id === id); if(!loc) return;
   /* a new location always opens on today; D.day survives everything else */
-  D = {loc, main:null, cmp:null, ext:null, acc:null, day:0, tab:'forecast', span:'hourly', vari:'temp', busy:false, seq:++detailSeq};
+  D = {loc, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, tab:'forecast', span:'hourly', vari:'temp', busy:false, seq:++detailSeq};
   paintHead();
   $$('.d-tabs button').forEach(b => b.classList.toggle('on', b.dataset.dtab === 'forecast'));
   const page = $('#detail');
@@ -784,6 +784,9 @@ async function loadDetail(){
     getCompare(loc, S.compare).then(r => {
       if(!current()) return;
       D.cmp = r;
+      /* the chip row can only offer models this payload actually holds —
+         offering more would mean a fetch on click, which spec §5 forbids */
+      D.cmpIds = S.compare.slice();
       /* the forecast tab's chart is already on screen as a single line —
          repaint just the chart so the other models appear without a reflow */
       if(D.tab === 'forecast') buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
@@ -917,6 +920,7 @@ function paintForecast(){
       <button class="dangerbtn" id="d-remove">${t('rmLoc')}</button>
     </div>`;
   bindDayStrip();
+  bindModelChips();
   buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
   $('#d-saveName').addEventListener('click', () => {
     const v = $('#d-rename').value.trim(); if(!v) return;
@@ -969,6 +973,7 @@ function renderTempChart(){
   return `<div class="glass">
     <h4>${t('vTemp')}<span class="r">${uT()}</span></h4>
     <div class="chartwrap" id="ch-temp"></div>
+    ${renderModelChips()}
     <div class="mlist" id="ch-temp-list"></div>
   </div>`;
 }
@@ -980,6 +985,35 @@ function renderVariChart(vari){
     <div class="chartwrap" id="ch-cmp"></div>
     <div class="mlist" id="ch-cmp-list"></div>
   </div>`;
+}
+
+/* Model selection, right beside the chart it drives. Reads and writes the same
+   S.compare the settings page does, and never fetches: the payload for every
+   chip shown here is already loaded (spec §4.5). */
+function renderModelChips(){
+  const ids = (D.cmpIds && D.cmpIds.length) ? D.cmpIds : S.compare.slice();
+  if(ids.length < 2) return '';
+  const dead = D.cmp === 'fail';
+  return `<div class="mchips${dead ? ' dead' : ''}">` + ids.map(id => {
+    const m = M(id);
+    return `<button class="mchip${S.compare.includes(id) ? ' on' : ''}" data-mchip="${id}"${dead ? ' disabled' : ''}>
+      <span class="mdot" style="background:${m.color}"></span>${esc(m.short)}</button>`;
+  }).join('') + '</div>';
+}
+function bindModelChips(){
+  $$('#d-body [data-mchip]').forEach(b => b.addEventListener('click', () => {
+    const id = b.dataset.mchip;
+    /* same rule as the settings page: the chart never ends up with no line */
+    if(S.compare.includes(id)){
+      if(S.compare.length <= 1) return;
+      S.compare = S.compare.filter(x => x !== id);
+    } else {
+      S.compare = MODELS.map(m => m.id).filter(x => S.compare.includes(x) || x === id);
+    }
+    save();
+    b.classList.toggle('on', S.compare.includes(id));
+    buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
+  }));
 }
 
 /* 'temp' | 'rain' | 'wind' come from the multi-model compare payload;

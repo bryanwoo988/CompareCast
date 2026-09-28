@@ -170,6 +170,13 @@ input{font-family:inherit}
 .cval .cvt{font-size:13px;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums}
 .cval svg{width:19px;height:19px}
 .cval b{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.mchips{display:flex;gap:7px;overflow-x:auto;margin:12px -4px 0;padding:0 4px 4px;scrollbar-width:none}
+.mchips::-webkit-scrollbar{display:none}
+.mchips.dead{opacity:.45;pointer-events:none}
+.mchip{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:17px;
+  font-size:13.5px;font-weight:600;color:rgba(255,255,255,.82);background:rgba(255,255,255,.08);transition:.16s}
+.mchip.on{background:#fff;color:#141b3d}
+.mchip .mdot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
 .d-body{padding:16px 16px calc(46px + var(--safe-b))}
 .glass{background:rgba(22,34,66,.34);backdrop-filter:blur(14px);border-radius:20px;padding:16px;margin-bottom:14px;
   border:1px solid rgba(255,255,255,.14)}
