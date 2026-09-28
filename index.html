@@ -135,7 +135,10 @@ input{font-family:inherit}
 .d-model{display:flex;align-items:center;gap:9px;padding:12px 18px;border-radius:24px;
   background:rgba(14,22,52,.72);backdrop-filter:blur(10px);font-size:16px;font-weight:600}
 .d-model svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round}
-.d-head{text-align:center;padding:6px 22px 0}
+/* .d-bar::before fades out 22px past the bar, so a 6px gap put the top of the
+   location name under that fade — clear the gradient instead of shortening it,
+   which is what keeps scrolled content legible under the floating buttons */
+.d-head{text-align:center;padding:26px 22px 0}
 .d-head h2{margin:0;font-size:33px;font-weight:700;letter-spacing:-.7px;line-height:1.15}
 .d-head p{margin:5px 0 0;font-size:16px;color:rgba(255,255,255,.85)}
 .d-ic{width:110px;height:110px;margin:2px auto 0}
