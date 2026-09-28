@@ -907,10 +907,10 @@ function paintForecast(){
     }).join('');
   }
 
-  $('#d-body').innerHTML = renderDayStrip() + renderTempChart() + `
+  $('#d-body').innerHTML = renderDayStrip() + renderTempChart() + renderProbChart() + `
     <div class="glass"><h4><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>${t('now')}<span class="r">${M(D.loc.model || S.defaultModel).short}</span></h4>${cells}</div>
     <div class="glass"><h4>${t('next24')}</h4><div class="hstrip">${strip}</div>
-      ${ex ? `<p class="note" style="margin-bottom:0">${t('probSrc')}</p>` : ''}</div>
+      </div>
     <div class="glass"><h4>${t('days10')}</h4>${days}</div>
     <div class="glass" style="padding-bottom:10px">
       <h4>${t('editName')}</h4>
@@ -922,6 +922,7 @@ function paintForecast(){
   bindDayStrip();
   bindModelChips();
   buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
+  buildChart('#ch-prob', {vari:'prob', fill:true, marks:false, yRange:[0,100]});
   $('#d-saveName').addEventListener('click', () => {
     const v = $('#d-rename').value.trim(); if(!v) return;
     D.loc.name = v; save(); paintHead(); renderList(); refreshPins(); toast(t('savedOk'));
@@ -975,6 +976,17 @@ function renderTempChart(){
     <div class="chartwrap" id="ch-temp"></div>
     ${renderModelChips()}
     <div class="mlist" id="ch-temp-list"></div>
+  </div>`;
+}
+/* Rain probability. One source (best_match) and one line, so it always gets
+   the gradient. Nothing is drawn at all when D.ext failed — an empty axis
+   would read as "0% all day", which is a different claim (spec §4.6). */
+function renderProbChart(){
+  if(!D.ext || D.ext === 'fail') return '';
+  return `<div class="glass">
+    <h4>${t('rainChance')}<span class="r">%</span></h4>
+    <div class="chartwrap" id="ch-prob"></div>
+    <p class="note" style="margin-bottom:0">${t('probSrc')}</p>
   </div>`;
 }
 function renderVariChart(vari){
