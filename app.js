@@ -78,7 +78,8 @@ zh:{
   errLat:'纬度要在 −90 到 90 之间。', errLon:'经度要在 −180 到 180 之间。',
   errNum:'请输入数字。', dupLoc:'这个位置已经加过了。',
   bmSat:'卫星', bmStreet:'街道', bmDark:'暗色',
-  mapHint:'点地图任意位置即可添加为地点', mapAdd:'添加此处', locsUnit:'个地点',
+  mapHint:'按 + 放置一个地点，或在上方搜索地名', mapAdd:'添加此处', locsUnit:'个地点',
+  railLocate:'定位到我', railAdd:'加一个地点', railLayer:'底图',
   tForecast:'预报', tCompare:'对比', tAccuracy:'准度',
   pickModel:'预报模式', pickModelD:'选择由哪个模式驱动这个地点。',
   unavail:'这个地点没有该模式数据', avail:'可用',
@@ -128,7 +129,8 @@ en:{
   errLat:'Latitude must be between −90 and 90.', errLon:'Longitude must be between −180 and 180.',
   errNum:'Enter a number.', dupLoc:'That spot is already saved.',
   bmSat:'Satellite', bmStreet:'Street', bmDark:'Dark',
-  mapHint:'Tap anywhere on the map to add that spot', mapAdd:'Add this spot', locsUnit:'locations',
+  mapHint:'Press + to place a location, or search for a place above', mapAdd:'Add this spot', locsUnit:'locations',
+  railLocate:'Locate me', railAdd:'Add a location', railLayer:'Basemap',
   tForecast:'Forecast', tCompare:'Compare', tAccuracy:'Accuracy',
   pickModel:'Forecast model', pickModelD:'Choose which model powers this location.',
   unavail:'No data for this location', avail:'Available',
@@ -178,7 +180,8 @@ ms:{
   errLat:'Latitud mesti antara −90 dan 90.', errLon:'Longitud mesti antara −180 dan 180.',
   errNum:'Masukkan nombor.', dupLoc:'Tempat itu sudah disimpan.',
   bmSat:'Satelit', bmStreet:'Jalan', bmDark:'Gelap',
-  mapHint:'Ketik mana-mana tempat pada peta untuk tambah', mapAdd:'Tambah tempat ini', locsUnit:'lokasi',
+  mapHint:'Tekan + untuk letak lokasi, atau cari nama tempat di atas', mapAdd:'Tambah tempat ini', locsUnit:'lokasi',
+  railLocate:'Cari saya', railAdd:'Tambah lokasi', railLayer:'Peta asas',
   tForecast:'Ramalan', tCompare:'Banding', tAccuracy:'Ketepatan',
   pickModel:'Model ramalan', pickModelD:'Pilih model yang menjana lokasi ini.',
   unavail:'Tiada data untuk lokasi ini', avail:'Ada',
@@ -526,6 +529,7 @@ function initMap(){
   map = L.map('map', {zoomControl:false, zoomSnap:0}).setView(c, S.locations.length ? 9 : 6);
   setBasemap(S.basemap || 'sat');
   myLayer = L.layerGroup().addTo(map);
+  bindRail();
   refreshPins();
   setTimeout(() => map.invalidateSize(), 120);
 }
@@ -536,12 +540,16 @@ const BASEMAPS = {
         url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         labels:'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
         attr:'Tiles © Esri · Earthstar Geographics' },
-  street:{ name:'bmStreet', cls:'bm-street', maxZoom:20, subdomains:'abcd',
-        url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        attr:'© OpenStreetMap · © CARTO' },
-  dark:{ name:'bmDark', cls:'bm-dark', maxZoom:20, subdomains:'abcd',
-        url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        attr:'© OpenStreetMap · © CARTO' }
+  /* CARTO now serves a 2KB "API KEY REQUIRED" placeholder on these endpoints at
+     both 1x and 2x, so street and dark were silently blank. Esri needs no key and
+     already backs the satellite layer, so all three basemaps share one provider
+     and one attribution. */
+  street:{ name:'bmStreet', cls:'bm-street', maxZoom:19,
+        url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        attr:'Tiles © Esri' },
+  dark:{ name:'bmDark', cls:'bm-dark', maxZoom:16,
+        url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        attr:'Tiles © Esri' }
 };
 let baseTiles = [];
 function setBasemap(id){
@@ -576,7 +584,64 @@ function drawBasemapSwitch(){
   host.innerHTML = Object.keys(BASEMAPS)
     .map(id => `<button data-bm="${id}" class="${S.basemap === id ? 'on' : ''}">${t(BASEMAPS[id].name)}</button>`).join('');
   host.querySelectorAll('[data-bm]').forEach(b =>
-    b.addEventListener('click', () => setBasemap(b.dataset.bm)));
+    b.addEventListener('click', () => {
+      setBasemap(b.dataset.bm);
+      host.classList.remove('on');
+      const lb = $('[data-rail="layer"]'); if(lb) lb.classList.remove('on');
+    }));
+}
+
+/* the location count used to be a chip floating on the map; on a page where
+   every pixel of map counts it belongs in the header line instead */
+function updateSub(){
+  const el2 = $('#app-sub'); if(!el2) return;
+  const onMap = document.body.classList.contains('map-mode');
+  el2.textContent = onMap
+    ? `${t('subMap')} · ${S.locations.length} ${t('locsUnit')}`
+    : t('subSaved');
+}
+
+const RAIL = [
+  ['locate', 'railLocate', '<circle cx="12" cy="12" r="3.4"/><circle cx="12" cy="12" r="7.6"/><path d="M12 1.6v3M12 19.4v3M22.4 12h-3M4.6 12h-3"/>'],
+  ['add',    'railAdd',    '<path d="M12 5v14M5 12h14"/>'],
+  ['layer',  'railLayer',  '<path d="m12 3 9 4.6-9 4.6-9-4.6L12 3z"/><path d="m3.6 12.4 8.4 4.3 8.4-4.3M3.6 16.9l8.4 4.3 8.4-4.3"/>']
+];
+function renderRail(){
+  return RAIL.map(([id, key, path]) =>
+    `<button data-rail="${id}" aria-label="${t(key)}" title="${t(key)}">
+      <svg viewBox="0 0 24 24">${path}</svg></button>`).join('');
+}
+function bindRail(){
+  const host = $('#map-rail'); if(!host) return;
+  host.innerHTML = renderRail();
+  host.querySelector('[data-rail="locate"]').addEventListener('click', locateMe);
+  host.querySelector('[data-rail="layer"]').addEventListener('click', e => {
+    const box = $('#basemaps'), btn = e.currentTarget;
+    const open = box.classList.toggle('on');
+    btn.classList.toggle('on', open);
+  });
+  /* the add button is wired to the placement mode in its own task */
+}
+
+let myDot = null;
+/* navigates only — saving the spot is a separate, deliberate act (press +) */
+function locateMe(){
+  const btn = $('[data-rail="locate"]');
+  if(!navigator.geolocation){ toast(t('gpsFail')); return; }
+  if(!window.isSecureContext){ toast(t('gpsInsecure')); return; }
+  if(btn) btn.classList.add('busy');
+  navigator.geolocation.getCurrentPosition(pos => {
+    if(btn) btn.classList.remove('busy');
+    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+    /* added to the map, not to myLayer, which refreshPins clears */
+    if(myDot) map.removeLayer(myDot);
+    myDot = L.marker([lat, lon], {interactive:false,
+      icon:L.divIcon({className:'', html:'<div class="me-dot"></div>', iconSize:[0,0]})}).addTo(map);
+    map.flyTo([lat, lon], Math.max(map.getZoom(), 14));
+  }, err => {
+    if(btn) btn.classList.remove('busy');
+    toast(err && err.code === 1 ? t('gpsDenied') : t('gpsFail'));
+  }, {enableHighAccuracy:true, timeout:12000, maximumAge:30000});
 }
 
 const pins = {};
@@ -592,8 +657,7 @@ function updatePin(id){
   pins[id].setIcon(pinIcon(l));
 }
 function refreshPins(){
-  const cnt = $('#map-count');
-  if(cnt) cnt.textContent = `${S.locations.length} ${t('locsUnit')}`;
+  updateSub();
   if(!myLayer) return;
   myLayer.clearLayers();
   Object.keys(pins).forEach(k => delete pins[k]);
@@ -1622,7 +1686,7 @@ function setTab(which){
   $('#tab-map').classList.toggle('on', !s);
   $('#pane-saved').classList.toggle('on', s);
   $('#pane-map').classList.toggle('on', !s);
-  $('#app-sub').textContent = s ? t('subSaved') : t('subMap');
+  updateSub();
   document.body.classList.toggle('map-mode', !s);
   if(!s) initMap();
 }
