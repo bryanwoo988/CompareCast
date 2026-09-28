@@ -86,6 +86,7 @@ zh:{
   rainToday:'今日降雨', rainChance:'降雨概率', uv:'紫外线', dir:'风向', sunrise:'日出', sunset:'日落',
   probSrc:'降雨概率与紫外线来自 Best Match 混合模式，因为有几个模式不输出这两项。',
   next24:'未来 24 小时', days10:'未来 10 天', today:'今天', now2:'现在',
+  tMax:'最高气温', tMin:'最低气温', rainSum:'降雨总量', windMax:'最大风速',
   hourly:'逐小时', daily:'逐日', h48:'未来 48 小时', d10:'10 天',
   vTemp:'气温', vRain:'降雨', vWind:'风速', hiMark:'高', loMark:'低',
   live:'实况 · 当前条件', scrub:'按住图表左右拖动',
@@ -133,6 +134,7 @@ en:{
   rainToday:'Rain today', rainChance:'Rain chance', uv:'UV index', dir:'Direction', sunrise:'Sunrise', sunset:'Sunset',
   probSrc:'Rain chance and UV come from the blended Best Match model, because several models do not produce them.',
   next24:'Next 24 hours', days10:'Next 10 days', today:'Today', now2:'Now',
+  tMax:'High', tMin:'Low', rainSum:'Total rain', windMax:'Max wind',
   hourly:'Hourly', daily:'Daily', h48:'next 48 h', d10:'10 days',
   vTemp:'Temperature', vRain:'Precipitation', vWind:'Wind', hiMark:'H', loMark:'L',
   live:'Live · current conditions', scrub:'Drag chart to scrub',
@@ -180,6 +182,7 @@ ms:{
   rainToday:'Hujan hari ini', rainChance:'Peluang hujan', uv:'Indeks UV', dir:'Arah', sunrise:'Matahari naik', sunset:'Matahari turun',
   probSrc:'Peluang hujan dan UV datang dari model gabungan Best Match, kerana beberapa model tidak mengeluarkannya.',
   next24:'24 jam akan datang', days10:'10 hari akan datang', today:'Hari ini', now2:'Sekarang',
+  tMax:'Tertinggi', tMin:'Terendah', rainSum:'Jumlah hujan', windMax:'Angin maksimum',
   hourly:'Setiap jam', daily:'Harian', h48:'48 jam', d10:'10 hari',
   vTemp:'Suhu', vRain:'Hujan', vWind:'Angin', hiMark:'T', loMark:'R',
   live:'Langsung · keadaan semasa', scrub:'Seret carta untuk baca',
@@ -837,51 +840,97 @@ function bindDayStrip(){
   }));
 }
 
-/* ----- Forecast tab ----- */
-function paintForecast(){
+/* ----- Selected-day blocks ----- */
+/* the heading every per-day block carries, so nothing on the page is ambiguous
+   about which of the ten days it describes */
+function dayLabel(){
+  const dd = D.main && D.main.daily;
+  if(!dd || !dd.time || !dd.time[D.day]) return '';
+  return new Date(dd.time[D.day] + 'T12:00:00')
+    .toLocaleDateString(locale(), {month:'long', day:'numeric', weekday:'short'});
+}
+
+/* the selected day's full run of hours — not "the next 24 from now", which
+   could not show a future day at all */
+function renderHourStrip(){
   const d = D.main, m = M(D.loc.model || S.defaultModel);
-  if(!d){ $('#d-body').innerHTML = `<div class="big-msg"><p>${t('loading')}</p></div>`; return; }
-  const c = d.current, dd = d.daily, hh = d.hourly;
+  const hh = d && d.hourly, dd = d && d.daily;
+  if(!hh || !hh.time || !dd || !dd.time || !dd.time[D.day]) return '';
+  const {start, n} = sliceDay(hh.time, dd.time[D.day]);
+  if(start < 0) return '';
+  /* -1 on any day but today, so only today gets a "now" column */
+  const nowAt = nowIndex(hh.time.slice(start, start + n), (d.current && d.current.time) || '');
+  const ex = (D.ext && D.ext !== 'fail') ? D.ext : null;
+  const P2 = {};
+  if(ex && ex.hourly && ex.hourly.precipitation_probability)
+    ex.hourly.time.forEach((tm, k) => { P2[tm] = ex.hourly.precipitation_probability[k]; });
+  const T2 = pick(hh,'temperature_2m',m.id,true);
+  const C2 = pick(hh,'weather_code',m.id,true), Dy = pick(hh,'is_day',m.id,true);
+  let strip = '';
+  for(let k = 0; k < n; k++){
+    const i = start + k;
+    strip += `<div class="hcol${k === nowAt ? ' nowcol' : ''}">
+      <div class="hh">${k === nowAt ? t('now2') : hh.time[i].slice(11,16)}</div>
+      <div class="hi">${icon(iconFor(C2 ? C2[i] : 3, Dy ? Dy[i] : 1), 30)}</div>
+      <div class="ht">${fT(T2 ? T2[i] : null)}</div>
+      <div class="hp">${nz(P2[hh.time[i]]) ? P2[hh.time[i]] + '%' : ''}</div>
+    </div>`;
+  }
+  return `<div class="glass"><h4>${esc(dayLabel())}</h4><div class="hstrip">${strip}</div></div>`;
+}
+
+/* Observations belong to today and only today. Showing this minute's pressure
+   under a heading that says 3 October would be exactly the kind of ambiguity
+   this rebuild exists to remove, so other days get that day's aggregates and
+   the rows with no daily equivalent are dropped rather than filled with —. */
+function renderCells(){
+  const d = D.main; if(!d) return '';
+  const m = M(D.loc.model || S.defaultModel);
   const g = (o,k) => pick(o, k, m.id, true);
+  const dd = d.daily, i = D.day, today = i === 0;
   const ex = (D.ext && D.ext !== 'fail') ? D.ext : null;
   const pp = ex && ex.daily ? ex.daily.precipitation_probability_max : null;
   const uv = ex && ex.daily ? ex.daily.uv_index_max : null;
   const sr = g(dd,'sunrise'), ss = g(dd,'sunset');
-  const hhmm = s => s ? s.slice(11,16) : '—';
-
-  const cells = `<div class="grid2">
-    <div class="cell"><small>${t('feels')}</small><b>${fT(g(c,'apparent_temperature'))}</b></div>
-    <div class="cell"><small>${t('humid')}</small><b>${nz(g(c,'relative_humidity_2m')) ? Math.round(g(c,'relative_humidity_2m')) + '%' : '—'}</b></div>
-    <div class="cell"><small>${t('wind')} · ${t('dir')} ${compass(g(c,'wind_direction_10m'))}</small><b>${fW(g(c,'wind_speed_10m'))}</b></div>
-    <div class="cell"><small>${t('gust')}</small><b>${fW(g(c,'wind_gusts_10m'))}</b></div>
-    <div class="cell"><small>${t('rainToday')}</small><b>${(() => { const ps = g(dd,'precipitation_sum'); return ps && nz(ps[0]) ? fR(ps[0]) : '—'; })()}</b></div>
-    <div class="cell"><small>${t('press')}</small><b>${nz(g(c,'surface_pressure')) ? Math.round(g(c,'surface_pressure')) + ' hPa' : '—'}</b></div>
-    <div class="cell"><small>${t('rainChance')}</small><b>${pp && nz(pp[0]) ? pp[0] + '%' : '—'}</b></div>
-    <div class="cell"><small>${t('uv')}</small><b>${uv && nz(uv[0]) ? Math.round(uv[0]) : '—'}</b></div>
-    <div class="cell"><small>${t('sunrise')}</small><b>${hhmm(sr && sr[0])}</b></div>
-    <div class="cell"><small>${t('sunset')}</small><b>${hhmm(ss && ss[0])}</b></div>
-  </div>`;
-
-  // next 24 hours, starting from the current hour
-  let strip = '';
-  if(hh && hh.time){
-    const nowIso = (d.current && d.current.time) ? d.current.time.slice(0,13) : null;
-    let start = nowIso ? hh.time.findIndex(x => x.slice(0,13) === nowIso) : 0;
-    if(start < 0) start = 0;
-    const T2 = pick(hh,'temperature_2m',m.id,true);
-    const P2map = {};
-    if(ex && ex.hourly && ex.hourly.precipitation_probability)
-      ex.hourly.time.forEach((tm,k) => { P2map[tm] = ex.hourly.precipitation_probability[k]; });
-    const C2 = pick(hh,'weather_code',m.id,true), Dy = pick(hh,'is_day',m.id,true);
-    for(let i = start; i < Math.min(start + 24, hh.time.length); i++){
-      strip += `<div class="hcol">
-        <div class="hh">${i === start ? t('now2') : hh.time[i].slice(11,16)}</div>
-        <div class="hi">${icon(iconFor(C2 ? C2[i] : 3, Dy ? Dy[i] : 1), 30)}</div>
-        <div class="ht">${fT(T2 ? T2[i] : null)}</div>
-        <div class="hp">${nz(P2map[hh.time[i]]) ? P2map[hh.time[i]] + '%' : ''}</div>
-      </div>`;
-    }
+  const at = (arr, f) => (arr && nz(arr[i])) ? f(arr[i]) : null;
+  const rows = [];
+  if(today){
+    const c = d.current;
+    const dir = g(c,'wind_direction_10m');
+    rows.push([t('feels'), nz(g(c,'apparent_temperature')) ? fT(g(c,'apparent_temperature')) : null]);
+    rows.push([t('humid'), nz(g(c,'relative_humidity_2m')) ? Math.round(g(c,'relative_humidity_2m')) + '%' : null]);
+    rows.push([nz(dir) ? `${t('wind')} · ${t('dir')} ${compass(dir)}` : t('wind'),
+               nz(g(c,'wind_speed_10m')) ? fW(g(c,'wind_speed_10m')) : null]);
+    rows.push([t('gust'), nz(g(c,'wind_gusts_10m')) ? fW(g(c,'wind_gusts_10m')) : null]);
+    rows.push([t('rainToday'), at(g(dd,'precipitation_sum'), fR)]);
+    rows.push([t('press'), nz(g(c,'surface_pressure')) ? Math.round(g(c,'surface_pressure')) + ' hPa' : null]);
+  } else {
+    rows.push([t('tMax'), at(g(dd,'temperature_2m_max'), fT)]);
+    rows.push([t('tMin'), at(g(dd,'temperature_2m_min'), fT)]);
+    rows.push([t('windMax'), at(g(dd,'wind_speed_10m_max'), fW)]);
+    rows.push([t('gust'), at(g(dd,'wind_gusts_10m_max'), fW)]);
+    rows.push([t('rainSum'), at(g(dd,'precipitation_sum'), fR)]);
   }
+  rows.push([t('rainChance'), at(pp, v => Math.round(v) + '%')]);
+  rows.push([t('uv'), at(uv, v => String(Math.round(v)))]);
+  rows.push([t('sunrise'), (sr && sr[i]) ? sr[i].slice(11,16) : null]);
+  rows.push([t('sunset'), (ss && ss[i]) ? ss[i].slice(11,16) : null]);
+  const cells = rows.filter(r => r[1] !== null && r[1] !== undefined)
+    .map(r => `<div class="cell"><small>${r[0]}</small><b>${r[1]}</b></div>`).join('');
+  if(!cells) return '';
+  const head = today
+    ? `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>${t('now')}`
+    : esc(dayLabel());
+  return `<div class="glass"><h4>${head}<span class="r">${m.short}</span></h4>
+    <div class="grid2">${cells}</div></div>`;
+}
+
+/* ----- Forecast tab ----- */
+function paintForecast(){
+  const d = D.main, m = M(D.loc.model || S.defaultModel);
+  if(!d){ $('#d-body').innerHTML = `<div class="big-msg"><p>${t('loading')}</p></div>`; return; }
+  const dd = d.daily;
+  const g = (o,k) => pick(o, k, m.id, true);
 
   // 10-day list with a min/max range bar
   let days = '';
@@ -907,10 +956,8 @@ function paintForecast(){
     }).join('');
   }
 
-  $('#d-body').innerHTML = renderDayStrip() + renderTempChart() + renderProbChart() + `
-    <div class="glass"><h4><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>${t('now')}<span class="r">${M(D.loc.model || S.defaultModel).short}</span></h4>${cells}</div>
-    <div class="glass"><h4>${t('next24')}</h4><div class="hstrip">${strip}</div>
-      </div>
+  $('#d-body').innerHTML = renderDayStrip() + renderTempChart() + renderProbChart()
+    + renderHourStrip() + renderCells() + `
     <div class="glass"><h4>${t('days10')}</h4>${days}</div>
     <div class="glass" style="padding-bottom:10px">
       <h4>${t('editName')}</h4>
