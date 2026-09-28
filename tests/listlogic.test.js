@@ -54,3 +54,30 @@ test('只有一张时恒为 0', () => {
 test('空列表返回 -1', () => {
   assert.strictEqual(targetIndex([], 100), -1);
 });
+
+/* ---- pullOffset ---- */
+const {pullOffset} = require('../listlogic.js');
+
+test('没拉动就没有位移', () => {
+  assert.strictEqual(pullOffset(0, 90), 0);
+});
+test('往上推不产生位移', () => {
+  assert.strictEqual(pullOffset(-120, 90), 0);
+});
+test('拉到 max 时位移是一半——阻尼确实在起作用', () => {
+  assert.strictEqual(pullOffset(90, 90), 45);
+});
+test('位移永远不超过 max', () => {
+  [100, 500, 5000, 1e9].forEach(dy => assert.ok(pullOffset(dy, 90) < 90));
+});
+test('位移随拉动单调递增', () => {
+  let prev = -1;
+  for(let dy = 0; dy <= 600; dy += 20){
+    const v = pullOffset(dy, 90);
+    assert.ok(v >= prev, `dy=${dy}`);
+    prev = v;
+  }
+});
+test('小幅拉动时接近线性', () => {
+  assert.ok(Math.abs(pullOffset(9, 90) - 9) < 1);
+});

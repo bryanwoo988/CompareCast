@@ -25,4 +25,14 @@ function targetIndex(centres, y){
   return best;
 }
 
-if(typeof module !== 'undefined') module.exports = {moveItem, targetIndex};
+/* How far the pull indicator travels for a finger that has moved `dy` down.
+
+   Rubber band: near-linear at the start so the indicator tracks the finger,
+   then asymptotic to `max` so the pull grows heavier and can never run off
+   the screen however hard it is dragged. */
+function pullOffset(dy, max){
+  if(!(dy > 0)) return 0;
+  return max * dy / (dy + max);
+}
+
+if(typeof module !== 'undefined') module.exports = {moveItem, targetIndex, pullOffset};
