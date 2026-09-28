@@ -10,7 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="天气预测">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<link rel="icon" href="icon-512.png" sizes="512x512" type="image/png">
 <title>天气预测 · Predict Weather · Ramalan Cuaca</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
@@ -35,7 +36,7 @@ input{font-family:inherit}
 .hdr{position:sticky;top:0;z-index:600;padding:calc(var(--safe-t) + 14px) 18px 12px;
   background:linear-gradient(180deg,#121838,#141b3d)}
 .hdr-row{display:flex;align-items:center;gap:12px}
-.mark{width:52px;height:52px;flex:0 0 52px}
+.mark{width:52px;height:52px;flex:0 0 52px;border-radius:13px;display:block;object-fit:contain}
 .brand{flex:1;min-width:0}
 .brand h1{margin:0;font-size:23px;font-weight:700;letter-spacing:-.4px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand p{margin:2px 0 0;font-size:13.5px;color:var(--dim)}
@@ -289,18 +290,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 
 <header class="hdr">
   <div class="hdr-row">
-    <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
-      <defs><radialGradient id="glow" cx="50%" cy="62%" r="42%">
-        <stop offset="0%" stop-color="#eaf3ff"/><stop offset="45%" stop-color="#5f8fe0" stop-opacity=".55"/>
-        <stop offset="100%" stop-color="#1b2450" stop-opacity="0"/></radialGradient></defs>
-      <rect x="4" y="4" width="92" height="92" rx="24" fill="#161e46"/>
-      <g stroke-width="2.2" stroke-linecap="round">
-        <line x1="50" y1="62" x2="16" y2="26" stroke="#f26d8c"/><line x1="50" y1="62" x2="27" y2="20" stroke="#f5a35c"/>
-        <line x1="50" y1="62" x2="39" y2="16" stroke="#f2d95e"/><line x1="50" y1="62" x2="50" y2="14" stroke="#8ef0c4"/>
-        <line x1="50" y1="62" x2="62" y2="17" stroke="#6fd7f5"/><line x1="50" y1="62" x2="74" y2="22" stroke="#7fa8f7"/>
-        <line x1="50" y1="62" x2="85" y2="30" stroke="#c48af5"/></g>
-      <circle cx="50" cy="62" r="26" fill="url(#glow)"/><circle cx="50" cy="62" r="4.2" fill="#fff"/>
-    </svg>
+    <img class="mark" src="icon-192.png" alt="" aria-hidden="true">
     <div class="brand"><h1 id="app-name">天气预测</h1><p id="app-sub">我的地点</p></div>
     <div class="hdr-btns">
       <button class="round" id="btn-lang" aria-label="Language">中</button>
