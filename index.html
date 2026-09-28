@@ -162,6 +162,14 @@ input{font-family:inherit}
 .dcell.today .dnum{color:var(--accent)}
 .dcell.on .dnum{background:#fff;color:#141b3d}
 .dfull{padding:0 16px 9px;font-size:14px;color:rgba(255,255,255,.88)}
+/* the floating readout sits directly above the plot, so a finger on the curve
+   never covers the number it is pointing at */
+.chartwrap{position:relative;padding-top:28px}
+.cval{position:absolute;top:0;left:50%;transform:translateX(-50%);opacity:0;pointer-events:none;
+  display:flex;align-items:center;gap:6px;white-space:nowrap;transition:opacity .15s}
+.cval .cvt{font-size:13px;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums}
+.cval svg{width:19px;height:19px}
+.cval b{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
 .d-body{padding:16px 16px calc(46px + var(--safe-b))}
 .glass{background:rgba(22,34,66,.34);backdrop-filter:blur(14px);border-radius:20px;padding:16px;margin-bottom:14px;
   border:1px solid rgba(255,255,255,.14)}
