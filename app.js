@@ -95,7 +95,7 @@ zh:{
   accLoading:'正在比对各模式与 ERA5 再分析…',
   accWindow:(a,b,n)=>`核对区间：${a} 至 ${b}（UTC），共 ${n} 个整点`,
   accMethodEra:'方法：取上面这段区间，各模式的逐小时气温与 ECMWF ERA5 再分析同一时刻的气温相比，算平均绝对误差（MAE）。ERA5 同化了全球地面站、探空气球和卫星观测，是气象界通用的对照基准。数值越小，这段时间在这个位置贴得越近。',
-  accEraNote:'两点提醒：一、ERA5 本身也是模式产品（同化观测后重算的），不是你园区的实测值，它是公认基准但不能代替雨量筒。二、这是对过去几天的核对，样本小，只能当参考，不是模式排名。',
+  accEraNote:'三点提醒：一、ERA5 本身也是模式产品（同化观测后重算的），不是你园区的实测值，它是公认基准但不能代替雨量筒。二、这是对过去几天的核对，样本小，只能当参考，不是模式排名。三、榜单里没有 Best Match：它不是一个预报模式，在历史时段 Open-Meteo 直接给的就是再分析数据（也就是这里的对照基准），放进来会永远是 0.00，没有意义。',
   accNone:'ERA5 对照数据读不到（再分析有几天的滞后，或接口暂时无回应），所以这里改用「与多模式共识的偏离」来排序。这不是准确度评分。',
   accCons:'与共识的偏离', accConsD:'每个模式跟所有模式平均值的平均差距（未来 48 小时气温）。偏离小只代表跟大多数一致，不代表更准。',
   accBest:'最贴近实测', accMae:'平均绝对误差',
@@ -142,7 +142,7 @@ en:{
   accLoading:'Comparing each model against ERA5 reanalysis…',
   accWindow:(a,b,n)=>`Window checked: ${a} to ${b} (UTC), ${n} hourly points`,
   accMethodEra:'Method: over that window, each model\'s hourly temperature is compared with ECMWF ERA5 reanalysis at the same hour. The figure is mean absolute error (MAE). ERA5 assimilates surface stations, radiosondes and satellites worldwide and is the standard reference in meteorology. Lower means closer over that period at this spot.',
-  accEraNote:'Two cautions. ERA5 is itself a model product, recomputed after assimilating observations, not a measurement at your plot: it is an accepted reference but no substitute for a rain gauge. And this checks a few past days on a small sample, so treat it as indicative, not a model ranking.',
+  accEraNote:'Three cautions. ERA5 is itself a model product, recomputed after assimilating observations, not a measurement at your plot: it is an accepted reference but no substitute for a rain gauge. And this checks a few past days on a small sample, so treat it as indicative, not a model ranking. Best Match is left out: it is not a forecast model, and over past dates Open-Meteo serves the reanalysis for it — the very series used as truth here — so it would always score 0.00.',
   accNone:'ERA5 data could not be read (reanalysis lags by a few days, or the endpoint did not respond), so this list falls back to how far each model sits from the multi-model consensus. That is agreement, not accuracy.',
   accCons:'Distance from consensus', accConsD:'Average gap between each model and the mean of all models, over the next 48 hours of temperature. A small gap only means it agrees with the majority.',
   accBest:'Closest to observed', accMae:'Mean absolute error',
@@ -189,7 +189,7 @@ ms:{
   accLoading:'Membandingkan setiap model dengan analisis semula ERA5…',
   accWindow:(a,b,n)=>`Tempoh disemak: ${a} hingga ${b} (UTC), ${n} titik jam`,
   accMethodEra:'Kaedah: dalam tempoh itu, suhu setiap jam bagi setiap model dibandingkan dengan ERA5 ECMWF pada jam yang sama. Angka ini ialah ralat mutlak purata (MAE). ERA5 mengasimilasi stesen permukaan, belon radiosonde dan satelit di seluruh dunia, dan menjadi rujukan piawai dalam meteorologi. Lebih kecil bermakna lebih hampir dalam tempoh itu.',
-  accEraNote:'Dua peringatan. ERA5 sendiri produk model, dikira semula selepas mengasimilasi cerapan, bukan ukuran di petak anda: ia rujukan yang diterima tetapi bukan ganti tolok hujan. Dan ini menyemak beberapa hari lepas dengan sampel kecil, jadi anggap sebagai panduan, bukan kedudukan model.',
+  accEraNote:'Tiga peringatan. ERA5 sendiri produk model, dikira semula selepas mengasimilasi cerapan, bukan ukuran di petak anda: ia rujukan yang diterima tetapi bukan ganti tolok hujan. Dan ini menyemak beberapa hari lepas dengan sampel kecil, jadi anggap sebagai panduan, bukan kedudukan model. Best Match tidak disenaraikan: ia bukan model ramalan, dan bagi tarikh lampau Open-Meteo memberi data analisis semula untuknya — siri yang sama digunakan sebagai rujukan di sini — jadi ia akan sentiasa mendapat 0.00.',
   accNone:'Data ERA5 tidak dapat dibaca (analisis semula lewat beberapa hari, atau titik akhir tidak menjawab), jadi senarai ini beralih kepada jarak setiap model dari konsensus. Itu persetujuan, bukan ketepatan.',
   accCons:'Jarak dari konsensus', accConsD:'Purata beza antara setiap model dengan purata semua model, untuk suhu 48 jam akan datang. Jurang kecil hanya bermakna ia sepakat dengan majoriti.',
   accBest:'Paling hampir cerapan', accMae:'Ralat mutlak purata',
@@ -762,7 +762,9 @@ function paintHead(){
 }
 
 async function loadDetail(){
-  if(D.busy) return;
+  /* a reload asked for while one is running (unit change, retry) must not be
+     swallowed — bump the sequence so the in-flight replies are discarded */
+  if(D.busy) D.seq = ++detailSeq;
   D.busy = true;
   /* every in-flight response is tagged, so a slow reply for a location the
      user already left can never paint over the one now on screen */
@@ -1126,12 +1128,18 @@ async function runAccuracy(){
 
   /* 1. real verification against ERA5 reanalysis.
      ERA5 lags a few days, so the window sits 7 to 4 days back. */
+  /* best_match is not a forecast model: over past dates Open-Meteo serves the
+     reanalysis for it, i.e. the very series used as truth here, so it would
+     always score an impossible 0.00 and top the table. Score real models only. */
+  const scored = models.filter(id => id !== 'best_match');
+
   try{
+    if(!scored.length) throw new Error('no scorable model');
     const now = Date.now(), day = 86400000;
     const from = new Date(now - 7 * day), to = new Date(now - 4 * day);
     const [era, past] = await Promise.all([
       getEra5(loc, ymd(from), ymd(to)),
-      getPast(loc, models, 9)
+      getPast(loc, scored, 9)
     ]);
     const truth = {};
     if(era && era.hourly && era.hourly.time){
@@ -1142,10 +1150,10 @@ async function runAccuracy(){
     }
     const keys = Object.keys(truth);
     if(keys.length >= 24 && past.hourly && past.hourly.time){
-      const single = models.length === 1;
+      const single = scored.length === 1;
       const times = past.hourly.time;
       const rows = [];
-      models.forEach(id => {
+      scored.forEach(id => {
         const v = pick(past.hourly, 'temperature_2m', id, single);
         if(!v) return;
         let sum = 0, cnt = 0;
@@ -1282,6 +1290,9 @@ function drawSettings(){
     save(); drawSettings();
     if(D.loc && $('#detail').classList.contains('on')){
       D.cmp = null; D.acc = null;
+      /* the accuracy table is derived from the same model list, so it has to be
+         thrown away and rebuilt too, not just the compare chart */
+      if(D.tab !== 'compare') paintBody();
       getCompare(D.loc, S.compare).then(r => { D.cmp = r; if(D.tab === 'compare') paintBody(); })
         .catch(() => { D.cmp = 'fail'; if(D.tab === 'compare') paintBody(); });
     }
