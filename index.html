@@ -121,6 +121,24 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
 .map-layer.on{display:flex}
 .map-layer button{padding:9px 15px;border-radius:14px;font-size:13.5px;font-weight:600;color:var(--dim);white-space:nowrap;text-align:left}
 .map-layer button.on{background:#fff;color:#141b3d}
+.map-search{position:absolute;left:12px;right:12px;top:12px;z-index:502}
+.ms-bar{display:flex;align-items:center;gap:9px;padding:0 14px;height:42px;border-radius:21px;
+  background:rgba(18,25,58,.92);backdrop-filter:blur(12px);box-shadow:0 4px 14px rgba(6,12,32,.4)}
+.ms-bar svg{width:17px;height:17px;flex:0 0 17px;fill:none;stroke:#8cc2f4;stroke-width:2;stroke-linecap:round}
+.ms-bar input{flex:1;min-width:0;height:100%;border:0;background:none;color:#fff;font-size:15px;outline:none}
+.ms-bar input::placeholder{color:var(--dim)}
+.ms-bar input::-webkit-search-cancel-button{-webkit-appearance:none}
+.ms-out{margin-top:8px;border-radius:16px;overflow:hidden;display:none;
+  background:rgba(18,25,58,.96);backdrop-filter:blur(12px);box-shadow:0 6px 20px rgba(6,12,32,.45);
+  max-height:246px;overflow-y:auto}
+.ms-out.on{display:block}
+.ms-out p{margin:0;padding:14px;font-size:13.5px;color:var(--dim);text-align:center}
+.ms-row{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;text-align:left;
+  border-top:1px solid rgba(255,255,255,.08)}
+.ms-row:first-child{border-top:0}
+.ms-row b{display:block;font-size:15px;font-weight:600}
+.ms-row small{display:block;margin-top:2px;font-size:12px;color:var(--dim)}
+.ms-row .go{margin-left:auto;color:var(--dim);font-size:18px}
 /* right-hand control rail: centred slightly low, so the top-right corner —
    the hardest place to reach one-handed — stays empty */
 .map-rail{position:absolute;right:12px;top:50%;transform:translateY(-35%);z-index:500;
@@ -397,6 +415,13 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
   <section class="pane" id="pane-map">
     <div class="map-wrap">
       <div id="map"></div>
+      <div class="map-search">
+        <div class="ms-bar">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.6"/><path d="m16 16 4.4 4.4"/></svg>
+          <input id="map-q" type="search" autocomplete="off" enterkeyhint="search">
+        </div>
+        <div class="ms-out" id="map-q-out"></div>
+      </div>
       <div class="map-rail" id="map-rail"></div>
       <div class="map-layer" id="basemaps"></div>
       <div class="map-foot" id="map-foot" data-t="mapHint">点地图任意位置即可添加为地点</div>

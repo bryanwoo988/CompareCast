@@ -79,7 +79,7 @@ zh:{
   errNum:'请输入数字。', dupLoc:'这个位置已经加过了。',
   bmSat:'卫星', bmStreet:'街道', bmDark:'暗色',
   mapHint:'按 + 放置一个地点，或在上方搜索地名', mapAdd:'添加此处', locsUnit:'个地点',
-  railLocate:'定位到我', railAdd:'加一个地点', railLayer:'底图',
+  railLocate:'定位到我', railAdd:'加一个地点', railLayer:'底图', mapSearchPh:'搜索地名',
   tForecast:'预报', tCompare:'对比', tAccuracy:'准度',
   pickModel:'预报模式', pickModelD:'选择由哪个模式驱动这个地点。',
   unavail:'这个地点没有该模式数据', avail:'可用',
@@ -130,7 +130,7 @@ en:{
   errNum:'Enter a number.', dupLoc:'That spot is already saved.',
   bmSat:'Satellite', bmStreet:'Street', bmDark:'Dark',
   mapHint:'Press + to place a location, or search for a place above', mapAdd:'Add this spot', locsUnit:'locations',
-  railLocate:'Locate me', railAdd:'Add a location', railLayer:'Basemap',
+  railLocate:'Locate me', railAdd:'Add a location', railLayer:'Basemap', mapSearchPh:'Search for a place',
   tForecast:'Forecast', tCompare:'Compare', tAccuracy:'Accuracy',
   pickModel:'Forecast model', pickModelD:'Choose which model powers this location.',
   unavail:'No data for this location', avail:'Available',
@@ -181,7 +181,7 @@ ms:{
   errNum:'Masukkan nombor.', dupLoc:'Tempat itu sudah disimpan.',
   bmSat:'Satelit', bmStreet:'Jalan', bmDark:'Gelap',
   mapHint:'Tekan + untuk letak lokasi, atau cari nama tempat di atas', mapAdd:'Tambah tempat ini', locsUnit:'lokasi',
-  railLocate:'Cari saya', railAdd:'Tambah lokasi', railLayer:'Peta asas',
+  railLocate:'Cari saya', railAdd:'Tambah lokasi', railLayer:'Peta asas', mapSearchPh:'Cari nama tempat',
   tForecast:'Ramalan', tCompare:'Banding', tAccuracy:'Ketepatan',
   pickModel:'Model ramalan', pickModelD:'Pilih model yang menjana lokasi ini.',
   unavail:'Tiada data untuk lokasi ini', avail:'Ada',
@@ -530,6 +530,7 @@ function initMap(){
   setBasemap(S.basemap || 'sat');
   myLayer = L.layerGroup().addTo(map);
   bindRail();
+  bindMapSearch();
   refreshPins();
   setTimeout(() => map.invalidateSize(), 120);
 }
@@ -623,6 +624,60 @@ function bindRail(){
   /* the add button is wired to the placement mode in its own task */
 }
 
+/* Search results and "locate me" are long jumps. flyTo animates them over
+   requestAnimationFrame, which browsers throttle in a backgrounded or
+   non-compositing tab — the flight then never lands and the map silently stays
+   put. These jumps are instant instead, which is also what the big map apps do
+   for a search result. */
+function jumpTo(lat, lon, minZoom){
+  if(!map) return;
+  map.setView([lat, lon], Math.max(map.getZoom(), minZoom), {animate:false});
+}
+
+/* Same contract as the search sheet's #q: two characters minimum, 350ms debounce,
+   a rising sequence number so a slow reply for an abandoned query cannot paint over
+   a newer one. Deliberately the same rules rather than a second set. */
+let mqTimer, mqSeq = 0;
+function bindMapSearch(){
+  const inp = $('#map-q'), out = $('#map-q-out');
+  if(!inp || !out || inp.dataset.bound) return;
+  inp.dataset.bound = '1';
+  inp.placeholder = t('mapSearchPh');
+  const clear = () => { out.className = 'ms-out'; out.innerHTML = ''; };
+  const msg = txt => { out.className = 'ms-out on'; out.innerHTML = `<p>${txt}</p>`; };
+
+  inp.addEventListener('input', e => {
+    clearTimeout(mqTimer);
+    const q = e.target.value.trim();
+    if(q.length < 2){ clear(); return; }
+    msg(t('searching'));
+    const mySeq = ++mqSeq;
+    mqTimer = setTimeout(async () => {
+      try{
+        const j = await geoSearch(q), rs = j.results || [];
+        if(mySeq !== mqSeq) return;
+        if(!rs.length){ msg(t('noResult')); return; }
+        out.className = 'ms-out on';
+        out.innerHTML = '';
+        rs.slice(0, 6).forEach(r => {
+          const region = [r.admin1, r.country].filter(Boolean).join(', ');
+          const b = el(`<button class="ms-row"><span style="flex:1;min-width:0"><b>${esc(r.name)}</b>
+            <small>${esc(region)} · ${r.latitude.toFixed(3)}°, ${r.longitude.toFixed(3)}°</small></span><span class="go">›</span></button>`);
+          b.addEventListener('click', () => {
+            inp.value = ''; inp.blur(); clear();
+            jumpTo(+r.latitude, +r.longitude, 12);
+            if(typeof enterPlace === 'function') enterPlace({name:r.name, region});
+          });
+          out.appendChild(b);
+        });
+      }catch(err){
+        if(mySeq !== mqSeq) return;
+        msg(navigator.onLine ? t('failLoad') : t('noNet'));
+      }
+    }, 350);
+  });
+}
+
 let myDot = null;
 /* navigates only — saving the spot is a separate, deliberate act (press +) */
 function locateMe(){
@@ -637,7 +692,7 @@ function locateMe(){
     if(myDot) map.removeLayer(myDot);
     myDot = L.marker([lat, lon], {interactive:false,
       icon:L.divIcon({className:'', html:'<div class="me-dot"></div>', iconSize:[0,0]})}).addTo(map);
-    map.flyTo([lat, lon], Math.max(map.getZoom(), 14));
+    jumpTo(lat, lon, 14);
   }, err => {
     if(btn) btn.classList.remove('busy');
     toast(err && err.code === 1 ? t('gpsDenied') : t('gpsFail'));
@@ -1713,6 +1768,8 @@ function applyLang(){
   if(!$('#q').value) $('#q-out').innerHTML = `<p class="searching">${t('searchEmpty')}</p>`;
   renderList(); refreshPins();
   if(map) $('#map-foot').textContent = t('mapHint');
+  if($('#map-q')) $('#map-q').placeholder = t('mapSearchPh');
+  if($('#map-rail')) bindRail();
   drawBasemapSwitch();
   if(openSheetId === '#sheet-info') drawInfo();
   if(openSheetId === '#sheet-set') drawSettings();
