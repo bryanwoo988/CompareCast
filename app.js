@@ -983,21 +983,29 @@ function renderProbChart(){
 }
 
 /* Model selection, right beside the chart it drives. Reads and writes the same
-   S.compare the settings page does, and never fetches: the payload for every
-   chip shown here is already loaded (spec §4.5). */
+   S.compare the settings page does.
+
+   Every model is listed, not only the ones already fetched. Listing just the
+   loaded set meant that narrowing to a single model made the whole row vanish,
+   and the row is the only way back — a one-way trap out of which the settings
+   page was the sole escape. Toggling a model that is already on board stays a
+   pure repaint (spec §5); ticking one that is not genuinely needs its data, so
+   that case — and only that case — refetches. */
 function renderModelChips(){
-  const ids = (D.cmpIds && D.cmpIds.length) ? D.cmpIds : S.compare.slice();
-  if(ids.length < 2) return '';
   const dead = D.cmp === 'fail';
-  return `<div class="mchips${dead ? ' dead' : ''}">` + ids.map(id => {
-    const m = M(id);
-    return `<button class="mchip${S.compare.includes(id) ? ' on' : ''}" data-mchip="${id}"${dead ? ' disabled' : ''}>
+  return `<div class="mchips${dead ? ' dead' : ''}">` + MODELS.map(m => {
+    const on = S.compare.includes(m.id);
+    /* selected while the compare payload is in flight: the line appears when
+       it lands, and the chip says so rather than looking inert */
+    const pending = on && !D.cmp;
+    return `<button class="mchip${on ? ' on' : ''}${pending ? ' pending' : ''}" data-mchip="${m.id}"${dead ? ' disabled' : ''}>
       <span class="mdot" style="background:${m.color}"></span>${esc(m.short)}</button>`;
   }).join('') + '</div>';
 }
 function bindModelChips(){
   $$('#d-body [data-mchip]').forEach(b => b.addEventListener('click', () => {
     const id = b.dataset.mchip;
+    const loaded = (D.cmpIds && D.cmpIds.length) ? D.cmpIds : [];
     /* same rule as the settings page: the chart never ends up with no line */
     if(S.compare.includes(id)){
       if(S.compare.length <= 1) return;
@@ -1006,9 +1014,25 @@ function bindModelChips(){
       S.compare = MODELS.map(m => m.id).filter(x => S.compare.includes(x) || x === id);
     }
     save();
-    b.classList.toggle('on', S.compare.includes(id));
-    buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
+    if(S.compare.every(x => loaded.includes(x))){
+      b.classList.toggle('on', S.compare.includes(id));
+      buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
+      return;
+    }
+    reloadCompare();
   }));
+}
+
+/* refetch the compare payload for the current selection; used when a model the
+   page does not hold is ticked on */
+function reloadCompare(){
+  const seq = D.seq, loc = D.loc;
+  D.cmp = null; D.cmpIds = null;
+  paintDetail();
+  getCompare(loc, S.compare).then(r => {
+    if(D.seq !== seq) return;
+    D.cmp = r; D.cmpIds = S.compare.slice(); paintDetail();
+  }).catch(() => { if(D.seq !== seq) return; D.cmp = 'fail'; paintDetail(); });
 }
 
 /* 'temp' | 'rain' | 'wind' come from the multi-model compare payload;

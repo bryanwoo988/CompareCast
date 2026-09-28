@@ -189,6 +189,9 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
 .mchip{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:17px;
   font-size:13.5px;font-weight:600;color:rgba(255,255,255,.82);background:rgba(255,255,255,.08);transition:.16s}
 .mchip.on{background:#fff;color:#141b3d}
+/* ticked but its data is still in flight */
+.mchip.pending{background:rgba(255,255,255,.55);color:#141b3d;animation:chippulse 1s ease-in-out infinite}
+@keyframes chippulse{50%{opacity:.55}}
 .mchip .mdot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
 /* the accuracy block is not about the selected day, so it is fenced off from
    everything above it rather than reading as one more per-day section */
