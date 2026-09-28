@@ -78,6 +78,7 @@ zh:{
   errLat:'纬度要在 −90 到 90 之间。', errLon:'经度要在 −180 到 180 之间。',
   errNum:'请输入数字。', dupLoc:'这个位置已经加过了。',
   bmSat:'卫星', bmStreet:'街道', bmDark:'暗色',
+  dragHint:'长按地点可拖动排序，排在最前的会成为地图的默认视角',
   mapHint:'按 + 放置一个地点，或在上方搜索地名', mapAdd:'添加此处', locsUnit:n=>'个地点',
   railLocate:'定位到我', railAdd:'加一个地点', railLayer:'底图', mapSearchPh:'搜索地名',
   placeHint:'拖动地图，把目标对进准星', placeName:'名称（留空则用坐标）',
@@ -131,6 +132,7 @@ en:{
   errLat:'Latitude must be between −90 and 90.', errLon:'Longitude must be between −180 and 180.',
   errNum:'Enter a number.', dupLoc:'That spot is already saved.',
   bmSat:'Satellite', bmStreet:'Street', bmDark:'Dark',
+  dragHint:'Hold a location to drag it into order — the first one becomes the map\u2019s default view',
   mapHint:'Press + to place a location, or search for a place above', mapAdd:'Add this spot', locsUnit:n=>n === 1 ? 'location' : 'locations',
   railLocate:'Locate me', railAdd:'Add a location', railLayer:'Basemap', mapSearchPh:'Search for a place',
   placeHint:'Drag the map to line the spot up with the crosshair', placeName:'Name (blank uses the coordinates)',
@@ -184,6 +186,7 @@ ms:{
   errLat:'Latitud mesti antara −90 dan 90.', errLon:'Longitud mesti antara −180 dan 180.',
   errNum:'Masukkan nombor.', dupLoc:'Tempat itu sudah disimpan.',
   bmSat:'Satelit', bmStreet:'Jalan', bmDark:'Gelap',
+  dragHint:'Tekan dan tahan lokasi untuk menyusunnya — yang pertama menjadi paparan asal peta',
   mapHint:'Tekan + untuk letak lokasi, atau cari nama tempat di atas', mapAdd:'Tambah tempat ini', locsUnit:n=>'lokasi',
   railLocate:'Cari saya', railAdd:'Tambah lokasi', railLayer:'Peta asas', mapSearchPh:'Cari nama tempat',
   placeHint:'Seret peta untuk selaraskan tempat dengan sasaran', placeName:'Nama (kosong guna koordinat)',
@@ -508,6 +511,11 @@ function makeCard(l){
 }
 function renderList(){
   const box = $('#loc-list'); box.innerHTML = '';
+  const hint = $('#list-hint');
+  if(hint){
+    hint.textContent = t('dragHint');
+    hint.style.display = S.locations.length >= 3 ? 'block' : 'none';
+  }
   if(!S.locations.length){ box.appendChild(el(`<p class="empty">${t('empty')}</p>`)); return; }
   S.locations.forEach(l => box.appendChild(makeCard(l)));
 }
@@ -526,6 +534,122 @@ async function loadCard(l){
   updateCard(l.id); updatePin(l.id);
 }
 function loadAll(){ S.locations.forEach(loadCard); }
+
+/* ---------- 8b. Drag to reorder ----------
+   Press and hold a card, then drag. The order is the array order, and position
+   one also decides where the map opens, so this is how a location is made the
+   default view.
+
+   A plain press must still open the detail page and a plain swipe must still
+   scroll the list, so the hold is what separates the three: move too early and
+   it was a scroll, release too early and it was a tap. */
+const HOLD_MS = 350, SLOP = 10, EDGE = 90;
+let drag = null, suppressClick = false;
+
+function cardMetrics(){
+  const cards = Array.from(document.querySelectorAll('#loc-list .loc'));
+  const sy = window.scrollY;
+  return cards.map(c => {
+    const r = c.getBoundingClientRect();
+    return {el:c, top:r.top + sy, h:r.height, centre:r.top + sy + r.height / 2};
+  });
+}
+
+function beginDrag(){
+  if(!drag) return;
+  const m = cardMetrics();
+  const from = m.findIndex(x => x.el === drag.card);
+  if(from < 0){ drag = null; return; }
+  drag.on = true;
+  drag.from = from;
+  drag.to = from;
+  drag.metrics = m;
+  /* the gap the card leaves behind is its own outer height, so every card it
+     passes shifts by exactly that much whatever its own height is */
+  drag.slot = m[from].h + 14;
+  drag.card.classList.add('dragging');
+  drag.card.style.transform = 'translateY(0px) scale(1.03)';
+  $('#loc-list').classList.add('reordering');
+  drag.autoTimer = setInterval(autoScroll, 16);
+}
+
+function autoScroll(){
+  if(!drag || !drag.on) return;
+  const y = drag.clientY;
+  let d = 0;
+  if(y < EDGE) d = -Math.ceil((EDGE - y) / 6);
+  else if(y > window.innerHeight - EDGE) d = Math.ceil((y - (window.innerHeight - EDGE)) / 6);
+  if(d){ window.scrollBy(0, d); paintDrag(); }
+}
+
+function paintDrag(){
+  if(!drag || !drag.on) return;
+  const dy = (drag.clientY + window.scrollY) - drag.startPageY;
+  drag.card.style.transform = `translateY(${dy}px) scale(1.03)`;
+  const centre = drag.metrics[drag.from].centre + dy;
+  const to = targetIndex(drag.metrics.map(x => x.centre), centre);
+  drag.to = to;
+  drag.metrics.forEach((x, i) => {
+    if(i === drag.from) return;
+    let shift = 0;
+    if(drag.from < to && i > drag.from && i <= to) shift = -drag.slot;
+    else if(drag.from > to && i >= to && i < drag.from) shift = drag.slot;
+    x.el.style.transform = shift ? `translateY(${shift}px)` : '';
+  });
+}
+
+function endDrag(){
+  if(!drag) return;
+  clearTimeout(drag.holdTimer);
+  clearInterval(drag.autoTimer);
+  const d = drag;
+  drag = null;
+  if(!d.on) return;
+  $('#loc-list').classList.remove('reordering');
+  d.metrics.forEach(x => { x.el.style.transform = ''; });
+  d.card.classList.remove('dragging');
+  /* a drag ends over a card, and that card's click must not open it */
+  suppressClick = true;
+  setTimeout(() => { suppressClick = false; }, 60);
+  if(d.to !== d.from){
+    S.locations = moveItem(S.locations, d.from, d.to);
+    save(); renderList(); refreshPins();
+  }
+}
+
+function initReorder(){
+  const list = $('#loc-list');
+  list.addEventListener('pointerdown', e => {
+    if(e.button !== undefined && e.button !== 0) return;
+    const card = e.target.closest('.loc');
+    if(!card) return;
+    drag = {card, on:false, clientY:e.clientY,
+            startPageY:e.clientY + window.scrollY, startClientY:e.clientY,
+            pointerId:e.pointerId};
+    drag.holdTimer = setTimeout(beginDrag, HOLD_MS);
+  });
+  list.addEventListener('pointermove', e => {
+    if(!drag) return;
+    drag.clientY = e.clientY;
+    if(!drag.on){
+      /* moved before the hold completed: the user is scrolling, not dragging */
+      if(Math.abs(e.clientY - drag.startClientY) > SLOP){ clearTimeout(drag.holdTimer); drag = null; }
+      return;
+    }
+    paintDrag();
+  });
+  ['pointerup','pointercancel'].forEach(ev => list.addEventListener(ev, endDrag));
+  window.addEventListener('pointerup', endDrag);
+  /* touch-action cannot be changed mid-gesture, so scrolling is held off here
+     for as long as a drag is actually running */
+  document.addEventListener('touchmove', e => {
+    if(drag && drag.on) e.preventDefault();
+  }, {passive:false});
+  list.addEventListener('click', e => {
+    if(!suppressClick) return;
+    e.stopPropagation(); e.preventDefault();
+  }, true);
+}
 
 /* ---------- 9. Map ---------- */
 let map, myLayer, mapCentred = false;
@@ -1890,6 +2014,7 @@ window.addEventListener('popstate', () => {
   if(!BASEMAPS[S.basemap]) S.basemap = 'sat';
   applyLang();
   renderList();
+  initReorder();
   loadAll();
   if('serviceWorker' in navigator && location.protocol !== 'file:'){
     const reg = () => navigator.serviceWorker.register('sw.js').catch(() => {});
