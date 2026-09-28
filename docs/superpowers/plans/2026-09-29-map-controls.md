@@ -213,7 +213,7 @@ git commit -m "feat: 地图页收窄顶栏、锁住滚动、删掉点击加点"
 
 - [ ] **Step 3: 实现 `renderRail()` / `bindRail()` / `locateMe()`**
 
-`.map-rail` 绝对定位 `right:12px`，`top:50%`，`transform:translateY(-35%)`（垂直居中略下偏，避开右上角够不到的问题）。三个 44px 圆钮自上而下：定位、加点、底图。加点钮此刻先只切换一个占位状态，真正的放置模式在 Task 5 接上。
+`.map-rail` 绝对定位 `right:12px`，`top:50%`，`transform:translateY(-35%)`（垂直居中略下偏，避开右上角够不到的问题）。三个 44px 圆钮自上而下：定位、加点、底图。加点钮这一任务里**不绑任何处理函数**（Task 5 绑上 `enterPlace`）——绑一个占位行为等于要在 Task 5 再拆一次。
 
 `locateMe()` 失败时按 spec §6 分三种情况走 `toast()`：`gpsDenied`（`err.code === 1`）、`gpsInsecure`（非安全上下文）、`gpsFail`（其余）。
 
