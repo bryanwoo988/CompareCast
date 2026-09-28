@@ -126,8 +126,11 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
 .map-cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:501;
   pointer-events:none;opacity:0;transition:opacity .16s}
 .map-cross.on{opacity:1}
-.map-cross svg{width:48px;height:48px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;
-  filter:drop-shadow(0 1px 4px rgba(0,0,0,.65))}
+.map-cross svg{width:48px;height:48px;fill:none;stroke-linecap:round}
+/* a white crosshair alone vanishes into satellite imagery, so a dark halo is
+   drawn underneath it — legible on every basemap */
+.map-cross .halo{stroke:rgba(0,0,0,.55);stroke-width:5.5}
+.map-cross .mark{stroke:#fff;stroke-width:2.4}
 .map-foot.placing{text-align:left;padding:13px 14px}
 .pb-top{font-size:14px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
 #place-name{width:100%;margin:9px 0;padding:11px 13px;border:0;border-radius:12px;
@@ -438,7 +441,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
         </div>
         <div class="ms-out" id="map-q-out"></div>
       </div>
-      <div class="map-cross" id="map-cross"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="9.5"/><path d="M24 2v9M24 37v9M2 24h9M37 24h9"/><circle cx="24" cy="24" r="1.8" fill="#fff" stroke="none"/></svg></div>
+      <div class="map-cross" id="map-cross"><svg viewBox="0 0 48 48"><g class="halo"><circle cx="24" cy="24" r="9.5"/><path d="M24 2v9M24 37v9M2 24h9M37 24h9"/></g><g class="mark"><circle cx="24" cy="24" r="9.5"/><path d="M24 2v9M24 37v9M2 24h9M37 24h9"/></g><circle cx="24" cy="24" r="2.2" fill="#fff" stroke="rgba(0,0,0,.55)" stroke-width="1.2"/></svg></div>
       <div class="map-rail" id="map-rail"></div>
       <div class="map-layer" id="basemaps"></div>
       <div class="map-foot" id="map-foot" data-t="mapHint">点地图任意位置即可添加为地点</div>

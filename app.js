@@ -706,9 +706,29 @@ function exitPlace(){
   const cross = $('#map-cross'); if(cross) cross.classList.remove('on');
   const btn = $('[data-rail="add"]'); if(btn) btn.classList.remove('on');
   if(map) map.off('move', syncPlaceCoords);
+  dropRail();
   const foot = $('#map-foot');
   if(foot){ foot.classList.remove('placing'); foot.textContent = t('mapHint'); }
 }
+/* On a short screen — landscape, or a small phone — the vertically centred rail
+   runs into the confirm bar and its bottom button becomes unpressable. Lift it
+   only when the two would actually meet, so tall screens keep the centred
+   position the rail was designed around. */
+function liftRailClear(){
+  const rail = $('#map-rail'), foot = $('#map-foot');
+  if(!rail || !foot) return;
+  rail.style.top = ''; rail.style.bottom = ''; rail.style.transform = '';
+  const r = rail.getBoundingClientRect(), f = foot.getBoundingClientRect();
+  if(r.bottom <= f.top - 8) return;
+  rail.style.top = 'auto';
+  rail.style.transform = 'none';
+  rail.style.bottom = Math.round(f.height + 32) + 'px';
+}
+function dropRail(){
+  const rail = $('#map-rail');
+  if(rail){ rail.style.top = ''; rail.style.bottom = ''; rail.style.transform = ''; }
+}
+
 function syncPlaceCoords(){
   const out = $('#place-coords');
   if(!out || !map) return;
@@ -726,6 +746,7 @@ function renderPlaceBar(){
       <button class="pb-cancel" id="place-cancel">${t('placeCancel')}</button>
       <button class="pb-ok" id="place-ok">${t('placeConfirm')}</button>
     </div>`;
+  liftRailClear();
   $('#place-cancel').addEventListener('click', exitPlace);
   $('#place-ok').addEventListener('click', () => {
     const c2 = map.getCenter();
