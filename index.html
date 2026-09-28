@@ -143,11 +143,7 @@ input{font-family:inherit}
 .d-now .t{font-size:66px;font-weight:200;letter-spacing:-3px;line-height:1}
 .d-now .c{font-size:17px;margin-top:4px;color:rgba(255,255,255,.92)}
 .d-badge{display:flex;justify-content:center;margin-top:12px}
-.d-tabs{position:sticky;top:calc(var(--safe-t) + 66px);z-index:19;display:flex;margin:16px 16px 0;padding:5px;border-radius:26px;background:rgba(20,30,60,.72);backdrop-filter:blur(14px);box-shadow:0 6px 20px rgba(6,12,32,.28)}
-.d-tabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px 0;border-radius:22px;
   font-size:15.5px;font-weight:600;color:rgba(255,255,255,.75);transition:.18s}
-.d-tabs button.on{background:#fff;color:#141b3d}
-.d-tabs svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 /* the date strip sticks directly under .d-bar, whose height is
    safe-t + 12 (pad) + 46 (button) + 8 (pad) = safe-t + 66px */
 .d-days{position:sticky;top:calc(var(--safe-t) + 66px);z-index:21;margin:0 -16px 14px;padding:9px 0 0;
@@ -177,6 +173,10 @@ input{font-family:inherit}
   font-size:13.5px;font-weight:600;color:rgba(255,255,255,.82);background:rgba(255,255,255,.08);transition:.16s}
 .mchip.on{background:#fff;color:#141b3d}
 .mchip .mdot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
+/* the accuracy block is not about the selected day, so it is fenced off from
+   everything above it rather than reading as one more per-day section */
+.accblock{margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.2)}
+.accblock .glass{background:rgba(8,13,34,.5)}
 .d-body{padding:16px 16px calc(46px + var(--safe-b))}
 .glass{background:rgba(22,34,66,.34);backdrop-filter:blur(14px);border-radius:20px;padding:16px;margin-bottom:14px;
   border:1px solid rgba(255,255,255,.14)}
@@ -383,14 +383,6 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
   <div class="d-ic" id="d-icon"></div>
   <div class="d-now"><div class="t" id="d-temp">—</div><div class="c" id="d-cond">—</div></div>
   <div class="d-badge"><span class="badge" id="d-badge"></span></div>
-  <div class="d-tabs">
-    <button class="on" data-dtab="forecast">
-      <svg viewBox="0 0 24 24"><path d="M14 14.8V5a2.5 2.5 0 0 0-5 0v9.8a5 5 0 1 0 5 0z"/></svg><span data-t="tForecast">预报</span></button>
-    <button data-dtab="compare">
-      <svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span data-t="tCompare">对比</span></button>
-    <button data-dtab="accuracy">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="3.4"/></svg><span data-t="tAccuracy">准度</span></button>
-  </div>
   <div class="d-body" id="d-body"></div>
 </section>
 

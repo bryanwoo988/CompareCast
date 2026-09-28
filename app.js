@@ -91,8 +91,8 @@ zh:{
   vTemp:'气温', vRain:'降雨', vWind:'风速', hiMark:'高', loMark:'低',
   live:'实况 · 当前条件', scrub:'按住图表左右拖动',
   srcModels:'各模式数值', spreadT:'模式分歧',
-  spreadTxt:(a,b,ut,ur)=>`各家模式对未来 24 小时气温的最大差距是 ${a} ${ut}，24 小时累计降雨的差距是 ${b} ${ur}。差距越大，预报越不确定。`,
-  accT:'准度核对', accSub:'对照 ERA5 再分析',
+  spreadTxt:(a,b,ut,ur)=>`各家模式对这一天最高气温的最大差距是 ${a} ${ut}，全日累计降雨的差距是 ${b} ${ur}。差距越大，预报越不确定。`,
+  accT:'准度核对', accT7:'模式准度核对（过去 7 天）', accSub:'对照 ERA5 再分析',
   accLoading:'正在比对各模式与 ERA5 再分析…',
   accWindow:(a,b,n)=>`核对区间：${a} 至 ${b}（UTC），共 ${n} 个整点`,
   accMethodEra:'方法：取上面这段区间，各模式的逐小时气温与 ECMWF ERA5 再分析同一时刻的气温相比，算平均绝对误差（MAE）。ERA5 同化了全球地面站、探空气球和卫星观测，是气象界通用的对照基准。数值越小，这段时间在这个位置贴得越近。',
@@ -139,8 +139,8 @@ en:{
   vTemp:'Temperature', vRain:'Precipitation', vWind:'Wind', hiMark:'H', loMark:'L',
   live:'Live · current conditions', scrub:'Drag chart to scrub',
   srcModels:'Source models', spreadT:'Model spread',
-  spreadTxt:(a,b,ut,ur)=>`Over the next 24 hours the models differ by up to ${a} ${ut} on temperature and ${b} ${ur} on total rainfall. A wider spread means a less certain forecast.`,
-  accT:'Accuracy check', accSub:'against ERA5 reanalysis',
+  spreadTxt:(a,b,ut,ur)=>`For this day the models differ by up to ${a} ${ut} on the high temperature and ${b} ${ur} on total rainfall. A wider spread means a less certain forecast.`,
+  accT:'Accuracy check', accT7:'Model accuracy check (past 7 days)', accSub:'against ERA5 reanalysis',
   accLoading:'Comparing each model against ERA5 reanalysis…',
   accWindow:(a,b,n)=>`Window checked: ${a} to ${b} (UTC), ${n} hourly points`,
   accMethodEra:'Method: over that window, each model\'s hourly temperature is compared with ECMWF ERA5 reanalysis at the same hour. The figure is mean absolute error (MAE). ERA5 assimilates surface stations, radiosondes and satellites worldwide and is the standard reference in meteorology. Lower means closer over that period at this spot.',
@@ -187,8 +187,8 @@ ms:{
   vTemp:'Suhu', vRain:'Hujan', vWind:'Angin', hiMark:'T', loMark:'R',
   live:'Langsung · keadaan semasa', scrub:'Seret carta untuk baca',
   srcModels:'Nilai setiap model', spreadT:'Jurang model',
-  spreadTxt:(a,b,ut,ur)=>`Untuk 24 jam akan datang, model berbeza sehingga ${a} ${ut} pada suhu dan ${b} ${ur} pada jumlah hujan. Jurang lebih besar bermakna ramalan kurang pasti.`,
-  accT:'Semakan ketepatan', accSub:'berbanding analisis semula ERA5',
+  spreadTxt:(a,b,ut,ur)=>`Untuk hari ini, model berbeza sehingga ${a} ${ut} pada suhu tertinggi dan ${b} ${ur} pada jumlah hujan. Jurang lebih besar bermakna ramalan kurang pasti.`,
+  accT:'Semakan ketepatan', accT7:'Semakan ketepatan model (7 hari lalu)', accSub:'berbanding analisis semula ERA5',
   accLoading:'Membandingkan setiap model dengan analisis semula ERA5…',
   accWindow:(a,b,n)=>`Tempoh disemak: ${a} hingga ${b} (UTC), ${n} titik jam`,
   accMethodEra:'Kaedah: dalam tempoh itu, suhu setiap jam bagi setiap model dibandingkan dengan ERA5 ECMWF pada jam yang sama. Angka ini ialah ralat mutlak purata (MAE). ERA5 mengasimilasi stesen permukaan, belon radiosonde dan satelit di seluruh dunia, dan menjadi rujukan piawai dalam meteorologi. Lebih kecil bermakna lebih hampir dalam tempoh itu.',
@@ -709,15 +709,14 @@ function addLocation(o){
 }
 
 /* ---------- 11. Detail page ---------- */
-let D = {loc:null, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, tab:'forecast', span:'hourly', vari:'temp', busy:false, seq:0};
+let D = {loc:null, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, busy:false, seq:0};
 let detailSeq = 0;
 
 function openDetail(id){
   const loc = S.locations.find(x => x.id === id); if(!loc) return;
   /* a new location always opens on today; D.day survives everything else */
-  D = {loc, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, tab:'forecast', span:'hourly', vari:'temp', busy:false, seq:++detailSeq};
+  D = {loc, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, busy:false, seq:++detailSeq};
   paintHead();
-  $$('.d-tabs button').forEach(b => b.classList.toggle('on', b.dataset.dtab === 'forecast'));
   const page = $('#detail');
   page.scrollTop = 0;
   page.classList.add('on');
@@ -736,11 +735,6 @@ function exitDetail(){
 }
 $('#d-back').addEventListener('click', exitDetail);
 $('#d-modelbtn').addEventListener('click', () => { drawModelPicker(); show('#sheet-model'); });
-$$('.d-tabs button').forEach(b => b.addEventListener('click', () => {
-  D.tab = b.dataset.dtab;
-  $$('.d-tabs button').forEach(x => x.classList.toggle('on', x === b));
-  paintBody();
-}));
 
 function paintHead(){
   const loc = D.loc, m = M(loc.model || S.defaultModel), sum = D.main || cache[loc.id];
@@ -781,20 +775,17 @@ async function loadDetail(){
     D.main = main;
     cache[loc.id] = main;
     paintHead(); updateCard(loc.id); updatePin(loc.id);
-    paintBody();
-    getExtras(loc).then(r => { if(!current()) return; D.ext = r; if(D.tab === 'forecast') paintForecast(); })
-                  .catch(() => { if(current()) D.ext = 'fail'; });
+    paintDetail();
+    getExtras(loc).then(r => { if(!current()) return; D.ext = r; paintDetail(); })
+                  .catch(() => { if(current()){ D.ext = 'fail'; paintDetail(); } });
     getCompare(loc, S.compare).then(r => {
       if(!current()) return;
       D.cmp = r;
       /* the chip row can only offer models this payload actually holds —
          offering more would mean a fetch on click, which spec §5 forbids */
       D.cmpIds = S.compare.slice();
-      /* the forecast tab's chart is already on screen as a single line —
-         repaint just the chart so the other models appear without a reflow */
-      if(D.tab === 'forecast') buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
-      else if(D.tab === 'compare') paintBody();
-    }).catch(() => { if(!current()) return; D.cmp = 'fail'; if(D.tab === 'compare') paintBody(); });
+      paintDetail();
+    }).catch(() => { if(!current()) return; D.cmp = 'fail'; paintDetail(); });
   }catch(e){
     if(!current()){ D.busy = false; return; }
     $('#d-body').innerHTML = `<div class="big-msg"><b>${t('failLoad')}</b>
@@ -802,12 +793,6 @@ async function loadDetail(){
     const r = $('#d-retry'); if(r) r.addEventListener('click', loadDetail);
   }
   D.busy = false;
-}
-
-function paintBody(){
-  if(D.tab === 'forecast') return paintForecast();
-  if(D.tab === 'compare') return paintCompare();
-  return paintAccuracy();
 }
 
 /* ----- Day strip ----- */
@@ -834,7 +819,7 @@ function bindDayStrip(){
     const i = +b.dataset.day;
     if(i === D.day) return;
     D.day = i;
-    paintBody();
+    paintDetail();
     const sel = $('#d-body .dcell.on');
     if(sel) sel.scrollIntoView({inline:'center', block:'nearest'});
   }));
@@ -925,40 +910,14 @@ function renderCells(){
     <div class="grid2">${cells}</div></div>`;
 }
 
-/* ----- Forecast tab ----- */
-function paintForecast(){
-  const d = D.main, m = M(D.loc.model || S.defaultModel);
-  if(!d){ $('#d-body').innerHTML = `<div class="big-msg"><p>${t('loading')}</p></div>`; return; }
-  const dd = d.daily;
-  const g = (o,k) => pick(o, k, m.id, true);
-
-  // 10-day list with a min/max range bar
-  let days = '';
-  if(dd && dd.time){
-    const mx = g(dd,'temperature_2m_max'), mn = g(dd,'temperature_2m_min');
-    const cd = g(dd,'weather_code'), ps = g(dd,'precipitation_sum');
-    const all = [].concat(mx || [], mn || []).filter(nz);
-    const lo = all.length ? Math.min.apply(null, all) : 0;
-    const hi = all.length ? Math.max.apply(null, all) : 1;
-    const rng = (hi - lo) > 0 ? (hi - lo) : 1;
-    days = dd.time.map((day,i) => {
-      const a = mn ? mn[i] : null, b = mx ? mx[i] : null;
-      let left = nz(a) ? ((a - lo) / rng) * 100 : 0;
-      let wid = nz(a) && nz(b) ? Math.max(6, ((b - a) / rng) * 100) : 0;
-      if(left + wid > 100) left = Math.max(0, 100 - wid);
-      return `<div class="day">
-        <span class="dn">${i === 0 ? t('today') : new Date(day).toLocaleDateString(locale(), {weekday:'short'})}</span>
-        <span class="di">${icon(wmo(cd ? cd[i] : 3).i, 30)}</span>
-        <span class="dp">${ps && nz(ps[i]) && ps[i] > 0 ? fR(ps[i]) : ''}</span>
-        <span class="bar"><i style="left:${left.toFixed(1)}%;width:${wid.toFixed(1)}%"></i></span>
-        <span class="dt"><i>${fT(a)}</i>${fT(b)}</span>
-      </div>`;
-    }).join('');
-  }
-
+/* ----- The detail page -----
+   One linear read from top to bottom, every block describing the day selected
+   in the strip. There are no tabs: the old three-way split was the reason the
+   same weather lived in three places (spec §4.1). */
+function paintDetail(){
+  if(!D.main){ $('#d-body').innerHTML = `<div class="big-msg"><p>${t('loading')}</p></div>`; return; }
   $('#d-body').innerHTML = renderDayStrip() + renderTempChart() + renderProbChart()
-    + renderHourStrip() + renderCells() + `
-    <div class="glass"><h4>${t('days10')}</h4>${days}</div>
+    + renderHourStrip() + renderCells() + renderAccuracyCard() + `
     <div class="glass" style="padding-bottom:10px">
       <h4>${t('editName')}</h4>
       <div class="field" style="margin-bottom:10px"><label>${t('rename')}</label>
@@ -970,6 +929,7 @@ function paintForecast(){
   bindModelChips();
   buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
   buildChart('#ch-prob', {vari:'prob', fill:true, marks:false, yRange:[0,100]});
+  paintAccuracyCard();
   $('#d-saveName').addEventListener('click', () => {
     const v = $('#d-rename').value.trim(); if(!v) return;
     D.loc.name = v; save(); paintHead(); renderList(); refreshPins(); toast(t('savedOk'));
@@ -978,37 +938,6 @@ function paintForecast(){
     S.locations = S.locations.filter(x => x.id !== D.loc.id);
     delete cache[D.loc.id]; save(); renderList(); refreshPins(); exitDetail(); toast(t('deleted'));
   });
-}
-
-/* ----- Compare tab ----- */
-function paintCompare(){
-  const variRow = `<div class="chiprow">
-      <button data-vari="temp" class="${D.vari === 'temp' ? 'on' : ''}">${t('vTemp')}</button>
-      <button data-vari="rain" class="${D.vari === 'rain' ? 'on' : ''}">${t('vRain')}</button>
-      <button data-vari="wind" class="${D.vari === 'wind' ? 'on' : ''}">${t('vWind')}</button>
-    </div>`;
-  if(D.cmp === 'fail'){
-    $('#d-body').innerHTML = renderDayStrip() + variRow + `<div class="big-msg"><b>${t('failLoad')}</b>
-      <button class="retry" id="c-retry">${t('retry')}</button></div>`;
-    bindDayStrip(); bindCompareControls();
-    $('#c-retry').addEventListener('click', () => {
-      D.cmp = null; paintBody();
-      getCompare(D.loc, S.compare).then(r => { D.cmp = r; if(D.tab === 'compare') paintBody(); })
-        .catch(() => { D.cmp = 'fail'; if(D.tab === 'compare') paintBody(); });
-    });
-    return;
-  }
-  if(!D.cmp){
-    $('#d-body').innerHTML = renderDayStrip() + variRow + `<div class="big-msg"><p>${t('loading')}</p></div>`;
-    bindDayStrip(); bindCompareControls(); return;
-  }
-  $('#d-body').innerHTML = renderDayStrip() + variRow + renderVariChart(D.vari) + `<div id="spread"></div>`;
-  bindDayStrip(); bindCompareControls();
-  buildChart('#ch-cmp', {vari:D.vari, fill:true, marks:true});
-  buildSpread();
-}
-function bindCompareControls(){
-  $$('#d-body [data-vari]').forEach(b => b.addEventListener('click', () => { D.vari = b.dataset.vari; paintBody(); }));
 }
 
 /* ----- Charts -----
@@ -1023,6 +952,7 @@ function renderTempChart(){
     <div class="chartwrap" id="ch-temp"></div>
     ${renderModelChips()}
     <div class="mlist" id="ch-temp-list"></div>
+    ${spreadNote()}
   </div>`;
 }
 /* Rain probability. One source (best_match) and one line, so it always gets
@@ -1034,15 +964,6 @@ function renderProbChart(){
     <h4>${t('rainChance')}<span class="r">%</span></h4>
     <div class="chartwrap" id="ch-prob"></div>
     <p class="note" style="margin-bottom:0">${t('probSrc')}</p>
-  </div>`;
-}
-function renderVariChart(vari){
-  const title = vari === 'temp' ? t('vTemp') : vari === 'rain' ? t('vRain') : t('vWind');
-  const unit  = vari === 'temp' ? uT() : vari === 'rain' ? uR() : uW();
-  return `<div class="glass">
-    <h4>${title}<span class="r">${unit}</span></h4>
-    <div class="chartwrap" id="ch-cmp"></div>
-    <div class="mlist" id="ch-cmp-list"></div>
   </div>`;
 }
 
@@ -1262,50 +1183,53 @@ function buildChart(host, opts){
   at(nowAt >= 0 ? nowAt : 0);
 }
 
-function buildSpread(){
-  const host = $('#spread'); if(!host) return;
-  const d = D.cmp, single = S.compare.length === 1;
-  if(!d || !d.hourly){ host.innerHTML = ''; return; }
-  let tLo = Infinity, tHi = -Infinity, rLo = Infinity, rHi = -Infinity, any = false;
+/* How far apart the models are on the selected day. Same idea as the old
+   compare tab's spread card, but scoped to the day on screen and folded into
+   the chart it describes rather than given a section of its own. */
+function spreadNote(){
+  const d = (D.cmp && D.cmp !== 'fail' && D.cmp.hourly) ? D.cmp : null;
+  const dd = D.main && D.main.daily;
+  if(!d || !dd || !dd.time || !dd.time[D.day] || S.compare.length < 2) return '';
+  const {start, n} = sliceDay(d.hourly.time, dd.time[D.day]);
+  if(start < 0) return '';
+  const single = S.compare.length === 1;
+  let tLo = Infinity, tHi = -Infinity, rLo = Infinity, rHi = -Infinity, any = false, rAny = false;
   S.compare.forEach(id => {
     const tv = pick(d.hourly,'temperature_2m',id,single), rv = pick(d.hourly,'precipitation',id,single);
     if(tv){
-      const s = tv.slice(0,24).filter(nz);
-      if(s.length){ any = true; const mx = Math.max.apply(null,s); tLo = Math.min(tLo,mx); tHi = Math.max(tHi,mx); }
+      const q = tv.slice(start, start + n).filter(nz);
+      if(q.length){ any = true; const mx = Math.max.apply(null,q); tLo = Math.min(tLo,mx); tHi = Math.max(tHi,mx); }
     }
     if(rv){
-      const s = rv.slice(0,24).filter(nz);
-      if(s.length){ const sum = s.reduce((a,b)=>a+b,0); rLo = Math.min(rLo,sum); rHi = Math.max(rHi,sum); }
+      const q = rv.slice(start, start + n).filter(nz);
+      if(q.length){ rAny = true; const sum = q.reduce((a,b) => a + b, 0); rLo = Math.min(rLo,sum); rHi = Math.max(rHi,sum); }
     }
   });
-  if(!any){ host.innerHTML = ''; return; }
+  if(!any) return '';
   const dt = isFinite(tHi - tLo) ? (tHi - tLo).toFixed(1) : '—';
-  const dr = isFinite(rHi - rLo) ? (rHi - rLo).toFixed(S.units.rain === 'inch' ? 2 : 1) : '—';
-  host.innerHTML = `<div class="glass"><h4>${t('spreadT')}</h4>
-    <p class="note" style="margin:0">${t('spreadTxt')(dt, dr, uT(), uR())}</p></div>`;
+  const dr = rAny && isFinite(rHi - rLo) ? (rHi - rLo).toFixed(S.units.rain === 'inch' ? 2 : 1) : '—';
+  return `<p class="note" style="margin-bottom:0">${t('spreadTxt')(dt, dr, uT(), uR())}</p>`;
 }
 
 /* ----- Accuracy tab: verify each model against ECMWF ERA5 reanalysis ----- */
-function paintAccuracy(){
-  if(D.acc === 'busy'){
-    $('#d-body').innerHTML = `<div class="glass"><h4>${t('accT')}<span class="r">${t('accSub')}</span></h4>
+/* The one block on this page that is NOT about the selected day: it scores the
+   models over the past week. It is deliberately last, ruled off and on a darker
+   background, and its title always says so — a date-keyed page could otherwise
+   make it read as "this day's accuracy", which is the very confusion this
+   rebuild removes (spec §3). */
+function renderAccuracyCard(){
+  return `<div class="accblock" id="acc-host"></div>`;
+}
+
+function accCardHTML(){
+  if(!D.acc || D.acc === 'busy')
+    return `<div class="glass"><h4>${t('accT7')}<span class="r">${t('accSub')}</span></h4>
       <p class="note" style="margin:0">${t('accLoading')}</p></div>`;
-    return;
-  }
-  if(!D.acc){
-    $('#d-body').innerHTML = `<div class="glass"><h4>${t('accT')}<span class="r">${t('accSub')}</span></h4>
-      <p class="note" style="margin:0">${t('accLoading')}</p></div>`;
-    runAccuracy();
-    return;
-  }
   const a = D.acc;
-  if(!a.rows.length){
-    $('#d-body').innerHTML = `<div class="glass"><h4>${t('accT')}</h4>
-      <p class="note" style="margin:0">${t('accNone')}</p></div>
-      <button class="retry" id="a-retry" style="width:100%">${t('retry')}</button>`;
-    $('#a-retry').addEventListener('click', () => { D.acc = null; paintBody(); });
-    return;
-  }
+  if(!a.rows.length)
+    return `<div class="glass"><h4>${t('accT7')}</h4>
+      <p class="note" style="margin:0 0 12px">${t('accNone')}</p>
+      <button class="retry" id="a-retry" style="width:100%">${t('retry')}</button></div>`;
   const rows = a.rows.map((r, i) => {
     const pct = a.max > 0 ? Math.min(100, (r.v / a.max) * 100) : 0;
     return `<div class="mrow" style="display:block">
@@ -1318,19 +1242,25 @@ function paintAccuracy(){
     </div>`;
   }).join('');
   const isEra = a.mode === 'era5';
-  $('#d-body').innerHTML = `
-    <div class="glass">
-      <h4>${isEra ? t('accT') : t('accCons')}<span class="r">${t('accMae')}</span></h4>
+  return `<div class="glass">
+      <h4>${isEra ? t('accT7') : t('accCons')}<span class="r">${t('accMae')}</span></h4>
       <p class="note" style="margin:0 0 12px">${isEra ? t('accWindow')(a.from, a.to, a.n) : t('accNone')}</p>
       <div class="mlist">${rows}</div>
       <p class="note">${isEra ? t('accMethodEra') : t('accConsD')}</p>
-    </div>
-    <div class="glass"><h4>${isEra ? t('accBest') : t('accCons')}</h4>
-      <p class="note" style="margin:0"><b>${a.rows[0].name}</b> · ${a.rows[0].v.toFixed(2)} ${a.unit}</p>
+      <p class="note" style="margin-bottom:0"><b>${a.rows[0].name}</b> · ${a.rows[0].v.toFixed(2)} ${a.unit} — ${isEra ? t('accBest') : t('accCons')}</p>
       ${isEra ? `<p class="note">${t('accEraNote')}</p>` : ''}
-    </div>
-    <button class="retry" id="a-retry" style="width:100%">${t('retry')}</button>`;
-  $('#a-retry').addEventListener('click', () => { D.acc = null; paintBody(); });
+      <button class="retry" id="a-retry" style="width:100%">${t('retry')}</button>
+    </div>`;
+}
+
+/* fills the card in place, so a finished verification never repaints the page
+   under the user's finger */
+function paintAccuracyCard(){
+  const host = $('#acc-host'); if(!host) return;
+  host.innerHTML = accCardHTML();
+  const r = host.querySelector('#a-retry');
+  if(r) r.addEventListener('click', () => { D.acc = null; paintAccuracyCard(); });
+  if(!D.acc) runAccuracy();
 }
 
 async function runAccuracy(){
@@ -1408,7 +1338,7 @@ async function runAccuracy(){
   }
 
   D.acc = out || {mode:'consensus', rows:[], max:0, unit:uT()};
-  if(D.tab === 'accuracy') paintBody();
+  if($('#detail').classList.contains('on')) paintAccuracyCard();
 }
 
 /* ---------- 12. Model picker ---------- */
@@ -1504,9 +1434,10 @@ function drawSettings(){
       D.cmp = null; D.acc = null;
       /* the accuracy table is derived from the same model list, so it has to be
          thrown away and rebuilt too, not just the compare chart */
-      if(D.tab !== 'compare') paintBody();
-      getCompare(D.loc, S.compare).then(r => { D.cmp = r; if(D.tab === 'compare') paintBody(); })
-        .catch(() => { D.cmp = 'fail'; if(D.tab === 'compare') paintBody(); });
+      D.cmpIds = null;
+      paintDetail();
+      getCompare(D.loc, S.compare).then(r => { D.cmp = r; D.cmpIds = S.compare.slice(); paintDetail(); })
+        .catch(() => { D.cmp = 'fail'; paintDetail(); });
     }
   }));
 }
@@ -1653,7 +1584,7 @@ function applyLang(){
   if(openSheetId === '#sheet-info') drawInfo();
   if(openSheetId === '#sheet-set') drawSettings();
   if(openSheetId === '#sheet-model') drawModelPicker();
-  if($('#detail').classList.contains('on')){ paintHead(); paintBody(); }
+  if($('#detail').classList.contains('on')){ paintHead(); paintDetail(); }
 }
 
 window.addEventListener('online', () => { loadAll(); });
@@ -1662,7 +1593,10 @@ let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    if(D.tab === 'compare' && D.cmp && D.cmp !== 'fail' && $('#detail').classList.contains('on')) buildChart();
+    if(!$('#detail').classList.contains('on') || !D.main) return;
+    /* the SVG is laid out in pixels, so a rotation has to redraw both charts */
+    buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
+    buildChart('#ch-prob', {vari:'prob', fill:true, marks:false, yRange:[0,100]});
   }, 160);
 });
 window.addEventListener('popstate', () => {
