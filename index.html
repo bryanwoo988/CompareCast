@@ -19,6 +19,7 @@
   --bg-top:#0e1430; --bg-bot:#232f66; --header:#141b3d;
   --track:#1c2348; --card:#232a4d; --line:rgba(255,255,255,.09);
   --txt:#fff; --dim:#9aa4c8; --dim2:#6f7aa3;
+  --accent:#6fc2ff;
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -134,7 +135,10 @@ input{font-family:inherit}
 .d-model{display:flex;align-items:center;gap:9px;padding:12px 18px;border-radius:24px;
   background:rgba(14,22,52,.72);backdrop-filter:blur(10px);font-size:16px;font-weight:600}
 .d-model svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round}
-.d-head{text-align:center;padding:6px 22px 0}
+/* .d-bar::before fades out 22px past the bar, so a 6px gap put the top of the
+   location name under that fade — clear the gradient instead of shortening it,
+   which is what keeps scrolled content legible under the floating buttons */
+.d-head{text-align:center;padding:26px 22px 0}
 .d-head h2{margin:0;font-size:33px;font-weight:700;letter-spacing:-.7px;line-height:1.15}
 .d-head p{margin:5px 0 0;font-size:16px;color:rgba(255,255,255,.85)}
 .d-ic{width:110px;height:110px;margin:2px auto 0}
@@ -142,11 +146,39 @@ input{font-family:inherit}
 .d-now .t{font-size:66px;font-weight:200;letter-spacing:-3px;line-height:1}
 .d-now .c{font-size:17px;margin-top:4px;color:rgba(255,255,255,.92)}
 .d-badge{display:flex;justify-content:center;margin-top:12px}
-.d-tabs{position:sticky;top:calc(var(--safe-t) + 66px);z-index:19;display:flex;margin:16px 16px 0;padding:5px;border-radius:26px;background:rgba(20,30,60,.72);backdrop-filter:blur(14px);box-shadow:0 6px 20px rgba(6,12,32,.28)}
-.d-tabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px 0;border-radius:22px;
-  font-size:15.5px;font-weight:600;color:rgba(255,255,255,.75);transition:.18s}
-.d-tabs button.on{background:#fff;color:#141b3d}
-.d-tabs svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* the date strip sticks directly under .d-bar, whose height is
+   safe-t + 12 (pad) + 46 (button) + 8 (pad) = safe-t + 66px */
+.d-days{position:sticky;top:calc(var(--safe-t) + 66px);z-index:21;margin:0 -16px 14px;padding:9px 0 0;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  background:linear-gradient(180deg,rgba(14,22,52,.84),rgba(14,22,52,.56))}
+.dscroll{display:flex;gap:4px;overflow-x:auto;padding:0 12px 6px;scrollbar-width:none}
+.dscroll::-webkit-scrollbar{display:none}
+.dcell{flex:0 0 44px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:2px 0}
+.dcell .dw{font-size:12.5px;color:rgba(255,255,255,.75)}
+.dcell .dnum{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;transition:.16s}
+.dcell.today .dnum{color:var(--accent)}
+.dcell.on .dnum{background:#fff;color:#141b3d}
+.dfull{padding:0 16px 9px;font-size:14px;color:rgba(255,255,255,.88)}
+/* the floating readout sits directly above the plot, so a finger on the curve
+   never covers the number it is pointing at */
+.chartwrap{position:relative;padding-top:28px}
+.cval{position:absolute;top:0;left:50%;transform:translateX(-50%);opacity:0;pointer-events:none;
+  display:flex;align-items:center;gap:6px;white-space:nowrap;transition:opacity .15s}
+.cval .cvt{font-size:13px;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums}
+.cval svg{width:19px;height:19px}
+.cval b{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.mchips{display:flex;gap:7px;overflow-x:auto;margin:12px -4px 0;padding:0 4px 4px;scrollbar-width:none}
+.mchips::-webkit-scrollbar{display:none}
+.mchips.dead{opacity:.45;pointer-events:none}
+.mchip{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:17px;
+  font-size:13.5px;font-weight:600;color:rgba(255,255,255,.82);background:rgba(255,255,255,.08);transition:.16s}
+.mchip.on{background:#fff;color:#141b3d}
+.mchip .mdot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
+/* the accuracy block is not about the selected day, so it is fenced off from
+   everything above it rather than reading as one more per-day section */
+.accblock{margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.2)}
+.accblock .glass{background:rgba(8,13,34,.5)}
 .d-body{padding:16px 16px calc(46px + var(--safe-b))}
 .glass{background:rgba(22,34,66,.34);backdrop-filter:blur(14px);border-radius:20px;padding:16px;margin-bottom:14px;
   border:1px solid rgba(255,255,255,.14)}
@@ -156,6 +188,9 @@ input{font-family:inherit}
 .glass h4 svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.14);border-radius:14px;overflow:hidden}
 .cell{background:rgba(22,34,66,.25);padding:13px 14px}
+/* an odd number of cells would otherwise leave a hole in the last row */
+.grid2 .cell:last-child:nth-child(odd){grid-column:1 / -1}
+.hcol.nowcol{background:rgba(255,255,255,.2)}
 .cell small{display:block;font-size:12.5px;color:rgba(255,255,255,.72)}
 .cell b{display:block;margin-top:3px;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
 .hstrip{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}
@@ -350,14 +385,6 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
   <div class="d-ic" id="d-icon"></div>
   <div class="d-now"><div class="t" id="d-temp">—</div><div class="c" id="d-cond">—</div></div>
   <div class="d-badge"><span class="badge" id="d-badge"></span></div>
-  <div class="d-tabs">
-    <button class="on" data-dtab="forecast">
-      <svg viewBox="0 0 24 24"><path d="M14 14.8V5a2.5 2.5 0 0 0-5 0v9.8a5 5 0 1 0 5 0z"/></svg><span data-t="tForecast">预报</span></button>
-    <button data-dtab="compare">
-      <svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span data-t="tCompare">对比</span></button>
-    <button data-dtab="accuracy">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="3.4"/></svg><span data-t="tAccuracy">准度</span></button>
-  </div>
   <div class="d-body" id="d-body"></div>
 </section>
 
@@ -423,6 +450,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="daylogic.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
