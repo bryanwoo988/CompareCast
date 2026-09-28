@@ -78,7 +78,7 @@ zh:{
   errLat:'纬度要在 −90 到 90 之间。', errLon:'经度要在 −180 到 180 之间。',
   errNum:'请输入数字。', dupLoc:'这个位置已经加过了。',
   bmSat:'卫星', bmStreet:'街道', bmDark:'暗色',
-  mapHint:'按 + 放置一个地点，或在上方搜索地名', mapAdd:'添加此处', locsUnit:'个地点',
+  mapHint:'按 + 放置一个地点，或在上方搜索地名', mapAdd:'添加此处', locsUnit:n=>'个地点',
   railLocate:'定位到我', railAdd:'加一个地点', railLayer:'底图', mapSearchPh:'搜索地名',
   placeHint:'拖动地图，把目标对进准星', placeName:'名称（留空则用坐标）',
   placeConfirm:'放在这里', placeCancel:'取消',
@@ -131,7 +131,7 @@ en:{
   errLat:'Latitude must be between −90 and 90.', errLon:'Longitude must be between −180 and 180.',
   errNum:'Enter a number.', dupLoc:'That spot is already saved.',
   bmSat:'Satellite', bmStreet:'Street', bmDark:'Dark',
-  mapHint:'Press + to place a location, or search for a place above', mapAdd:'Add this spot', locsUnit:'locations',
+  mapHint:'Press + to place a location, or search for a place above', mapAdd:'Add this spot', locsUnit:n=>n === 1 ? 'location' : 'locations',
   railLocate:'Locate me', railAdd:'Add a location', railLayer:'Basemap', mapSearchPh:'Search for a place',
   placeHint:'Drag the map to line the spot up with the crosshair', placeName:'Name (blank uses the coordinates)',
   placeConfirm:'Place it here', placeCancel:'Cancel',
@@ -184,7 +184,7 @@ ms:{
   errLat:'Latitud mesti antara −90 dan 90.', errLon:'Longitud mesti antara −180 dan 180.',
   errNum:'Masukkan nombor.', dupLoc:'Tempat itu sudah disimpan.',
   bmSat:'Satelit', bmStreet:'Jalan', bmDark:'Gelap',
-  mapHint:'Tekan + untuk letak lokasi, atau cari nama tempat di atas', mapAdd:'Tambah tempat ini', locsUnit:'lokasi',
+  mapHint:'Tekan + untuk letak lokasi, atau cari nama tempat di atas', mapAdd:'Tambah tempat ini', locsUnit:n=>'lokasi',
   railLocate:'Cari saya', railAdd:'Tambah lokasi', railLayer:'Peta asas', mapSearchPh:'Cari nama tempat',
   placeHint:'Seret peta untuk selaraskan tempat dengan sasaran', placeName:'Nama (kosong guna koordinat)',
   placeConfirm:'Letak di sini', placeCancel:'Batal',
@@ -604,7 +604,7 @@ function updateSub(){
   const el2 = $('#app-sub'); if(!el2) return;
   const onMap = document.body.classList.contains('map-mode');
   el2.textContent = onMap
-    ? `${t('subMap')} · ${S.locations.length} ${t('locsUnit')}`
+    ? `${t('subMap')} · ${S.locations.length} ${t('locsUnit')(S.locations.length)}`
     : t('subSaved');
 }
 
