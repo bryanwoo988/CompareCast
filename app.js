@@ -78,7 +78,10 @@ zh:{
   errLat:'纬度要在 −90 到 90 之间。', errLon:'经度要在 −180 到 180 之间。',
   errNum:'请输入数字。', dupLoc:'这个位置已经加过了。',
   bmSat:'卫星', bmStreet:'街道', bmDark:'暗色',
-  mapHint:'点地图任意位置即可添加为地点', mapAdd:'添加此处', locsUnit:'个地点',
+  mapHint:'按 + 放置一个地点，或在上方搜索地名', mapAdd:'添加此处', locsUnit:n=>'个地点',
+  railLocate:'定位到我', railAdd:'加一个地点', railLayer:'底图', mapSearchPh:'搜索地名',
+  placeHint:'拖动地图，把目标对进准星', placeName:'名称（留空则用坐标）',
+  placeConfirm:'放在这里', placeCancel:'取消',
   tForecast:'预报', tCompare:'对比', tAccuracy:'准度',
   pickModel:'预报模式', pickModelD:'选择由哪个模式驱动这个地点。',
   unavail:'这个地点没有该模式数据', avail:'可用',
@@ -128,7 +131,10 @@ en:{
   errLat:'Latitude must be between −90 and 90.', errLon:'Longitude must be between −180 and 180.',
   errNum:'Enter a number.', dupLoc:'That spot is already saved.',
   bmSat:'Satellite', bmStreet:'Street', bmDark:'Dark',
-  mapHint:'Tap anywhere on the map to add that spot', mapAdd:'Add this spot', locsUnit:'locations',
+  mapHint:'Press + to place a location, or search for a place above', mapAdd:'Add this spot', locsUnit:n=>n === 1 ? 'location' : 'locations',
+  railLocate:'Locate me', railAdd:'Add a location', railLayer:'Basemap', mapSearchPh:'Search for a place',
+  placeHint:'Drag the map to line the spot up with the crosshair', placeName:'Name (blank uses the coordinates)',
+  placeConfirm:'Place it here', placeCancel:'Cancel',
   tForecast:'Forecast', tCompare:'Compare', tAccuracy:'Accuracy',
   pickModel:'Forecast model', pickModelD:'Choose which model powers this location.',
   unavail:'No data for this location', avail:'Available',
@@ -178,7 +184,10 @@ ms:{
   errLat:'Latitud mesti antara −90 dan 90.', errLon:'Longitud mesti antara −180 dan 180.',
   errNum:'Masukkan nombor.', dupLoc:'Tempat itu sudah disimpan.',
   bmSat:'Satelit', bmStreet:'Jalan', bmDark:'Gelap',
-  mapHint:'Ketik mana-mana tempat pada peta untuk tambah', mapAdd:'Tambah tempat ini', locsUnit:'lokasi',
+  mapHint:'Tekan + untuk letak lokasi, atau cari nama tempat di atas', mapAdd:'Tambah tempat ini', locsUnit:n=>'lokasi',
+  railLocate:'Cari saya', railAdd:'Tambah lokasi', railLayer:'Peta asas', mapSearchPh:'Cari nama tempat',
+  placeHint:'Seret peta untuk selaraskan tempat dengan sasaran', placeName:'Nama (kosong guna koordinat)',
+  placeConfirm:'Letak di sini', placeCancel:'Batal',
   tForecast:'Ramalan', tCompare:'Banding', tAccuracy:'Ketepatan',
   pickModel:'Model ramalan', pickModelD:'Pilih model yang menjana lokasi ini.',
   unavail:'Tiada data untuk lokasi ini', avail:'Ada',
@@ -519,26 +528,15 @@ async function loadCard(l){
 function loadAll(){ S.locations.forEach(loadCard); }
 
 /* ---------- 9. Map ---------- */
-let map, myLayer, tapMarker, mapCentred = false;
+let map, myLayer, mapCentred = false;
 function initMap(){
   if(map){ setTimeout(() => map.invalidateSize(), 80); return; }
   const c = S.locations.length ? [S.locations[0].lat, S.locations[0].lon] : [4.2105, 101.9758];
-  map = L.map('map', {zoomControl:false}).setView(c, S.locations.length ? 9 : 6);
+  map = L.map('map', {zoomControl:false, zoomSnap:0}).setView(c, S.locations.length ? 9 : 6);
   setBasemap(S.basemap || 'sat');
   myLayer = L.layerGroup().addTo(map);
-  map.on('click', e => {
-    const {lat, lng} = e.latlng;
-    if(tapMarker) map.removeLayer(tapMarker);
-    tapMarker = L.marker([lat,lng], {icon:L.divIcon({className:'', html:'<div class="tap-pin"></div>', iconSize:[0,0]})}).addTo(map);
-    const foot = $('#map-foot');
-    foot.innerHTML = `<b style="color:#fff">${lat.toFixed(4)}°, ${lng.toFixed(4)}°</b>
-      <button id="map-add" style="display:block;width:100%;margin-top:10px;padding:12px 0;border-radius:12px;background:#5b9ce6;color:#0d1330;font-weight:700;font-size:15px">${t('mapAdd')}</button>`;
-    $('#map-add').addEventListener('click', () => {
-      addLocation({name:`${lat.toFixed(3)}, ${lng.toFixed(3)}`, lat:+lat.toFixed(5), lon:+lng.toFixed(5), region:''});
-      if(tapMarker){ map.removeLayer(tapMarker); tapMarker = null; }
-      foot.textContent = t('mapHint');
-    });
-  });
+  bindRail();
+  bindMapSearch();
   refreshPins();
   setTimeout(() => map.invalidateSize(), 120);
 }
@@ -549,12 +547,16 @@ const BASEMAPS = {
         url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         labels:'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
         attr:'Tiles © Esri · Earthstar Geographics' },
-  street:{ name:'bmStreet', cls:'bm-street', maxZoom:20, subdomains:'abcd',
-        url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        attr:'© OpenStreetMap · © CARTO' },
-  dark:{ name:'bmDark', cls:'bm-dark', maxZoom:20, subdomains:'abcd',
-        url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        attr:'© OpenStreetMap · © CARTO' }
+  /* CARTO now serves a 2KB "API KEY REQUIRED" placeholder on these endpoints at
+     both 1x and 2x, so street and dark were silently blank. Esri needs no key and
+     already backs the satellite layer, so all three basemaps share one provider
+     and one attribution. */
+  street:{ name:'bmStreet', cls:'bm-street', maxZoom:19,
+        url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        attr:'Tiles © Esri' },
+  dark:{ name:'bmDark', cls:'bm-dark', maxZoom:16,
+        url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        attr:'Tiles © Esri' }
 };
 let baseTiles = [];
 function setBasemap(id){
@@ -562,7 +564,15 @@ function setBasemap(id){
   const next = BASEMAPS[id] ? id : 'sat';
   if(S.basemap !== next){ S.basemap = next; save(); }
   const wrap = $('#map');
-  if(wrap) wrap.className = b.cls;
+  /* swap only our own basemap class: assigning className outright also wiped
+     Leaflet's (leaflet-container, leaflet-touch-drag...), which is where the
+     container gets overflow:hidden and touch-action:none. Without them the
+     tiles spilled past the map and the browser's native panning fought
+     Leaflet's drag handler. */
+  if(wrap){
+    Object.keys(BASEMAPS).forEach(k => wrap.classList.remove(BASEMAPS[k].cls));
+    wrap.classList.add(b.cls);
+  }
   if(map){
     baseTiles.forEach(l => map.removeLayer(l));
     baseTiles = [];
@@ -581,7 +591,192 @@ function drawBasemapSwitch(){
   host.innerHTML = Object.keys(BASEMAPS)
     .map(id => `<button data-bm="${id}" class="${S.basemap === id ? 'on' : ''}">${t(BASEMAPS[id].name)}</button>`).join('');
   host.querySelectorAll('[data-bm]').forEach(b =>
-    b.addEventListener('click', () => setBasemap(b.dataset.bm)));
+    b.addEventListener('click', () => {
+      setBasemap(b.dataset.bm);
+      host.classList.remove('on');
+      const lb = $('[data-rail="layer"]'); if(lb) lb.classList.remove('on');
+    }));
+}
+
+/* the location count used to be a chip floating on the map; on a page where
+   every pixel of map counts it belongs in the header line instead */
+function updateSub(){
+  const el2 = $('#app-sub'); if(!el2) return;
+  const onMap = document.body.classList.contains('map-mode');
+  el2.textContent = onMap
+    ? `${t('subMap')} · ${S.locations.length} ${t('locsUnit')(S.locations.length)}`
+    : t('subSaved');
+}
+
+const RAIL = [
+  ['locate', 'railLocate', '<circle cx="12" cy="12" r="3.4"/><circle cx="12" cy="12" r="7.6"/><path d="M12 1.6v3M12 19.4v3M22.4 12h-3M4.6 12h-3"/>'],
+  ['add',    'railAdd',    '<path d="M12 5v14M5 12h14"/>'],
+  ['layer',  'railLayer',  '<path d="m12 3 9 4.6-9 4.6-9-4.6L12 3z"/><path d="m3.6 12.4 8.4 4.3 8.4-4.3M3.6 16.9l8.4 4.3 8.4-4.3"/>']
+];
+function renderRail(){
+  return RAIL.map(([id, key, path]) =>
+    `<button data-rail="${id}" aria-label="${t(key)}" title="${t(key)}">
+      <svg viewBox="0 0 24 24">${path}</svg></button>`).join('');
+}
+function bindRail(){
+  const host = $('#map-rail'); if(!host) return;
+  host.innerHTML = renderRail();
+  host.querySelector('[data-rail="locate"]').addEventListener('click', locateMe);
+  host.querySelector('[data-rail="layer"]').addEventListener('click', e => {
+    const box = $('#basemaps'), btn = e.currentTarget;
+    const open = box.classList.toggle('on');
+    btn.classList.toggle('on', open);
+  });
+  host.querySelector('[data-rail="add"]').addEventListener('click',
+    () => P.on ? exitPlace() : enterPlace(null));
+}
+
+/* Search results and "locate me" are long jumps. flyTo animates them over
+   requestAnimationFrame, which browsers throttle in a backgrounded or
+   non-compositing tab — the flight then never lands and the map silently stays
+   put. These jumps are instant instead, which is also what the big map apps do
+   for a search result. */
+function jumpTo(lat, lon, minZoom){
+  if(!map) return;
+  map.setView([lat, lon], Math.max(map.getZoom(), minZoom), {animate:false});
+}
+
+/* Same contract as the search sheet's #q: two characters minimum, 350ms debounce,
+   a rising sequence number so a slow reply for an abandoned query cannot paint over
+   a newer one. Deliberately the same rules rather than a second set. */
+let mqTimer, mqSeq = 0;
+function bindMapSearch(){
+  const inp = $('#map-q'), out = $('#map-q-out');
+  if(!inp || !out || inp.dataset.bound) return;
+  inp.dataset.bound = '1';
+  inp.placeholder = t('mapSearchPh');
+  const clear = () => { out.className = 'ms-out'; out.innerHTML = ''; };
+  const msg = txt => { out.className = 'ms-out on'; out.innerHTML = `<p>${txt}</p>`; };
+
+  inp.addEventListener('input', e => {
+    clearTimeout(mqTimer);
+    const q = e.target.value.trim();
+    if(q.length < 2){ clear(); return; }
+    msg(t('searching'));
+    const mySeq = ++mqSeq;
+    mqTimer = setTimeout(async () => {
+      try{
+        const j = await geoSearch(q), rs = j.results || [];
+        if(mySeq !== mqSeq) return;
+        if(!rs.length){ msg(t('noResult')); return; }
+        out.className = 'ms-out on';
+        out.innerHTML = '';
+        rs.slice(0, 6).forEach(r => {
+          const region = [r.admin1, r.country].filter(Boolean).join(', ');
+          const b = el(`<button class="ms-row"><span style="flex:1;min-width:0"><b>${esc(r.name)}</b>
+            <small>${esc(region)} · ${r.latitude.toFixed(3)}°, ${r.longitude.toFixed(3)}°</small></span><span class="go">›</span></button>`);
+          b.addEventListener('click', () => {
+            inp.value = ''; inp.blur(); clear();
+            jumpTo(+r.latitude, +r.longitude, 12);
+            if(typeof enterPlace === 'function') enterPlace({name:r.name, region});
+          });
+          out.appendChild(b);
+        });
+      }catch(err){
+        if(mySeq !== mqSeq) return;
+        msg(navigator.onLine ? t('failLoad') : t('noNet'));
+      }
+    }, 350);
+  });
+}
+
+/* Placement mode.
+
+   The crosshair is fixed at the centre of the screen and the map moves under
+   it, rather than the user tapping a spot: a finger covers the target it is
+   trying to hit, and tap-to-place is what made every pan end in an accidental
+   pin. Purely transient — never written to S. */
+let P = {on:false, name:'', region:''};
+
+function enterPlace(seed){
+  if(!map) return;
+  P = {on:true, name:(seed && seed.name) || '', region:(seed && seed.region) || ''};
+  $('#map-cross').classList.add('on');
+  const btn = $('[data-rail="add"]'); if(btn) btn.classList.add('on');
+  map.on('move', syncPlaceCoords);
+  renderPlaceBar();
+}
+function exitPlace(){
+  P = {on:false, name:'', region:''};
+  const cross = $('#map-cross'); if(cross) cross.classList.remove('on');
+  const btn = $('[data-rail="add"]'); if(btn) btn.classList.remove('on');
+  if(map) map.off('move', syncPlaceCoords);
+  dropRail();
+  const foot = $('#map-foot');
+  if(foot){ foot.classList.remove('placing'); foot.textContent = t('mapHint'); }
+}
+/* On a short screen — landscape, or a small phone — the vertically centred rail
+   runs into the confirm bar and its bottom button becomes unpressable. Lift it
+   only when the two would actually meet, so tall screens keep the centred
+   position the rail was designed around. */
+function liftRailClear(){
+  const rail = $('#map-rail'), foot = $('#map-foot');
+  if(!rail || !foot) return;
+  rail.style.top = ''; rail.style.bottom = ''; rail.style.transform = '';
+  const r = rail.getBoundingClientRect(), f = foot.getBoundingClientRect();
+  if(r.bottom <= f.top - 8) return;
+  rail.style.top = 'auto';
+  rail.style.transform = 'none';
+  rail.style.bottom = Math.round(f.height + 32) + 'px';
+}
+function dropRail(){
+  const rail = $('#map-rail');
+  if(rail){ rail.style.top = ''; rail.style.bottom = ''; rail.style.transform = ''; }
+}
+
+function syncPlaceCoords(){
+  const out = $('#place-coords');
+  if(!out || !map) return;
+  const c = map.getCenter();
+  out.textContent = `${c.lat.toFixed(4)}°, ${c.lng.toFixed(4)}°`;
+}
+function renderPlaceBar(){
+  const foot = $('#map-foot'); if(!foot) return;
+  const c = map.getCenter();
+  foot.classList.add('placing');
+  foot.innerHTML = `
+    <div class="pb-top"><span id="place-coords">${c.lat.toFixed(4)}°, ${c.lng.toFixed(4)}°</span></div>
+    <input id="place-name" type="text" placeholder="${esc(t('placeName'))}" value="${esc(P.name)}">
+    <div class="pb-row">
+      <button class="pb-cancel" id="place-cancel">${t('placeCancel')}</button>
+      <button class="pb-ok" id="place-ok">${t('placeConfirm')}</button>
+    </div>`;
+  liftRailClear();
+  $('#place-cancel').addEventListener('click', exitPlace);
+  $('#place-ok').addEventListener('click', () => {
+    const c2 = map.getCenter();
+    const lat = +c2.lat.toFixed(5), lon = +c2.lng.toFixed(5);
+    const typed = $('#place-name').value.trim();
+    addLocation({name:typed || `${lat.toFixed(3)}, ${lon.toFixed(3)}`,
+                 region:typed ? P.region : '', lat, lon}, {stay:true});
+    exitPlace();
+  });
+}
+
+let myDot = null;
+/* navigates only — saving the spot is a separate, deliberate act (press +) */
+function locateMe(){
+  const btn = $('[data-rail="locate"]');
+  if(!navigator.geolocation){ toast(t('gpsFail')); return; }
+  if(!window.isSecureContext){ toast(t('gpsInsecure')); return; }
+  if(btn) btn.classList.add('busy');
+  navigator.geolocation.getCurrentPosition(pos => {
+    if(btn) btn.classList.remove('busy');
+    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+    /* added to the map, not to myLayer, which refreshPins clears */
+    if(myDot) map.removeLayer(myDot);
+    myDot = L.marker([lat, lon], {interactive:false,
+      icon:L.divIcon({className:'', html:'<div class="me-dot"></div>', iconSize:[0,0]})}).addTo(map);
+    jumpTo(lat, lon, 14);
+  }, err => {
+    if(btn) btn.classList.remove('busy');
+    toast(err && err.code === 1 ? t('gpsDenied') : t('gpsFail'));
+  }, {enableHighAccuracy:true, timeout:12000, maximumAge:30000});
 }
 
 const pins = {};
@@ -597,8 +792,7 @@ function updatePin(id){
   pins[id].setIcon(pinIcon(l));
 }
 function refreshPins(){
-  const cnt = $('#map-count');
-  if(cnt) cnt.textContent = `${S.locations.length} ${t('locsUnit')}`;
+  updateSub();
   if(!myLayer) return;
   myLayer.clearLayers();
   Object.keys(pins).forEach(k => delete pins[k]);
@@ -702,16 +896,26 @@ $('#btn-manual').addEventListener('click', () => {
   $('#m-name').value = $('#m-lat').value = $('#m-lon').value = '';
 });
 
-function addLocation(o){
-  const dup = S.locations.find(x => Math.abs(x.lat - o.lat) < 1e-4 && Math.abs(x.lon - o.lon) < 1e-4);
+/* opts.stay keeps the caller where it is — the map pins several places in a
+   row, and jumping to the saved list after each one is unusable there.
+   Returns the new location, or null when it duplicates an existing pin. */
+function addLocation(o, opts){
+  const stay = !!(opts && opts.stay);
+  const dup = findNearby(S.locations, +o.lat, +o.lon);
   if(dup){
-    toast(t('dupLoc')); hide();
-    $('#m-name').value = $('#m-lat').value = $('#m-lon').value = '';
-    return;
+    toast(t('dupLoc'));
+    if(!stay){
+      hide();
+      $('#m-name').value = $('#m-lat').value = $('#m-lon').value = '';
+    }
+    return null;
   }
   const l = {id:'l' + Date.now() + Math.floor(Math.random()*99), name:o.name, region:o.region || '',
              lat:+o.lat, lon:+o.lon, model:S.defaultModel};
-  S.locations.push(l); save(); renderList(); refreshPins(); hide(); setTab('saved'); loadCard(l);
+  S.locations.push(l); save(); renderList(); refreshPins();
+  if(!stay){ hide(); setTab('saved'); }
+  loadCard(l);
+  return l;
 }
 
 /* ---------- 11. Detail page ---------- */
@@ -978,21 +1182,29 @@ function renderProbChart(){
 }
 
 /* Model selection, right beside the chart it drives. Reads and writes the same
-   S.compare the settings page does, and never fetches: the payload for every
-   chip shown here is already loaded (spec §4.5). */
+   S.compare the settings page does.
+
+   Every model is listed, not only the ones already fetched. Listing just the
+   loaded set meant that narrowing to a single model made the whole row vanish,
+   and the row is the only way back — a one-way trap out of which the settings
+   page was the sole escape. Toggling a model that is already on board stays a
+   pure repaint (spec §5); ticking one that is not genuinely needs its data, so
+   that case — and only that case — refetches. */
 function renderModelChips(){
-  const ids = (D.cmpIds && D.cmpIds.length) ? D.cmpIds : S.compare.slice();
-  if(ids.length < 2) return '';
   const dead = D.cmp === 'fail';
-  return `<div class="mchips${dead ? ' dead' : ''}">` + ids.map(id => {
-    const m = M(id);
-    return `<button class="mchip${S.compare.includes(id) ? ' on' : ''}" data-mchip="${id}"${dead ? ' disabled' : ''}>
+  return `<div class="mchips${dead ? ' dead' : ''}">` + MODELS.map(m => {
+    const on = S.compare.includes(m.id);
+    /* selected while the compare payload is in flight: the line appears when
+       it lands, and the chip says so rather than looking inert */
+    const pending = on && !D.cmp;
+    return `<button class="mchip${on ? ' on' : ''}${pending ? ' pending' : ''}" data-mchip="${m.id}"${dead ? ' disabled' : ''}>
       <span class="mdot" style="background:${m.color}"></span>${esc(m.short)}</button>`;
   }).join('') + '</div>';
 }
 function bindModelChips(){
   $$('#d-body [data-mchip]').forEach(b => b.addEventListener('click', () => {
     const id = b.dataset.mchip;
+    const loaded = (D.cmpIds && D.cmpIds.length) ? D.cmpIds : [];
     /* same rule as the settings page: the chart never ends up with no line */
     if(S.compare.includes(id)){
       if(S.compare.length <= 1) return;
@@ -1001,9 +1213,25 @@ function bindModelChips(){
       S.compare = MODELS.map(m => m.id).filter(x => S.compare.includes(x) || x === id);
     }
     save();
-    b.classList.toggle('on', S.compare.includes(id));
-    buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
+    if(S.compare.every(x => loaded.includes(x))){
+      b.classList.toggle('on', S.compare.includes(id));
+      buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
+      return;
+    }
+    reloadCompare();
   }));
+}
+
+/* refetch the compare payload for the current selection; used when a model the
+   page does not hold is ticked on */
+function reloadCompare(){
+  const seq = D.seq, loc = D.loc;
+  D.cmp = null; D.cmpIds = null;
+  paintDetail();
+  getCompare(loc, S.compare).then(r => {
+    if(D.seq !== seq) return;
+    D.cmp = r; D.cmpIds = S.compare.slice(); paintDetail();
+  }).catch(() => { if(D.seq !== seq) return; D.cmp = 'fail'; paintDetail(); });
 }
 
 /* 'temp' | 'rain' | 'wind' come from the multi-model compare payload;
@@ -1593,11 +1821,9 @@ function setTab(which){
   $('#tab-map').classList.toggle('on', !s);
   $('#pane-saved').classList.toggle('on', s);
   $('#pane-map').classList.toggle('on', !s);
-  $('#app-sub').textContent = s ? t('subSaved') : t('subMap');
-  if(s && map && tapMarker){          // leaving the map: drop the pending pin
-    map.removeLayer(tapMarker); tapMarker = null;
-    $('#map-foot').textContent = t('mapHint');
-  }
+  updateSub();
+  document.body.classList.toggle('map-mode', !s);
+  if(s && P.on) exitPlace();
   if(!s) initMap();
 }
 $('#tab-saved').addEventListener('click', () => setTab('saved'));
@@ -1623,6 +1849,8 @@ function applyLang(){
   if(!$('#q').value) $('#q-out').innerHTML = `<p class="searching">${t('searchEmpty')}</p>`;
   renderList(); refreshPins();
   if(map) $('#map-foot').textContent = t('mapHint');
+  if($('#map-q')) $('#map-q').placeholder = t('mapSearchPh');
+  if($('#map-rail')) bindRail();
   drawBasemapSwitch();
   if(openSheetId === '#sheet-info') drawInfo();
   if(openSheetId === '#sheet-set') drawSettings();
