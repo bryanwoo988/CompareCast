@@ -80,6 +80,8 @@ zh:{
   bmSat:'卫星', bmStreet:'街道', bmDark:'暗色',
   mapHint:'按 + 放置一个地点，或在上方搜索地名', mapAdd:'添加此处', locsUnit:'个地点',
   railLocate:'定位到我', railAdd:'加一个地点', railLayer:'底图', mapSearchPh:'搜索地名',
+  placeHint:'拖动地图，把目标对进准星', placeName:'名称（留空则用坐标）',
+  placeConfirm:'放在这里', placeCancel:'取消',
   tForecast:'预报', tCompare:'对比', tAccuracy:'准度',
   pickModel:'预报模式', pickModelD:'选择由哪个模式驱动这个地点。',
   unavail:'这个地点没有该模式数据', avail:'可用',
@@ -131,6 +133,8 @@ en:{
   bmSat:'Satellite', bmStreet:'Street', bmDark:'Dark',
   mapHint:'Press + to place a location, or search for a place above', mapAdd:'Add this spot', locsUnit:'locations',
   railLocate:'Locate me', railAdd:'Add a location', railLayer:'Basemap', mapSearchPh:'Search for a place',
+  placeHint:'Drag the map to line the spot up with the crosshair', placeName:'Name (blank uses the coordinates)',
+  placeConfirm:'Place it here', placeCancel:'Cancel',
   tForecast:'Forecast', tCompare:'Compare', tAccuracy:'Accuracy',
   pickModel:'Forecast model', pickModelD:'Choose which model powers this location.',
   unavail:'No data for this location', avail:'Available',
@@ -182,6 +186,8 @@ ms:{
   bmSat:'Satelit', bmStreet:'Jalan', bmDark:'Gelap',
   mapHint:'Tekan + untuk letak lokasi, atau cari nama tempat di atas', mapAdd:'Tambah tempat ini', locsUnit:'lokasi',
   railLocate:'Cari saya', railAdd:'Tambah lokasi', railLayer:'Peta asas', mapSearchPh:'Cari nama tempat',
+  placeHint:'Seret peta untuk selaraskan tempat dengan sasaran', placeName:'Nama (kosong guna koordinat)',
+  placeConfirm:'Letak di sini', placeCancel:'Batal',
   tForecast:'Ramalan', tCompare:'Banding', tAccuracy:'Ketepatan',
   pickModel:'Model ramalan', pickModelD:'Pilih model yang menjana lokasi ini.',
   unavail:'Tiada data untuk lokasi ini', avail:'Ada',
@@ -621,7 +627,8 @@ function bindRail(){
     const open = box.classList.toggle('on');
     btn.classList.toggle('on', open);
   });
-  /* the add button is wired to the placement mode in its own task */
+  host.querySelector('[data-rail="add"]').addEventListener('click',
+    () => P.on ? exitPlace() : enterPlace(null));
 }
 
 /* Search results and "locate me" are long jumps. flyTo animates them over
@@ -675,6 +682,58 @@ function bindMapSearch(){
         msg(navigator.onLine ? t('failLoad') : t('noNet'));
       }
     }, 350);
+  });
+}
+
+/* Placement mode.
+
+   The crosshair is fixed at the centre of the screen and the map moves under
+   it, rather than the user tapping a spot: a finger covers the target it is
+   trying to hit, and tap-to-place is what made every pan end in an accidental
+   pin. Purely transient — never written to S. */
+let P = {on:false, name:'', region:''};
+
+function enterPlace(seed){
+  if(!map) return;
+  P = {on:true, name:(seed && seed.name) || '', region:(seed && seed.region) || ''};
+  $('#map-cross').classList.add('on');
+  const btn = $('[data-rail="add"]'); if(btn) btn.classList.add('on');
+  map.on('move', syncPlaceCoords);
+  renderPlaceBar();
+}
+function exitPlace(){
+  P = {on:false, name:'', region:''};
+  const cross = $('#map-cross'); if(cross) cross.classList.remove('on');
+  const btn = $('[data-rail="add"]'); if(btn) btn.classList.remove('on');
+  if(map) map.off('move', syncPlaceCoords);
+  const foot = $('#map-foot');
+  if(foot){ foot.classList.remove('placing'); foot.textContent = t('mapHint'); }
+}
+function syncPlaceCoords(){
+  const out = $('#place-coords');
+  if(!out || !map) return;
+  const c = map.getCenter();
+  out.textContent = `${c.lat.toFixed(4)}°, ${c.lng.toFixed(4)}°`;
+}
+function renderPlaceBar(){
+  const foot = $('#map-foot'); if(!foot) return;
+  const c = map.getCenter();
+  foot.classList.add('placing');
+  foot.innerHTML = `
+    <div class="pb-top"><span id="place-coords">${c.lat.toFixed(4)}°, ${c.lng.toFixed(4)}°</span></div>
+    <input id="place-name" type="text" placeholder="${esc(t('placeName'))}" value="${esc(P.name)}">
+    <div class="pb-row">
+      <button class="pb-cancel" id="place-cancel">${t('placeCancel')}</button>
+      <button class="pb-ok" id="place-ok">${t('placeConfirm')}</button>
+    </div>`;
+  $('#place-cancel').addEventListener('click', exitPlace);
+  $('#place-ok').addEventListener('click', () => {
+    const c2 = map.getCenter();
+    const lat = +c2.lat.toFixed(5), lon = +c2.lng.toFixed(5);
+    const typed = $('#place-name').value.trim();
+    addLocation({name:typed || `${lat.toFixed(3)}, ${lon.toFixed(3)}`,
+                 region:typed ? P.region : '', lat, lon}, {stay:true});
+    exitPlace();
   });
 }
 
@@ -1743,6 +1802,7 @@ function setTab(which){
   $('#pane-map').classList.toggle('on', !s);
   updateSub();
   document.body.classList.toggle('map-mode', !s);
+  if(s && P.on) exitPlace();
   if(!s) initMap();
 }
 $('#tab-saved').addEventListener('click', () => setTab('saved'));
