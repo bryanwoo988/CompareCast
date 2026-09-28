@@ -706,12 +706,13 @@ function addLocation(o){
 }
 
 /* ---------- 11. Detail page ---------- */
-let D = {loc:null, main:null, cmp:null, ext:null, acc:null, tab:'forecast', span:'hourly', vari:'temp', busy:false, seq:0};
+let D = {loc:null, main:null, cmp:null, ext:null, acc:null, day:0, tab:'forecast', span:'hourly', vari:'temp', busy:false, seq:0};
 let detailSeq = 0;
 
 function openDetail(id){
   const loc = S.locations.find(x => x.id === id); if(!loc) return;
-  D = {loc, main:null, cmp:null, ext:null, acc:null, tab:'forecast', span:'hourly', vari:'temp', busy:false, seq:++detailSeq};
+  /* a new location always opens on today; D.day survives everything else */
+  D = {loc, main:null, cmp:null, ext:null, acc:null, day:0, tab:'forecast', span:'hourly', vari:'temp', busy:false, seq:++detailSeq};
   paintHead();
   $$('.d-tabs button').forEach(b => b.classList.toggle('on', b.dataset.dtab === 'forecast'));
   const page = $('#detail');
@@ -800,6 +801,36 @@ function paintBody(){
   return paintAccuracy();
 }
 
+/* ----- Day strip ----- */
+/* Ten rows of weekday names repeat after seven, so the old list could not tell
+   next Tuesday from the one after. Every cell here carries its date number. */
+function renderDayStrip(){
+  const dd = D.main && D.main.daily;
+  if(!dd || !dd.time || !dd.time.length) return '';
+  if(D.day >= dd.time.length) D.day = 0;
+  /* parse at midday: the date string is a bare YYYY-MM-DD and midnight can
+     land on the wrong side of a DST jump in some zones */
+  const asDate = day => new Date(day + 'T12:00:00');
+  const cells = dd.time.map((day, i) => {
+    const wd = asDate(day).toLocaleDateString(locale(), {weekday:'narrow'});
+    return `<button class="dcell${i === D.day ? ' on' : ''}${i === 0 ? ' today' : ''}" data-day="${i}">
+      <span class="dw">${esc(wd)}</span><span class="dnum">${+day.slice(8,10)}</span></button>`;
+  }).join('');
+  const full = asDate(dd.time[D.day]).toLocaleDateString(locale(),
+    {year:'numeric', month:'long', day:'numeric', weekday:'long'});
+  return `<div class="d-days"><div class="dscroll">${cells}</div><div class="dfull">${esc(full)}</div></div>`;
+}
+function bindDayStrip(){
+  $$('#d-body [data-day]').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.day;
+    if(i === D.day) return;
+    D.day = i;
+    paintBody();
+    const sel = $('#d-body .dcell.on');
+    if(sel) sel.scrollIntoView({inline:'center', block:'nearest'});
+  }));
+}
+
 /* ----- Forecast tab ----- */
 function paintForecast(){
   const d = D.main, m = M(D.loc.model || S.defaultModel);
@@ -870,7 +901,7 @@ function paintForecast(){
     }).join('');
   }
 
-  $('#d-body').innerHTML = `
+  $('#d-body').innerHTML = renderDayStrip() + `
     <div class="glass"><h4><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>${t('now')}<span class="r">${M(D.loc.model || S.defaultModel).short}</span></h4>${cells}</div>
     <div class="glass"><h4>${t('next24')}</h4><div class="hstrip">${strip}</div>
       ${ex ? `<p class="note" style="margin-bottom:0">${t('probSrc')}</p>` : ''}</div>
@@ -882,6 +913,7 @@ function paintForecast(){
       <button class="cta ghost" id="d-saveName" style="margin-bottom:12px">${t('saveLoc')}</button>
       <button class="dangerbtn" id="d-remove">${t('rmLoc')}</button>
     </div>`;
+  bindDayStrip();
   $('#d-saveName').addEventListener('click', () => {
     const v = $('#d-rename').value.trim(); if(!v) return;
     D.loc.name = v; save(); paintHead(); renderList(); refreshPins(); toast(t('savedOk'));

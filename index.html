@@ -19,6 +19,7 @@
   --bg-top:#0e1430; --bg-bot:#232f66; --header:#141b3d;
   --track:#1c2348; --card:#232a4d; --line:rgba(255,255,255,.09);
   --txt:#fff; --dim:#9aa4c8; --dim2:#6f7aa3;
+  --accent:#6fc2ff;
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -147,6 +148,20 @@ input{font-family:inherit}
   font-size:15.5px;font-weight:600;color:rgba(255,255,255,.75);transition:.18s}
 .d-tabs button.on{background:#fff;color:#141b3d}
 .d-tabs svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+/* the date strip sticks directly under .d-bar, whose height is
+   safe-t + 12 (pad) + 46 (button) + 8 (pad) = safe-t + 66px */
+.d-days{position:sticky;top:calc(var(--safe-t) + 66px);z-index:21;margin:0 -16px 14px;padding:9px 0 0;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  background:linear-gradient(180deg,rgba(14,22,52,.84),rgba(14,22,52,.56))}
+.dscroll{display:flex;gap:4px;overflow-x:auto;padding:0 12px 6px;scrollbar-width:none}
+.dscroll::-webkit-scrollbar{display:none}
+.dcell{flex:0 0 44px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:2px 0}
+.dcell .dw{font-size:12.5px;color:rgba(255,255,255,.75)}
+.dcell .dnum{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;transition:.16s}
+.dcell.today .dnum{color:var(--accent)}
+.dcell.on .dnum{background:#fff;color:#141b3d}
+.dfull{padding:0 16px 9px;font-size:14px;color:rgba(255,255,255,.88)}
 .d-body{padding:16px 16px calc(46px + var(--safe-b))}
 .glass{background:rgba(22,34,66,.34);backdrop-filter:blur(14px);border-radius:20px;padding:16px;margin-bottom:14px;
   border:1px solid rgba(255,255,255,.14)}
