@@ -92,7 +92,9 @@ zh:{
   live:'实况 · 当前条件', scrub:'按住图表左右拖动',
   srcModels:'各模式数值', spreadT:'模式分歧',
   spreadTxt:(a,b,ut,ur)=>`各家模式对这一天最高气温的最大差距是 ${a} ${ut}，全日累计降雨的差距是 ${b} ${ur}。差距越大，预报越不确定。`,
-  accT:'准度核对', accT7:'模式准度核对（过去 7 天）', accSub:'对照 ERA5 再分析',
+  accT:'准度核对', accT7:'模式准度核对（过去 7 天）',
+  accIdle:'核对要另外向 ERA5 再分析取数，所以不在打开页面时自动进行。',
+  accRun:'开始核对', accSub:'对照 ERA5 再分析',
   accLoading:'正在比对各模式与 ERA5 再分析…',
   accWindow:(a,b,n)=>`核对区间：${a} 至 ${b}（UTC），共 ${n} 个整点`,
   accMethodEra:'方法：取上面这段区间，各模式的逐小时气温与 ECMWF ERA5 再分析同一时刻的气温相比，算平均绝对误差（MAE）。ERA5 同化了全球地面站、探空气球和卫星观测，是气象界通用的对照基准。数值越小，这段时间在这个位置贴得越近。',
@@ -140,7 +142,9 @@ en:{
   live:'Live · current conditions', scrub:'Drag chart to scrub',
   srcModels:'Source models', spreadT:'Model spread',
   spreadTxt:(a,b,ut,ur)=>`For this day the models differ by up to ${a} ${ut} on the high temperature and ${b} ${ur} on total rainfall. A wider spread means a less certain forecast.`,
-  accT:'Accuracy check', accT7:'Model accuracy check (past 7 days)', accSub:'against ERA5 reanalysis',
+  accT:'Accuracy check', accT7:'Model accuracy check (past 7 days)',
+  accIdle:'This check fetches the ERA5 reanalysis separately, so it does not run just because the page opened.',
+  accRun:'Run the check', accSub:'against ERA5 reanalysis',
   accLoading:'Comparing each model against ERA5 reanalysis…',
   accWindow:(a,b,n)=>`Window checked: ${a} to ${b} (UTC), ${n} hourly points`,
   accMethodEra:'Method: over that window, each model\'s hourly temperature is compared with ECMWF ERA5 reanalysis at the same hour. The figure is mean absolute error (MAE). ERA5 assimilates surface stations, radiosondes and satellites worldwide and is the standard reference in meteorology. Lower means closer over that period at this spot.',
@@ -188,7 +192,9 @@ ms:{
   live:'Langsung · keadaan semasa', scrub:'Seret carta untuk baca',
   srcModels:'Nilai setiap model', spreadT:'Jurang model',
   spreadTxt:(a,b,ut,ur)=>`Untuk hari ini, model berbeza sehingga ${a} ${ut} pada suhu tertinggi dan ${b} ${ur} pada jumlah hujan. Jurang lebih besar bermakna ramalan kurang pasti.`,
-  accT:'Semakan ketepatan', accT7:'Semakan ketepatan model (7 hari lalu)', accSub:'berbanding analisis semula ERA5',
+  accT:'Semakan ketepatan', accT7:'Semakan ketepatan model (7 hari lalu)',
+  accIdle:'Semakan ini mengambil data analisis semula ERA5 secara berasingan, jadi ia tidak berjalan hanya kerana halaman dibuka.',
+  accRun:'Jalankan semakan', accSub:'berbanding analisis semula ERA5',
   accLoading:'Membandingkan setiap model dengan analisis semula ERA5…',
   accWindow:(a,b,n)=>`Tempoh disemak: ${a} hingga ${b} (UTC), ${n} titik jam`,
   accMethodEra:'Kaedah: dalam tempoh itu, suhu setiap jam bagi setiap model dibandingkan dengan ERA5 ECMWF pada jam yang sama. Angka ini ialah ralat mutlak purata (MAE). ERA5 mengasimilasi stesen permukaan, belon radiosonde dan satelit di seluruh dunia, dan menjadi rujukan piawai dalam meteorologi. Lebih kecil bermakna lebih hampir dalam tempoh itu.',
@@ -929,6 +935,10 @@ function paintDetail(){
   bindModelChips();
   buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
   buildChart('#ch-prob', {vari:'prob', fill:true, marks:false, yRange:[0,100]});
+  /* the strip starts at 00:00 so the whole day is there, but on today that
+     would open on the small hours — put the current hour in the middle */
+  const hs = $('#d-body .hstrip'), nc = $('#d-body .hcol.nowcol');
+  if(hs && nc) hs.scrollLeft = Math.max(0, nc.offsetLeft - (hs.clientWidth - nc.clientWidth) / 2);
   paintAccuracyCard();
   $('#d-saveName').addEventListener('click', () => {
     const v = $('#d-rename').value.trim(); if(!v) return;
@@ -1222,7 +1232,11 @@ function renderAccuracyCard(){
 }
 
 function accCardHTML(){
-  if(!D.acc || D.acc === 'busy')
+  if(!D.acc)
+    return `<div class="glass"><h4>${t('accT7')}<span class="r">${t('accSub')}</span></h4>
+      <p class="note" style="margin:0 0 12px">${t('accIdle')}</p>
+      <button class="retry" id="a-run" style="width:100%">${t('accRun')}</button></div>`;
+  if(D.acc === 'busy')
     return `<div class="glass"><h4>${t('accT7')}<span class="r">${t('accSub')}</span></h4>
       <p class="note" style="margin:0">${t('accLoading')}</p></div>`;
   const a = D.acc;
@@ -1260,12 +1274,38 @@ function paintAccuracyCard(){
   host.innerHTML = accCardHTML();
   const r = host.querySelector('#a-retry');
   if(r) r.addEventListener('click', () => { D.acc = null; paintAccuracyCard(); });
-  if(!D.acc) runAccuracy();
+  const run = host.querySelector('#a-run');
+  if(run) run.addEventListener('click', () => { runAccuracy(); paintAccuracyCard(); });
+  if(!D.acc) armAccuracy();
+}
+
+/* The check costs two slow requests — ERA5 plus every model's past output — and
+   it sits at the bottom of a long page, so opening a location does not pay for a
+   block the user may never reach. It starts when that block is scrolled near, and
+   the idle card carries a button so it is never only reachable by scrolling. */
+let accScroll = null;
+function armAccuracy(){
+  const page = $('#detail');
+  const off = () => { if(accScroll){ page.removeEventListener('scroll', accScroll); accScroll = null; } };
+  off();
+  if(D.acc) return;
+  const check = () => {
+    const host = $('#acc-host');
+    if(!host){ off(); return; }
+    if(D.acc){ off(); return; }
+    if(host.getBoundingClientRect().top > page.clientHeight + 140) return;
+    off();
+    runAccuracy();
+    paintAccuracyCard();
+  };
+  accScroll = check;
+  page.addEventListener('scroll', check, {passive:true});
+  check();
 }
 
 async function runAccuracy(){
   D.acc = 'busy';
-  const loc = D.loc, models = S.compare.slice();
+  const loc = D.loc, models = S.compare.slice(), seq = D.seq;
   let out = null;
 
   /* 1. real verification against ERA5 reanalysis.
@@ -1337,6 +1377,9 @@ async function runAccuracy(){
     }catch(e){}
   }
 
+  /* the same guard loadDetail uses: a verification for a location the user has
+     already left must never paint over the one now on screen */
+  if(D.seq !== seq) return;
   D.acc = out || {mode:'consensus', rows:[], max:0, unit:uT()};
   if($('#detail').classList.contains('on')) paintAccuracyCard();
 }
