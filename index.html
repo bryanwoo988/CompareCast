@@ -52,6 +52,21 @@ input{font-family:inherit}
 .seg button.on{background:#fff;color:#141b3d}
 .seg svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 
+/* ---- map page only: every rule below is scoped to body.map-mode so the
+   saved-locations page keeps its layout to the pixel ---- */
+body.map-mode{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+body.map-mode main{flex:1;min-height:0;display:flex}
+body.map-mode #pane-map.on{flex:1;min-height:0;padding:0}
+body.map-mode .map-wrap{height:100%}
+body.map-mode .hdr{padding:calc(var(--safe-t) + 9px) 18px 9px}
+body.map-mode .mark{width:40px;height:40px;flex:0 0 40px;border-radius:10px}
+/* title and subtitle share one line here, which is most of the height saved */
+body.map-mode .brand{display:flex;align-items:baseline;gap:8px}
+body.map-mode .brand h1{font-size:18px}
+body.map-mode .brand p{margin:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.map-mode .round{width:36px;height:36px}
+body.map-mode .seg{margin-top:9px}
+body.map-mode .seg button{padding:8px 0;font-size:15px}
 .pane{display:none;padding:18px 18px calc(40px + var(--safe-b))}
 .pane.on{display:block}
 #pane-map{padding:0}
@@ -88,7 +103,7 @@ input{font-family:inherit}
 
 /* ---------------- map ---------------- */
 .map-wrap{position:relative;height:calc(100dvh - 182px - var(--safe-t))}
-#map{width:100%;height:100%;background:#0d1330}
+#map{width:100%;height:100%;background:#0d1330;overflow:hidden;overscroll-behavior:contain}
 .leaflet-container{background:#0d1330;font-family:inherit}
 .bm-dark .leaflet-tile-pane{filter:saturate(1.3) brightness(1.75) contrast(1.05)}
 .bm-sat .leaflet-tile-pane{filter:saturate(1.05)}

@@ -519,26 +519,13 @@ async function loadCard(l){
 function loadAll(){ S.locations.forEach(loadCard); }
 
 /* ---------- 9. Map ---------- */
-let map, myLayer, tapMarker, mapCentred = false;
+let map, myLayer, mapCentred = false;
 function initMap(){
   if(map){ setTimeout(() => map.invalidateSize(), 80); return; }
   const c = S.locations.length ? [S.locations[0].lat, S.locations[0].lon] : [4.2105, 101.9758];
-  map = L.map('map', {zoomControl:false}).setView(c, S.locations.length ? 9 : 6);
+  map = L.map('map', {zoomControl:false, zoomSnap:0}).setView(c, S.locations.length ? 9 : 6);
   setBasemap(S.basemap || 'sat');
   myLayer = L.layerGroup().addTo(map);
-  map.on('click', e => {
-    const {lat, lng} = e.latlng;
-    if(tapMarker) map.removeLayer(tapMarker);
-    tapMarker = L.marker([lat,lng], {icon:L.divIcon({className:'', html:'<div class="tap-pin"></div>', iconSize:[0,0]})}).addTo(map);
-    const foot = $('#map-foot');
-    foot.innerHTML = `<b style="color:#fff">${lat.toFixed(4)}°, ${lng.toFixed(4)}°</b>
-      <button id="map-add" style="display:block;width:100%;margin-top:10px;padding:12px 0;border-radius:12px;background:#5b9ce6;color:#0d1330;font-weight:700;font-size:15px">${t('mapAdd')}</button>`;
-    $('#map-add').addEventListener('click', () => {
-      addLocation({name:`${lat.toFixed(3)}, ${lng.toFixed(3)}`, lat:+lat.toFixed(5), lon:+lng.toFixed(5), region:''});
-      if(tapMarker){ map.removeLayer(tapMarker); tapMarker = null; }
-      foot.textContent = t('mapHint');
-    });
-  });
   refreshPins();
   setTimeout(() => map.invalidateSize(), 120);
 }
@@ -562,7 +549,15 @@ function setBasemap(id){
   const next = BASEMAPS[id] ? id : 'sat';
   if(S.basemap !== next){ S.basemap = next; save(); }
   const wrap = $('#map');
-  if(wrap) wrap.className = b.cls;
+  /* swap only our own basemap class: assigning className outright also wiped
+     Leaflet's (leaflet-container, leaflet-touch-drag...), which is where the
+     container gets overflow:hidden and touch-action:none. Without them the
+     tiles spilled past the map and the browser's native panning fought
+     Leaflet's drag handler. */
+  if(wrap){
+    Object.keys(BASEMAPS).forEach(k => wrap.classList.remove(BASEMAPS[k].cls));
+    wrap.classList.add(b.cls);
+  }
   if(map){
     baseTiles.forEach(l => map.removeLayer(l));
     baseTiles = [];
@@ -1604,10 +1599,7 @@ function setTab(which){
   $('#pane-saved').classList.toggle('on', s);
   $('#pane-map').classList.toggle('on', !s);
   $('#app-sub').textContent = s ? t('subSaved') : t('subMap');
-  if(s && map && tapMarker){          // leaving the map: drop the pending pin
-    map.removeLayer(tapMarker); tapMarker = null;
-    $('#map-foot').textContent = t('mapHint');
-  }
+  document.body.classList.toggle('map-mode', !s);
   if(!s) initMap();
 }
 $('#tab-saved').addEventListener('click', () => setTab('saved'));
