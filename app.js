@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.11.1';
+const APP_VERSION = '3.12.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,13 @@ const APP_VERSION = '3.11.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.12.0',
+   zh:['修好「当前实况」里降雨概率和紫外线显示全天最高值的问题——晚上九点不会再写着 100% 下雨、紫外线 9',
+       '其他日期的这两格改称「最高降雨概率」「最高紫外线」，说清楚是全天值'],
+   en:['Fixed rain chance and UV under "Right now" showing the whole day\u2019s peak — 9pm no longer claims 100% rain and UV 9',
+       'On other days those two now read "Peak rain chance" and "Peak UV", so it is clear they are daily figures'],
+   ms:['Membaiki peluang hujan dan UV di bawah "Sekarang" yang memaparkan nilai tertinggi harian',
+       'Pada hari lain kedua-duanya kini "Peluang hujan tertinggi" dan "UV tertinggi"']},
   {v:'3.11.1',
    zh:['修好了一处会让离线与通知一起失效的隐患', '清掉 66 条没人用的旧文案，应用包更小'],
    en:['Fixed a fault that could have taken offline support and notifications down together',
@@ -179,7 +186,7 @@ zh:{
   pickModel:'预报模式', pickModelD:'选择由哪个模式驱动这个地点。',
   unavail:'这个地点没有该模式数据', avail:'可用',
   now:'当前实况', humid:'湿度', wind:'风速', gust:'阵风', press:'气压',
-  rainToday:'今日降雨', rainChance:'降雨概率', uv:'紫外线', dir:'风向', sunrise:'日出', sunset:'日落',
+  rainToday:'今日降雨', rainChance:'降雨概率', rainChanceMax:'最高降雨概率', uv:'紫外线', uvMax:'最高紫外线', dir:'风向', sunrise:'日出', sunset:'日落',
   probSrc:'降雨概率与紫外线来自 Best Match 混合模式，因为有几个模式不输出这两项。',
   now2:'现在',
   tMax:'最高气温', tMin:'最低气温', rainSum:'降雨总量', windMax:'最大风速',
@@ -247,7 +254,7 @@ en:{
   pickModel:'Forecast model', pickModelD:'Choose which model powers this location.',
   unavail:'No data for this location', avail:'Available',
   now:'Right now', humid:'Humidity', wind:'Wind', gust:'Gusts', press:'Pressure',
-  rainToday:'Rain today', rainChance:'Rain chance', uv:'UV index', dir:'Direction', sunrise:'Sunrise', sunset:'Sunset',
+  rainToday:'Rain today', rainChance:'Rain chance', rainChanceMax:'Peak rain chance', uv:'UV index', uvMax:'Peak UV', dir:'Direction', sunrise:'Sunrise', sunset:'Sunset',
   probSrc:'Rain chance and UV come from the blended Best Match model, because several models do not produce them.',
   now2:'Now',
   tMax:'High', tMin:'Low', rainSum:'Total rain', windMax:'Max wind',
@@ -315,7 +322,7 @@ ms:{
   pickModel:'Model ramalan', pickModelD:'Pilih model yang menjana lokasi ini.',
   unavail:'Tiada data untuk lokasi ini', avail:'Ada',
   now:'Sekarang', humid:'Kelembapan', wind:'Angin', gust:'Tiupan', press:'Tekanan',
-  rainToday:'Hujan hari ini', rainChance:'Peluang hujan', uv:'Indeks UV', dir:'Arah', sunrise:'Matahari naik', sunset:'Matahari turun',
+  rainToday:'Hujan hari ini', rainChance:'Peluang hujan', rainChanceMax:'Peluang hujan tertinggi', uv:'Indeks UV', uvMax:'UV tertinggi', dir:'Arah', sunrise:'Matahari naik', sunset:'Matahari turun',
   probSrc:'Peluang hujan dan UV datang dari model gabungan Best Match, kerana beberapa model tidak mengeluarkannya.',
   now2:'Sekarang',
   tMax:'Tertinggi', tMin:'Terendah', rainSum:'Jumlah hujan', windMax:'Angin maksimum',
@@ -581,7 +588,7 @@ async function getMain(loc){
 function getExtras(loc){
   const p = Object.assign({
     latitude:loc.lat, longitude:loc.lon, timezone:'auto', forecast_days:'10',
-    hourly:'precipitation_probability', daily:'precipitation_probability_max,uv_index_max'
+    hourly:'precipitation_probability,uv_index', daily:'precipitation_probability_max,uv_index_max'
   }, unitParams());
   return jget(API + '?' + new URLSearchParams(p), 15000);
 }
@@ -1548,8 +1555,21 @@ function renderCells(){
     rows.push([t('gust'), at(g(dd,'wind_gusts_10m_max'), fW)]);
     rows.push([t('rainSum'), at(g(dd,'precipitation_sum'), fR)]);
   }
-  rows.push([t('rainChance'), at(pp, v => Math.round(v) + '%')]);
-  rows.push([t('uv'), at(uv, v => String(Math.round(v)))]);
+  /* These two used to read the DAILY MAXIMUM while sitting under a heading
+     that says "right now". At 21:00 on a clear evening the card announced a
+     100% rain chance and a UV of 9 — both were today's peaks, from hours ago.
+     Today now reads the current hour; other days keep the daily figure and
+     say plainly that it is a maximum. */
+  if(today){
+    const eh = ex && ex.hourly ? ex.hourly : null;
+    const k = eh ? nowIndex(eh.time, (d.current && d.current.time) || '') : -1;
+    const hourly = (arr, f) => (k >= 0 && arr && nz(arr[k])) ? f(arr[k]) : null;
+    rows.push([t('rainChance'), hourly(eh && eh.precipitation_probability, v => Math.round(v) + '%')]);
+    rows.push([t('uv'), hourly(eh && eh.uv_index, v => String(Math.round(v)))]);
+  } else {
+    rows.push([t('rainChanceMax'), at(pp, v => Math.round(v) + '%')]);
+    rows.push([t('uvMax'), at(uv, v => String(Math.round(v)))]);
+  }
   rows.push([t('sunrise'), (sr && sr[i]) ? sr[i].slice(11,16) : null]);
   rows.push([t('sunset'), (ss && ss[i]) ? ss[i].slice(11,16) : null]);
   const cells = rows.filter(r => r[1] !== null && r[1] !== undefined)
