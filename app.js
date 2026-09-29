@@ -80,6 +80,18 @@ zh:{
   bmSat:'卫星', bmStreet:'街道', bmDark:'暗色',
   dragHint:'长按地点可拖动排序，排在最前的会成为地图的默认视角',
   updated:'已更新到新版本',
+  ntEntry:'通知提醒', ntOff:'未开启', ntSummary:(b,w)=>`${b} 个地块 · ${w} 个时段`,
+  ntMaster:'启用提醒', ntWindows:'时段', ntRules:'提醒条件', ntBlocks:'地块',
+  wMorning:'早上', wAfternoon:'下午', wEvening:'晚上', wNight:'凌晨',
+  ntFrom:'起', ntTo:'止', ntAt:'提醒时间', ntCross:'此时段跨天',
+  ntDigest:'每天摘要', ntThreshold:'仅超阈值',
+  rRainProb:'降雨概率', rRainSum:'降雨量', rTMax:'最高温', rTMin:'最低温', rWind:'风速', rGust:'阵风',
+  ntNoLoc:'还没有地点。先加一个，才能设定要提醒哪一块。',
+  ntNoWin:'四个时段都关闭了。上面至少打开一个，才有东西可以勾。',
+  ntPermOn:'已允许通知', ntPermAsk:'允许通知', ntPermDenied:'通知被系统拒绝了。要改的话，去手机设置里找到这个网站或应用，重新允许。',
+  ntNotYet:'设定会保存下来，但通知现在还不会送达——那需要一台推送服务器，还没有做。iPhone 另外必须把这个应用「加到主屏幕」，只在浏览器里开着收不到。',
+  ntTest:'发一条测试通知', ntTestTitle:'天气预测', ntTestBody:'通知通路正常。真正的定时提醒还需要服务端。',
+  ntTestFail:'这个浏览器发不出通知。',
   mapHint:'按 + 放置一个地点，或在上方搜索地名', mapAdd:'添加此处', locsUnit:n=>'个地点',
   railLocate:'定位到我', railAdd:'加一个地点', railLayer:'底图', mapSearchPh:'搜索地名',
   placeHint:'拖动地图，把目标对进准星', placeName:'名称（留空则用坐标）',
@@ -135,6 +147,18 @@ en:{
   bmSat:'Satellite', bmStreet:'Street', bmDark:'Dark',
   dragHint:'Hold a location to drag it into order — the first one becomes the map\u2019s default view',
   updated:'Updated to the new version',
+  ntEntry:'Reminders', ntOff:'Off', ntSummary:(b,w)=>`${b} location${b===1?'':'s'} · ${w} window${w===1?'':'s'}`,
+  ntMaster:'Enable reminders', ntWindows:'Time windows', ntRules:'Alert when', ntBlocks:'Locations',
+  wMorning:'Morning', wAfternoon:'Afternoon', wEvening:'Evening', wNight:'Overnight',
+  ntFrom:'From', ntTo:'To', ntAt:'Notify at', ntCross:'This window crosses midnight',
+  ntDigest:'Daily summary', ntThreshold:'Only when exceeded',
+  rRainProb:'Rain chance', rRainSum:'Rainfall', rTMax:'High temp', rTMin:'Low temp', rWind:'Wind', rGust:'Gusts',
+  ntNoLoc:'No locations yet. Add one first, then choose which ones to be reminded about.',
+  ntNoWin:'All four windows are off. Turn at least one on above and it will appear here.',
+  ntPermOn:'Notifications allowed', ntPermAsk:'Allow notifications', ntPermDenied:'Notifications are blocked by the system. To change it, find this site or app in your phone settings and allow them again.',
+  ntNotYet:'Your settings are saved, but reminders will not arrive yet — that needs a push server, which does not exist yet. On iPhone the app must also be added to the Home Screen; notifications never arrive while it only runs in the browser.',
+  ntTest:'Send a test notification', ntTestTitle:'Predict Weather', ntTestBody:'The notification path works. Scheduled reminders still need a server.',
+  ntTestFail:'This browser cannot show notifications.',
   mapHint:'Press + to place a location, or search for a place above', mapAdd:'Add this spot', locsUnit:n=>n === 1 ? 'location' : 'locations',
   railLocate:'Locate me', railAdd:'Add a location', railLayer:'Basemap', mapSearchPh:'Search for a place',
   placeHint:'Drag the map to line the spot up with the crosshair', placeName:'Name (blank uses the coordinates)',
@@ -190,6 +214,18 @@ ms:{
   bmSat:'Satelit', bmStreet:'Jalan', bmDark:'Gelap',
   dragHint:'Tekan dan tahan lokasi untuk menyusunnya — yang pertama menjadi paparan asal peta',
   updated:'Dikemas kini ke versi baharu',
+  ntEntry:'Peringatan', ntOff:'Tidak aktif', ntSummary:(b,w)=>`${b} lokasi · ${w} tempoh`,
+  ntMaster:'Aktifkan peringatan', ntWindows:'Tempoh masa', ntRules:'Beritahu apabila', ntBlocks:'Lokasi',
+  wMorning:'Pagi', wAfternoon:'Petang', wEvening:'Malam', wNight:'Dini hari',
+  ntFrom:'Dari', ntTo:'Hingga', ntAt:'Beritahu pada', ntCross:'Tempoh ini melepasi tengah malam',
+  ntDigest:'Ringkasan harian', ntThreshold:'Hanya bila melebihi',
+  rRainProb:'Peluang hujan', rRainSum:'Jumlah hujan', rTMax:'Suhu tertinggi', rTMin:'Suhu terendah', rWind:'Angin', rGust:'Tiupan',
+  ntNoLoc:'Belum ada lokasi. Tambah satu dahulu, kemudian pilih yang mana hendak diperingatkan.',
+  ntNoWin:'Keempat-empat tempoh dimatikan. Hidupkan sekurang-kurangnya satu di atas.',
+  ntPermOn:'Pemberitahuan dibenarkan', ntPermAsk:'Benarkan pemberitahuan', ntPermDenied:'Pemberitahuan disekat oleh sistem. Cari tapak atau aplikasi ini dalam tetapan telefon dan benarkan semula.',
+  ntNotYet:'Tetapan anda disimpan, tetapi peringatan belum akan sampai — ia memerlukan pelayan tolak yang belum wujud. Pada iPhone, aplikasi juga mesti ditambah ke Skrin Utama; pemberitahuan tidak akan sampai jika ia hanya dibuka dalam pelayar.',
+  ntTest:'Hantar pemberitahuan ujian', ntTestTitle:'Ramalan Cuaca', ntTestBody:'Laluan pemberitahuan berfungsi. Peringatan berjadual masih perlukan pelayan.',
+  ntTestFail:'Pelayar ini tidak boleh memaparkan pemberitahuan.',
   mapHint:'Tekan + untuk letak lokasi, atau cari nama tempat di atas', mapAdd:'Tambah tempat ini', locsUnit:n=>'lokasi',
   railLocate:'Cari saya', railAdd:'Tambah lokasi', railLayer:'Peta asas', mapSearchPh:'Cari nama tempat',
   placeHint:'Seret peta untuk selaraskan tempat dengan sasaran', placeName:'Nama (kosong guna koordinat)',
@@ -311,6 +347,76 @@ let S = {
 };
 const save = () => store.set(KEY, S);
 const t = k => T[S.lang][k];
+
+/* ---------- 4b. Reminder settings ----------
+   Thresholds are stored in metric (°C, km/h, mm) and converted only for
+   display, so switching units never has to migrate stored numbers and a 35
+   can never be reinterpreted as 35°F. */
+const NOTIFY_DEFAULTS = {
+  enabled:false,
+  windows:[
+    {id:'morning',   on:true,  from:'06:00', to:'12:00', at:'06:00', mode:'threshold'},
+    {id:'afternoon', on:true,  from:'12:00', to:'18:00', at:'12:00', mode:'threshold'},
+    {id:'evening',   on:false, from:'18:00', to:'23:59', at:'18:00', mode:'digest'},
+    {id:'night',     on:false, from:'00:00', to:'06:00', at:'00:00', mode:'digest'}
+  ],
+  rules:{
+    rainProb:{on:true,  v:60},
+    rainSum: {on:false, v:5},
+    tMax:    {on:false, v:35},
+    tMin:    {on:false, v:22},
+    wind:    {on:true,  v:20},
+    gust:    {on:false, v:35}
+  }
+};
+const NOTIFY_RULES = ['rainProb','rainSum','tMax','tMin','wind','gust'];
+const clone = o => JSON.parse(JSON.stringify(o));
+
+/* Repairs S.notify in place. The time inputs hand back '' when cleared and
+   localStorage can hold anything at all, so nothing here is trusted. */
+function normalizeNotify(){
+  if(!S.notify || typeof S.notify !== 'object') S.notify = clone(NOTIFY_DEFAULTS);
+  const N = S.notify;
+  N.enabled = !!N.enabled;
+
+  const byId = {};
+  if(Array.isArray(N.windows)) N.windows.forEach(w => { if(w && w.id) byId[w.id] = w; });
+  N.windows = NOTIFY_DEFAULTS.windows.map(def => {
+    const w = byId[def.id] || {};
+    const time = (v, fb) => minutesOf(v) < 0 ? fb : v;
+    return {
+      id:def.id,
+      on:typeof w.on === 'boolean' ? w.on : def.on,
+      from:time(w.from, def.from),
+      to:time(w.to, def.to),
+      at:time(w.at, def.at),
+      mode:(w.mode === 'digest' || w.mode === 'threshold') ? w.mode : def.mode
+    };
+  });
+
+  const r = (N.rules && typeof N.rules === 'object') ? N.rules : {};
+  N.rules = {};
+  NOTIFY_RULES.forEach(k => {
+    const def = NOTIFY_DEFAULTS.rules[k], got = r[k] || {};
+    N.rules[k] = {
+      on:typeof got.on === 'boolean' ? got.on : def.on,
+      v:Number.isFinite(+got.v) ? +got.v : def.v
+    };
+  });
+
+  /* a window that no longer exists must not keep a location subscribed to it */
+  const ids = N.windows.map(w => w.id);
+  S.locations.forEach(l => {
+    l.notify = Array.isArray(l.notify) ? l.notify.filter(x => ids.includes(x)) : [];
+  });
+}
+
+function notifySummary(){
+  if(!S.notify || !S.notify.enabled) return t('ntOff');
+  const blocks = S.locations.filter(l => (l.notify || []).length).length;
+  const wins = S.notify.windows.filter(w => w.on).length;
+  return t('ntSummary')(blocks, wins);
+}
 
 /* ---------- 5. Units ---------- */
 const ULBL = {celsius:'°C', fahrenheit:'°F', kmh:'km/h', mph:'mph', kn:'kn', ms:'m/s', mm:'mm', inch:'in'};
@@ -1150,7 +1256,7 @@ function addLocation(o, opts){
     return null;
   }
   const l = {id:'l' + Date.now() + Math.floor(Math.random()*99), name:o.name, region:o.region || '',
-             lat:+o.lat, lon:+o.lon, model:S.defaultModel};
+             lat:+o.lat, lon:+o.lon, model:S.defaultModel, notify:[]};
   S.locations.push(l); save(); renderList(); refreshPins();
   if(!stay){ hide(); setTab('saved'); }
   loadCard(l);
@@ -1183,6 +1289,7 @@ function exitDetail(){
   else closeDetail();
 }
 $('#d-back').addEventListener('click', exitDetail);
+$('#nt-back').addEventListener('click', exitNotify);
 $('#d-modelbtn').addEventListener('click', () => { drawModelPicker(); show('#sheet-model'); });
 
 function paintHead(){
@@ -1850,6 +1957,212 @@ async function runAccuracy(){
   if($('#detail').classList.contains('on')) paintAccuracyCard();
 }
 
+/* ---------- 11b. Reminder settings page ---------- */
+const WIN_LABEL = {morning:'wMorning', afternoon:'wAfternoon', evening:'wEvening', night:'wNight'};
+/* rule -> which unit it is shown in, and how to convert to and from metric */
+const RULE_UNIT = {
+  rainProb:{unit:() => '%',   out:v => v,              back:v => v},
+  rainSum: {unit:uR,          out:v => S.units.rain === 'inch' ? v / 25.4 : v,
+                              back:v => S.units.rain === 'inch' ? v * 25.4 : v},
+  tMax:    {unit:uT,          out:v => S.units.temp === 'fahrenheit' ? v * 9 / 5 + 32 : v,
+                              back:v => S.units.temp === 'fahrenheit' ? (v - 32) * 5 / 9 : v},
+  wind:    {unit:uW,          out:v => windOut(v), back:v => windBack(v)},
+  gust:    {unit:uW,          out:v => windOut(v), back:v => windBack(v)}
+};
+RULE_UNIT.tMin = RULE_UNIT.tMax;
+const WIND_PER_KMH = {kmh:1, mph:0.621371, kn:0.539957, ms:0.277778};
+const windOut  = v => v * (WIND_PER_KMH[S.units.wind] || 1);
+const windBack = v => v / (WIND_PER_KMH[S.units.wind] || 1);
+/* one decimal for the units where whole numbers would be too coarse */
+const ruleShown = k => {
+  const raw = RULE_UNIT[k].out(S.notify.rules[k].v);
+  return (k === 'rainSum' && S.units.rain === 'inch') ? raw.toFixed(2)
+       : String(Math.round(raw * 10) / 10);
+};
+
+function openNotify(){
+  normalizeNotify();
+  const page = $('#notify');
+  page.scrollTop = 0;
+  page.classList.add('on');
+  document.body.style.overflow = 'hidden';
+  try{ history.pushState({pw:'notify'}, ''); }catch(e){}
+  paintNotify();
+}
+function closeNotify(){
+  $('#notify').classList.remove('on');
+  document.body.style.overflow = '';
+  if(openSheetId === '#sheet-set') drawSettings();
+}
+function exitNotify(){
+  if(history.state && history.state.pw === 'notify') history.back();
+  else closeNotify();
+}
+
+const sw = on => `<span class="sw${on ? ' on' : ''}"><i></i></span>`;
+
+function renderPermission(){
+  const supported = typeof Notification !== 'undefined';
+  const perm = supported ? Notification.permission : 'unsupported';
+  let top = '';
+  if(supported && perm === 'default')
+    top = `<button class="cta ghost" id="nt-ask" style="margin-bottom:12px">${t('ntPermAsk')}</button>`;
+  else if(supported && perm === 'granted')
+    top = `<p class="nt-note" style="margin-bottom:12px">✓ ${t('ntPermOn')}</p>`;
+  else if(supported && perm === 'denied')
+    top = `<p class="nt-note" style="margin-bottom:12px">${t('ntPermDenied')}</p>`;
+  /* spec §4.5 / §9: this notice is a deliverable. Always expanded. */
+  const warn = `<p class="nt-warn">${t('ntNotYet')}</p>`;
+  const test = (supported && perm === 'granted')
+    ? `<button class="cta ghost" id="nt-test">${t('ntTest')}</button>` : '';
+  return top + warn + test;
+}
+
+function renderWindows(){
+  return S.notify.windows.map(w => {
+    const name = t(WIN_LABEL[w.id]);
+    if(!w.on)
+      return `<div class="nt-win"><div class="nt-win-hd"><b>${name}</b>
+        <span data-wsw="${w.id}">${sw(false)}</span></div></div>`;
+    const cross = minutesOf(w.to) <= minutesOf(w.from)
+      ? `<div class="nt-cross">${t('ntCross')}</div>` : '';
+    return `<div class="nt-win">
+      <div class="nt-win-hd"><b>${name}</b><span data-wsw="${w.id}">${sw(true)}</span></div>
+      <div class="nt-win-body">
+        <div class="nt-times">
+          <div class="nt-fld"><label>${t('ntFrom')}</label><input type="time" data-wt="${w.id}:from" value="${w.from}"></div>
+          <div class="nt-fld"><label>${t('ntTo')}</label><input type="time" data-wt="${w.id}:to" value="${w.to}"></div>
+        </div>
+        <div class="nt-fld"><label>${t('ntAt')}</label><input type="time" data-wt="${w.id}:at" value="${w.at}"></div>
+        ${cross}
+        <div class="nt-mode">
+          <button data-wm="${w.id}:digest" class="${w.mode === 'digest' ? 'on' : ''}">${t('ntDigest')}</button>
+          <button data-wm="${w.id}:threshold" class="${w.mode === 'threshold' ? 'on' : ''}">${t('ntThreshold')}</button>
+        </div>
+      </div></div>`;
+  }).join('');
+}
+
+function renderRules(){
+  const LBL = {rainProb:'rRainProb', rainSum:'rRainSum', tMax:'rTMax', tMin:'rTMin', wind:'rWind', gust:'rGust'};
+  return NOTIFY_RULES.map(k => {
+    const r = S.notify.rules[k];
+    /* tMin is a floor warning, so it reads ≤ while everything else reads ≥.
+       Showing the operator is the only thing stopping people filling it in backwards. */
+    const op = k === 'tMin' ? '≤' : '≥';
+    return `<div class="nt-rule${r.on ? '' : ' off'}">
+      <span data-rsw="${k}">${sw(r.on)}</span>
+      <span class="rn">${t(LBL[k])}</span>
+      <span class="op">${op}</span>
+      <input type="number" inputmode="decimal" data-rv="${k}" value="${ruleShown(k)}">
+      <span class="un">${RULE_UNIT[k].unit()}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderMatrix(){
+  const wins = S.notify.windows.filter(w => w.on);
+  if(!S.locations.length) return `<p class="nt-note">${t('ntNoLoc')}</p>`;
+  if(!wins.length) return `<p class="nt-note">${t('ntNoWin')}</p>`;
+  const head = wins.map(w =>
+    `<th><button data-col="${w.id}">${t(WIN_LABEL[w.id])}</button></th>`).join('');
+  const rows = S.locations.map(l => {
+    const on = l.notify || [];
+    const cells = wins.map(w => `<td><span class="nt-cell${on.includes(w.id) ? ' on' : ''}" data-mx="${l.id}:${w.id}">
+      <svg viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19 7"/></svg></span></td>`).join('');
+    return `<tr><td>${esc(l.name)}</td>${cells}</tr>`;
+  }).join('');
+  return `<table class="nt-mx"><thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function paintNotify(){
+  const N = S.notify;
+  $('#nt-body').innerHTML = `
+    <div class="nt-master"><b>${t('ntMaster')}</b><span id="nt-on">${sw(N.enabled)}</span></div>
+    ${renderPermission()}
+    <div class="glass"><h4>${t('ntWindows')}</h4>${renderWindows()}</div>
+    <div class="glass"><h4>${t('ntRules')}</h4>${renderRules()}</div>
+    <div class="glass"><h4>${t('ntBlocks')}</h4>${renderMatrix()}</div>`;
+  bindNotify();
+}
+
+function bindNotify(){
+  const redraw = () => { save(); paintNotify(); };
+  $('#nt-on').addEventListener('click', () => { S.notify.enabled = !S.notify.enabled; redraw(); });
+
+  $$('#nt-body [data-wsw]').forEach(el2 => el2.addEventListener('click', () => {
+    const w = S.notify.windows.find(x => x.id === el2.dataset.wsw);
+    /* deliberately does NOT touch l.notify: turning a window off hides its
+       column, and turning it back on must bring the old ticks back */
+    if(w){ w.on = !w.on; redraw(); }
+  }));
+  $$('#nt-body [data-wt]').forEach(inp => inp.addEventListener('change', () => {
+    const [id, field] = inp.dataset.wt.split(':');
+    const w = S.notify.windows.find(x => x.id === id);
+    if(!w) return;
+    if(minutesOf(inp.value) < 0){ paintNotify(); return; }   // cleared or invalid
+    w[field] = inp.value;
+    redraw();
+  }));
+  $$('#nt-body [data-wm]').forEach(b => b.addEventListener('click', () => {
+    const [id, mode] = b.dataset.wm.split(':');
+    const w = S.notify.windows.find(x => x.id === id);
+    if(w){ w.mode = mode; redraw(); }
+  }));
+
+  $$('#nt-body [data-rsw]').forEach(el2 => el2.addEventListener('click', () => {
+    const r = S.notify.rules[el2.dataset.rsw];
+    if(r){ r.on = !r.on; redraw(); }
+  }));
+  $$('#nt-body [data-rv]').forEach(inp => inp.addEventListener('change', () => {
+    const k = inp.dataset.rv, n = parseFloat(inp.value);
+    if(!Number.isFinite(n)){ paintNotify(); return; }
+    /* stored metric, shown converted — convert back exactly once */
+    S.notify.rules[k].v = RULE_UNIT[k].back(n);
+    redraw();
+  }));
+
+  $$('#nt-body [data-mx]').forEach(el2 => el2.addEventListener('click', () => {
+    const [lid, wid] = el2.dataset.mx.split(':');
+    const l = S.locations.find(x => x.id === lid);
+    if(!l) return;
+    l.notify = l.notify || [];
+    l.notify = l.notify.includes(wid) ? l.notify.filter(x => x !== wid) : l.notify.concat(wid);
+    redraw();
+  }));
+  $$('#nt-body [data-col]').forEach(b => b.addEventListener('click', () => {
+    const wid = b.dataset.col;
+    const all = S.locations.every(l => (l.notify || []).includes(wid));
+    S.locations.forEach(l => {
+      l.notify = l.notify || [];
+      l.notify = all ? l.notify.filter(x => x !== wid)
+                     : (l.notify.includes(wid) ? l.notify : l.notify.concat(wid));
+    });
+    redraw();
+  }));
+
+  const ask = $('#nt-ask');
+  if(ask) ask.addEventListener('click', () => {
+    Notification.requestPermission().then(() => paintNotify()).catch(() => {});
+  });
+  const test = $('#nt-test');
+  if(test) test.addEventListener('click', sendTestNotification);
+}
+
+/* the one thing on this page that really does fire today — it proves the
+   permission and the service worker path, nothing more */
+function sendTestNotification(){
+  const body = {body:t('ntTestBody'), icon:'icon-192.png', badge:'icon-192.png', tag:'pw-test'};
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if(reg && reg.showNotification) return reg.showNotification(t('ntTestTitle'), body);
+      new Notification(t('ntTestTitle'), body);
+    }).catch(() => toast(t('ntTestFail')));
+    return;
+  }
+  try{ new Notification(t('ntTestTitle'), body); }catch(e){ toast(t('ntTestFail')); }
+}
+
 /* ---------- 12. Model picker ---------- */
 function drawModelPicker(){
   const cur = D.loc ? (D.loc.model || S.defaultModel) : S.defaultModel;
@@ -1916,6 +2229,10 @@ function drawSettings(){
       </div>
     </div>
     <div class="group">
+      <button class="nt-row" id="set-notify"><b>${t('ntEntry')}</b>
+        <span class="val">${esc(notifySummary())}</span><span class="chev">›</span></button>
+    </div>
+    <div class="group">
       <h4>${t('cmpSection')}</h4><p>${t('cmpD')}</p>
       ${MODELS.map(m => `<div class="row">
         <span class="mdot" style="background:${m.color}"></span>
@@ -1923,6 +2240,8 @@ function drawSettings(){
         <button class="check ${S.compare.includes(m.id) ? 'on' : ''}" data-cmp="${m.id}">
           <svg viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19 7"/></svg></button></div>`).join('')}
     </div>`;
+  const nb = $('#set-notify');
+  if(nb) nb.addEventListener('click', () => { hide(); openNotify(); });
   body.querySelectorAll('[data-unit]').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.unit;
     if(S.units[k] === b.dataset.val) return;
@@ -2110,6 +2429,7 @@ window.addEventListener('resize', () => {
 });
 window.addEventListener('popstate', () => {
   if(openSheetId){ closeSheetNow(); return; }
+  if($('#notify').classList.contains('on')){ closeNotify(); return; }
   if($('#detail').classList.contains('on')) closeDetail();
 });
 
@@ -2126,6 +2446,7 @@ window.addEventListener('popstate', () => {
   Object.keys(OK).forEach(k => { if(!OK[k].includes(S.units[k])) S.units[k] = FB[k]; });
   if(!T[S.lang]) S.lang = 'zh';
   if(!BASEMAPS[S.basemap]) S.basemap = 'sat';
+  normalizeNotify();
   applyLang();
   renderList();
   initReorder();
