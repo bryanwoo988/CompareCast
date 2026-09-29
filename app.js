@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.13.1';
+const APP_VERSION = '3.14.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,13 @@ const APP_VERSION = '3.13.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.14.0',
+   zh:['详情页重新排序，学 iOS 天气：实况小时条排在前面，十天概览接着，多模式对比图挪到下面',
+       '实况卡片加了气温 / 降雨 / 风速三个切换，按一下就看接下来每小时的那一项',
+       '风速视图的每小时图标换成风向箭头'],
+   en:['The detail page follows iOS Weather\u2019s order now: the hourly Conditions card first, the ten-day list next, the model-comparison charts moved further down',
+       'The Conditions card has temperature / precipitation / wind toggles \u2014 tap one to read that metric hour by hour',
+       'On the wind view each hour shows a direction arrow instead of a weather icon']},
   {v:'3.13.1',
    zh:['风向与气压两张卡片重做：密齿刻度环，风向用「来向圆点 + 去向箭头」，四个方位都标'],
    en:['Rebuilt the wind and pressure cards: a proper tick ring, wind shown as a dot for where it comes from and an arrow for where it goes'],
@@ -182,6 +189,7 @@ zh:{
   sumRain:(p,pk)=>`${p}有雨，最高 ${pk}%`, sumShowers:(p,pk)=>`${p}可能有零星阵雨，最高 ${pk}%`,
   sumHot:(t)=>`全天无雨，最高 ${t}`, sumCalm:'全天无明显降雨', sumUnknown:'暂无足够数据',
   pNight:'凌晨', pMorning:'早上', pAfternoon:'下午', pEvening:'晚上',
+  condT:'实况', vRain:'降雨', vWind:'风速',
   cWind:'风', cPress:'气压', cSun:'日出日落', cUV:'紫外线', cHumid:'湿度', cVis:'能见度', cRain:'降雨',
   dewPoint:(v)=>`露点 ${v}`, visClear:'视野通透', visOk:'一般', visPoor:'有雾或霾',
   uvLow:'低', uvMid:'中等', uvHigh:'高', uvVeryHigh:'很高', uvExtreme:'极高',
@@ -257,6 +265,7 @@ en:{
   sumRain:(p,pk)=>`Rain ${p}, peaking at ${pk}%`, sumShowers:(p,pk)=>`Scattered showers possible ${p}, up to ${pk}%`,
   sumHot:(t)=>`No rain, high of ${t}`, sumCalm:'No significant rain', sumUnknown:'Not enough data yet',
   pNight:'overnight', pMorning:'in the morning', pAfternoon:'in the afternoon', pEvening:'in the evening',
+  condT:'Conditions', vRain:'Precipitation', vWind:'Wind',
   cWind:'Wind', cPress:'Pressure', cSun:'Sun', cUV:'UV index', cHumid:'Humidity', cVis:'Visibility', cRain:'Rain',
   dewPoint:(v)=>`Dew point ${v}`, visClear:'Clear view', visOk:'Moderate', visPoor:'Haze or fog',
   uvLow:'Low', uvMid:'Moderate', uvHigh:'High', uvVeryHigh:'Very high', uvExtreme:'Extreme',
@@ -332,6 +341,7 @@ ms:{
   sumRain:(p,pk)=>`Hujan ${p}, tertinggi ${pk}%`, sumShowers:(p,pk)=>`Mungkin hujan renyai ${p}, sehingga ${pk}%`,
   sumHot:(t)=>`Tiada hujan, tertinggi ${t}`, sumCalm:'Tiada hujan ketara', sumUnknown:'Data belum cukup',
   pNight:'dini hari', pMorning:'pagi', pAfternoon:'petang', pEvening:'malam',
+  condT:'Keadaan', vRain:'Hujan', vWind:'Angin',
   cWind:'Angin', cPress:'Tekanan', cSun:'Matahari', cUV:'Indeks UV', cHumid:'Kelembapan', cVis:'Penglihatan', cRain:'Hujan',
   dewPoint:(v)=>`Takat embun ${v}`, visClear:'Pandangan jelas', visOk:'Sederhana', visPoor:'Jerebu atau kabus',
   uvLow:'Rendah', uvMid:'Sederhana', uvHigh:'Tinggi', uvVeryHigh:'Sangat tinggi', uvExtreme:'Ekstrem',
@@ -1405,13 +1415,13 @@ function addLocation(o, opts){
 }
 
 /* ---------- 11. Detail page ---------- */
-let D = {loc:null, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, busy:false, seq:0};
+let D = {loc:null, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, hvar:'temp', busy:false, seq:0};
 let detailSeq = 0;
 
 function openDetail(id){
   const loc = S.locations.find(x => x.id === id); if(!loc) return;
   /* a new location always opens on today; D.day survives everything else */
-  D = {loc, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, busy:false, seq:++detailSeq};
+  D = {loc, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, hvar:'temp', busy:false, seq:++detailSeq};
   paintHead();
   const page = $('#detail');
   page.scrollTop = 0;
@@ -1745,33 +1755,72 @@ function dayLabel(){
     .toLocaleDateString(locale(), {month:'long', day:'numeric', weekday:'short'});
 }
 
-/* the selected day's full run of hours — not "the next 24 from now", which
-   could not show a future day at all */
+/* ----- Conditions -----
+   One card: which metric you are looking at, a switch for the other two, and
+   the selected day's hours. Temperature is what most people want most of the
+   time, so it leads; rain and wind are one tap away rather than a scroll. */
+const HVARS = [
+  ['temp', 'vTemp', '<path d="M14 14.8V5a2.5 2.5 0 0 0-5 0v9.8a5 5 0 1 0 5 0z"/>'],
+  ['rain', 'vRain', '<path d="M12 3.2s5 5.6 5 8.8a5 5 0 0 1-10 0c0-3.2 5-8.8 5-8.8z"/>'],
+  ['wind', 'vWind', '<path d="M3 8h10a2.6 2.6 0 1 0-2.6-2.6M3 12h14a2.6 2.6 0 1 1-2.6 2.6M3 16h8"/>']
+];
+
 function renderHourStrip(){
   const d = D.main, m = M(D.loc.model || S.defaultModel);
   const hh = d && d.hourly, dd = d && d.daily;
   if(!hh || !hh.time || !dd || !dd.time || !dd.time[D.day]) return '';
   const {start, n} = sliceDay(hh.time, dd.time[D.day]);
   if(start < 0) return '';
-  /* -1 on any day but today, so only today gets a "now" column */
   const nowAt = nowIndex(hh.time.slice(start, start + n), (d.current && d.current.time) || '');
   const ex = (D.ext && D.ext !== 'fail') ? D.ext : null;
   const P2 = {};
   if(ex && ex.hourly && ex.hourly.precipitation_probability)
     ex.hourly.time.forEach((tm, k) => { P2[tm] = ex.hourly.precipitation_probability[k]; });
+
+  const v = D.hvar;
   const T2 = pick(hh,'temperature_2m',m.id,true);
+  const R2 = pick(hh,'precipitation',m.id,true);
+  const W2 = pick(hh,'wind_speed_10m',m.id,true);
   const C2 = pick(hh,'weather_code',m.id,true), Dy = pick(hh,'is_day',m.id,true);
+  const unit = v === 'temp' ? uT() : v === 'rain' ? uR() : uW();
+  const valueOf = i => v === 'temp' ? fT(T2 ? T2[i] : null)
+                     : v === 'rain' ? (R2 && nz(R2[i]) ? fR(R2[i]) : '—')
+                     : fW(W2 ? W2[i] : null);
+
   let strip = '';
   for(let k = 0; k < n; k++){
     const i = start + k;
+    /* on the wind tab an arrow beats a cloud: it is the quantity being read */
+    const glyph = v === 'wind'
+      ? `<svg class="harrow" viewBox="0 0 24 24"><path d="M12 19V6M12 6l-5 5M12 6l5 5"/></svg>`
+      : icon(iconFor(C2 ? C2[i] : 3, Dy ? Dy[i] : 1), 30);
     strip += `<div class="hcol${k === nowAt ? ' nowcol' : ''}">
       <div class="hh">${k === nowAt ? t('now2') : hh.time[i].slice(11,16)}</div>
-      <div class="hi">${icon(iconFor(C2 ? C2[i] : 3, Dy ? Dy[i] : 1), 30)}</div>
-      <div class="ht">${fT(T2 ? T2[i] : null)}</div>
+      <div class="hi">${glyph}</div>
+      <div class="ht">${valueOf(i)}</div>
       <div class="hp">${nz(P2[hh.time[i]]) ? P2[hh.time[i]] + '%' : ''}</div>
     </div>`;
   }
-  return `<div class="glass"><h4>${esc(dayLabel())}</h4><div class="hstrip">${strip}</div></div>`;
+
+  const label = v === 'temp' ? t('vTemp') : v === 'rain' ? t('vRain') : t('vWind');
+  const sw2 = HVARS.map(([id, key, path]) =>
+    `<button class="hsw${id === v ? ' on' : ''}" data-hvar="${id}" aria-label="${t(key)}" title="${t(key)}">
+      <svg viewBox="0 0 24 24">${path}</svg></button>`).join('');
+
+  return `<div class="glass cond">
+    <div class="cond-hd">
+      <div><h4 style="margin:0">${t('condT')}</h4>
+        <p class="cond-sub">${esc(label)} (${unit}) · ${esc(dayLabel())}</p></div>
+      <div class="hswrow">${sw2}</div>
+    </div>
+    <div class="hstrip">${strip}</div></div>`;
+}
+function bindHourStrip(){
+  $$('#d-body [data-hvar]').forEach(b => b.addEventListener('click', () => {
+    if(D.hvar === b.dataset.hvar) return;
+    D.hvar = b.dataset.hvar;
+    paintDetail();
+  }));
 }
 
 /* Observations belong to today and only today. Showing this minute's pressure
@@ -1838,8 +1887,12 @@ function renderCells(){
    same weather lived in three places (spec §4.1). */
 function paintDetail(){
   if(!D.main){ $('#d-body').innerHTML = `<div class="big-msg"><p>${t('loading')}</p></div>`; return; }
-  $('#d-body').innerHTML = renderDayStrip() + renderSummary() + renderTempChart() + renderProbChart()
-    + renderHourStrip() + renderCardGrid() + renderCells() + renderTenDay() + renderAccuracyCard() + `
+  /* Everyday use is "what are the next few hours"; the multi-model comparison
+     is what you open when you want to interrogate that. So the hours and the
+     week lead, and the charts sit below them rather than above. */
+  $('#d-body').innerHTML = renderDayStrip() + renderSummary() + renderHourStrip()
+    + renderCardGrid() + renderCells() + renderTenDay()
+    + renderTempChart() + renderProbChart() + renderAccuracyCard() + `
     <div class="glass" style="padding-bottom:10px">
       <h4>${t('editName')}</h4>
       <div class="field" style="margin-bottom:10px"><label>${t('rename')}</label>
@@ -1848,6 +1901,7 @@ function paintDetail(){
       <button class="dangerbtn" id="d-remove">${t('rmLoc')}</button>
     </div>`;
   bindDayStrip();
+  bindHourStrip();
   bindTenDay();
   bindModelChips();
   buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});

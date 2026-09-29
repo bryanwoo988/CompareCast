@@ -1,7 +1,7 @@
 /* 天气预测 · service worker
    Shell is cached so the app opens offline.
    Weather data is NEVER cached — forecasts must always be fresh. */
-const VERSION = 'pw-v3.13.1';
+const VERSION = 'pw-v3.14.0';
 const SHELL = VERSION + '-shell';
 const SHELL_FILES = [
   './', './index.html', './swpolicy.js', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './summary.js', './app.js', './manifest.webmanifest',
