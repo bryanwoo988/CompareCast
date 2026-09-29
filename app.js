@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.12.0';
+const APP_VERSION = '3.13.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,19 @@ const APP_VERSION = '3.12.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.13.0',
+   zh:['详情页顶部加了一句白话结论，例如「下午有雨，最高 86%」——不用自己从一堆数字里推',
+       '数据格子改成卡片：风向罗盘、气压表盘、日出日落弧线、紫外线色阶条',
+       '加回十天概览，而且现在可以点，点哪天就看哪天',
+       '补上能见度与露点'],
+   en:['A plain-language line at the top of the detail page, e.g. "Rain in the afternoon, peaking at 86%"',
+       'The data cells became cards: a wind compass, a pressure dial, a sunrise arc, a UV scale',
+       'The ten-day overview is back, and tapping a row now selects that day',
+       'Added visibility and dew point'],
+   ms:['Satu baris kesimpulan di atas halaman perincian, contoh "Hujan petang, tertinggi 86%"',
+       'Sel data menjadi kad: kompas angin, tolok tekanan, lengkung matahari, skala UV',
+       'Gambaran sepuluh hari kembali, dan mengetik baris kini memilih hari itu',
+       'Menambah penglihatan dan takat embun']},
   {v:'3.12.0',
    zh:['修好「当前实况」里降雨概率和紫外线显示全天最高值的问题——晚上九点不会再写着 100% 下雨、紫外线 9',
        '其他日期的这两格改称「最高降雨概率」「最高紫外线」，说清楚是全天值'],
@@ -162,6 +175,13 @@ zh:{
   errNum:'请输入数字。', dupLoc:'这个位置已经加过了。',
   bmSat:'卫星', bmStreet:'街道', bmDark:'暗色',
   dragHint:'长按地点可拖动排序，排在最前的会成为地图的默认视角',
+  sumRain:(p,pk)=>`${p}有雨，最高 ${pk}%`, sumShowers:(p,pk)=>`${p}可能有零星阵雨，最高 ${pk}%`,
+  sumHot:(t)=>`全天无雨，最高 ${t}`, sumCalm:'全天无明显降雨', sumUnknown:'暂无足够数据',
+  pNight:'凌晨', pMorning:'早上', pAfternoon:'下午', pEvening:'晚上',
+  cWind:'风', cPress:'气压', cSun:'日出日落', cUV:'紫外线', cHumid:'湿度', cVis:'能见度', cRain:'降雨',
+  dewPoint:(v)=>`露点 ${v}`, visClear:'视野通透', visOk:'一般', visPoor:'有雾或霾',
+  uvLow:'低', uvMid:'中等', uvHigh:'高', uvVeryHigh:'很高', uvExtreme:'极高',
+  pressLow:'低', pressHigh:'高', days10:'未来 10 天', today:'今天',
   ntEntry:'通知提醒', ntOff:'未开启', ntSummary:(b,w)=>`${b} 个地块 · ${w} 个时段`,
   ntMaster:'启用提醒', ntWindows:'时段', ntRules:'提醒条件', ntBlocks:'地块',
   wMorning:'早上', wAfternoon:'下午', wEvening:'晚上', wNight:'凌晨',
@@ -230,6 +250,13 @@ en:{
   errNum:'Enter a number.', dupLoc:'That spot is already saved.',
   bmSat:'Satellite', bmStreet:'Street', bmDark:'Dark',
   dragHint:'Hold a location to drag it into order — the first one becomes the map\u2019s default view',
+  sumRain:(p,pk)=>`Rain ${p}, peaking at ${pk}%`, sumShowers:(p,pk)=>`Scattered showers possible ${p}, up to ${pk}%`,
+  sumHot:(t)=>`No rain, high of ${t}`, sumCalm:'No significant rain', sumUnknown:'Not enough data yet',
+  pNight:'overnight', pMorning:'in the morning', pAfternoon:'in the afternoon', pEvening:'in the evening',
+  cWind:'Wind', cPress:'Pressure', cSun:'Sun', cUV:'UV index', cHumid:'Humidity', cVis:'Visibility', cRain:'Rain',
+  dewPoint:(v)=>`Dew point ${v}`, visClear:'Clear view', visOk:'Moderate', visPoor:'Haze or fog',
+  uvLow:'Low', uvMid:'Moderate', uvHigh:'High', uvVeryHigh:'Very high', uvExtreme:'Extreme',
+  pressLow:'Low', pressHigh:'High', days10:'Next 10 days', today:'Today',
   ntEntry:'Reminders', ntOff:'Off', ntSummary:(b,w)=>`${b} location${b===1?'':'s'} · ${w} window${w===1?'':'s'}`,
   ntMaster:'Enable reminders', ntWindows:'Time windows', ntRules:'Alert when', ntBlocks:'Locations',
   wMorning:'Morning', wAfternoon:'Afternoon', wEvening:'Evening', wNight:'Overnight',
@@ -298,6 +325,13 @@ ms:{
   errNum:'Masukkan nombor.', dupLoc:'Tempat itu sudah disimpan.',
   bmSat:'Satelit', bmStreet:'Jalan', bmDark:'Gelap',
   dragHint:'Tekan dan tahan lokasi untuk menyusunnya — yang pertama menjadi paparan asal peta',
+  sumRain:(p,pk)=>`Hujan ${p}, tertinggi ${pk}%`, sumShowers:(p,pk)=>`Mungkin hujan renyai ${p}, sehingga ${pk}%`,
+  sumHot:(t)=>`Tiada hujan, tertinggi ${t}`, sumCalm:'Tiada hujan ketara', sumUnknown:'Data belum cukup',
+  pNight:'dini hari', pMorning:'pagi', pAfternoon:'petang', pEvening:'malam',
+  cWind:'Angin', cPress:'Tekanan', cSun:'Matahari', cUV:'Indeks UV', cHumid:'Kelembapan', cVis:'Penglihatan', cRain:'Hujan',
+  dewPoint:(v)=>`Takat embun ${v}`, visClear:'Pandangan jelas', visOk:'Sederhana', visPoor:'Jerebu atau kabus',
+  uvLow:'Rendah', uvMid:'Sederhana', uvHigh:'Tinggi', uvVeryHigh:'Sangat tinggi', uvExtreme:'Ekstrem',
+  pressLow:'Rendah', pressHigh:'Tinggi', days10:'10 hari akan datang', today:'Hari ini',
   ntEntry:'Peringatan', ntOff:'Tidak aktif', ntSummary:(b,w)=>`${b} lokasi · ${w} tempoh`,
   ntMaster:'Aktifkan peringatan', ntWindows:'Tempoh masa', ntRules:'Beritahu apabila', ntBlocks:'Lokasi',
   wMorning:'Pagi', wAfternoon:'Petang', wEvening:'Malam', wNight:'Dini hari',
@@ -549,7 +583,7 @@ const unitParams = () => ({
 /* Variables every model in the list supports. Open-Meteo returns HTTP 400 —
    not nulls — when a model cannot produce a requested variable, so anything
    model-specific (precipitation_probability, uv_index) is fetched separately. */
-const SAFE_CURRENT = 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,surface_pressure,precipitation,is_day';
+const SAFE_CURRENT = 'temperature_2m,relative_humidity_2m,visibility,dew_point_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,surface_pressure,precipitation,is_day';
 const MIN_CURRENT  = 'temperature_2m,wind_speed_10m,is_day';
 const SAFE_HOURLY  = 'temperature_2m,precipitation,weather_code,wind_speed_10m,is_day';
 const MIN_HOURLY   = 'temperature_2m,precipitation';
@@ -1485,6 +1519,179 @@ function bindDayStrip(){
   }));
 }
 
+/* ----- Plain-language summary -----
+   One line that turns a screen of numbers into something you can act on.
+   The judgement lives in summary.js so all three languages share it. */
+function renderSummary(){
+  const d = D.main, dd = d && d.daily, ex = (D.ext && D.ext !== 'fail') ? D.ext : null;
+  if(!dd || !dd.time || !dd.time[D.day] || !ex || !ex.hourly) return '';
+  const dayISO = dd.time[D.day];
+  const {start, n} = sliceDay(ex.hourly.time, dayISO);
+  if(start < 0) return '';
+  const probs = ex.hourly.precipitation_probability.slice(start, start + n);
+  /* on today, rain that already fell is not a decision to make */
+  const nowAt = nowIndex(ex.hourly.time.slice(start, start + n), (d.current && d.current.time) || '');
+  const m = M(D.loc.model || S.defaultModel);
+  const mx = pick(dd, 'temperature_2m_max', m.id, true);
+  const sum = summarize({probs, tMax:mx && nz(mx[D.day]) ? mx[D.day] : null, from:nowAt >= 0 ? nowAt : 0});
+
+  const PART = {night:'pNight', morning:'pMorning', afternoon:'pAfternoon', evening:'pEvening'};
+  let txt;
+  if(sum.kind === 'rain')          txt = t('sumRain')(t(PART[sum.part]), Math.round(sum.peak));
+  else if(sum.kind === 'showers')  txt = t('sumShowers')(t(PART[sum.part]), Math.round(sum.peak));
+  else if(sum.kind === 'hot')      txt = t('sumHot')(fT(sum.tMax));
+  else if(sum.kind === 'calm')     txt = t('sumCalm');
+  else return '';
+  return `<p class="d-sum">${esc(txt)}</p>`;
+}
+
+/* ----- Card grid -----
+   A number with no sense of scale is just a number: 1007 hPa means nothing
+   without knowing where it sits, and "SE" means nothing without a dial. */
+const card = (title, body) => `<div class="wcard"><h5>${title}</h5>${body}</div>`;
+
+function windCard(c, m){
+  const g = k => pick(c, k, m.id, true);
+  const sp = g('wind_speed_10m'), dir = g('wind_direction_10m'), gust = g('wind_gusts_10m');
+  if(!nz(sp)) return '';
+  const a = nz(dir) ? dir : 0;
+  const ticks = Array.from({length:24}, (_, i) =>
+    `<line x1="50" y1="6" x2="50" y2="${i % 6 === 0 ? 13 : 10}" stroke="rgba(255,255,255,.35)"
+      stroke-width="${i % 6 === 0 ? 1.6 : 1}" transform="rotate(${i * 15} 50 50)"/>`).join('');
+  return card(t('cWind'), `<div class="dial"><svg viewBox="0 0 100 100">${ticks}
+    <text x="50" y="18" fill="rgba(255,255,255,.7)" font-size="9" text-anchor="middle">N</text>
+    <g transform="rotate(${a} 50 50)">
+      <path d="M50 22 L55 50 L50 45 L45 50 Z" fill="#fff"/>
+      <circle cx="50" cy="78" r="3.4" fill="rgba(255,255,255,.55)"/></g>
+    <text x="50" y="48" fill="#fff" font-size="17" font-weight="600" text-anchor="middle">${S.units.wind === 'ms' ? sp.toFixed(1) : Math.round(sp)}</text>
+    <text x="50" y="60" fill="rgba(255,255,255,.7)" font-size="8.5" text-anchor="middle">${uW()}</text>
+    </svg></div><p class="cnote">${nz(gust) ? t('gust') + ' ' + fW(gust) : ''} ${nz(dir) ? compass(dir) : ''}</p>`);
+}
+
+function pressureCard(c, m){
+  const v = pick(c, 'surface_pressure', m.id, true);
+  if(!nz(v)) return '';
+  const lo = 980, hi = 1040;
+  const frac = Math.max(0, Math.min(1, (v - lo) / (hi - lo)));
+  const ang = -90 + frac * 180;
+  return card(t('cPress'), `<div class="dial"><svg viewBox="0 0 100 66">
+    <path d="M12 58 A38 38 0 0 1 88 58" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="5" stroke-linecap="round"/>
+    <g transform="rotate(${ang.toFixed(1)} 50 58)"><line x1="50" y1="56" x2="50" y2="36" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></g>
+    <circle cx="50" cy="58" r="3" fill="#fff"/>
+    <text x="50" y="30" fill="#fff" font-size="14" font-weight="600" text-anchor="middle">${Math.round(v)}</text>
+    <text x="12" y="65" fill="rgba(255,255,255,.55)" font-size="7.5">${t('pressLow')}</text>
+    <text x="88" y="65" fill="rgba(255,255,255,.55)" font-size="7.5" text-anchor="end">${t('pressHigh')}</text>
+    </svg></div><p class="cnote">hPa</p>`);
+}
+
+function sunCard(dd, m, today){
+  const sr = pick(dd, 'sunrise', m.id, true), ss = pick(dd, 'sunset', m.id, true);
+  if(!sr || !ss || !sr[D.day] || !ss[D.day]) return '';
+  const hm = t2 => t2.slice(11, 16);
+  const mins = t2 => (+t2.slice(11, 13)) * 60 + (+t2.slice(14, 16));
+  const a = mins(sr[D.day]), b = mins(ss[D.day]);
+  let dot = '';
+  if(today && D.main.current && D.main.current.time){
+    const now = mins(D.main.current.time);
+    const f = Math.max(0, Math.min(1, (now - a) / Math.max(1, b - a)));
+    const x = 12 + f * 76, y = 54 - Math.sin(f * Math.PI) * 34;
+    dot = `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="#ffd76e"/>`;
+  }
+  return card(t('cSun'), `<div class="dial"><svg viewBox="0 0 100 66">
+    <path d="M12 54 Q50 2 88 54" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="3 3"/>
+    <line x1="8" y1="54" x2="92" y2="54" stroke="rgba(255,255,255,.22)" stroke-width="1.4"/>${dot}
+    <text x="12" y="64" fill="rgba(255,255,255,.75)" font-size="8.5">${hm(sr[D.day])}</text>
+    <text x="88" y="64" fill="rgba(255,255,255,.75)" font-size="8.5" text-anchor="end">${hm(ss[D.day])}</text>
+    </svg></div>`);
+}
+
+function uvCard(v){
+  if(!nz(v)) return '';
+  const lvl = v < 3 ? 'uvLow' : v < 6 ? 'uvMid' : v < 8 ? 'uvHigh' : v < 11 ? 'uvVeryHigh' : 'uvExtreme';
+  const f = Math.max(0, Math.min(1, v / 12));
+  return card(t('cUV'), `<div class="uvbox"><b>${Math.round(v)}</b><span>${t(lvl)}</span>
+    <div class="uvbar"><i style="left:${(f * 100).toFixed(1)}%"></i></div></div>`);
+}
+
+function renderCardGrid(){
+  const d = D.main; if(!d) return '';
+  const m = M(D.loc.model || S.defaultModel);
+  const c = d.current, dd = d.daily, today = D.day === 0;
+  const ex = (D.ext && D.ext !== 'fail') ? D.ext : null;
+  const eh = ex && ex.hourly ? ex.hourly : null;
+  const k = (today && eh) ? nowIndex(eh.time, (c && c.time) || '') : -1;
+
+  const uv = today
+    ? (k >= 0 && eh.uv_index && nz(eh.uv_index[k]) ? eh.uv_index[k] : null)
+    : (ex && ex.daily && nz(ex.daily.uv_index_max[D.day]) ? ex.daily.uv_index_max[D.day] : null);
+
+  let cards = '';
+  if(today && c){
+    cards += windCard(c, m) + pressureCard(c, m);
+  }
+  cards += sunCard(dd, m, today) + uvCard(uv);
+  if(today && c){
+    const rh = pick(c, 'relative_humidity_2m', m.id, true), dp = pick(c, 'dew_point_2m', m.id, true);
+    if(nz(rh)) cards += card(t('cHumid'),
+      `<div class="cbig">${Math.round(rh)}%</div><p class="cnote">${nz(dp) ? t('dewPoint')(fT(dp)) : ''}</p>`);
+    const vis = pick(c, 'visibility', m.id, true);
+    if(nz(vis)){
+      const km = vis / 1000;
+      const q = km >= 10 ? 'visClear' : km >= 4 ? 'visOk' : 'visPoor';
+      cards += card(t('cVis'), `<div class="cbig">${km >= 10 ? Math.round(km) : km.toFixed(1)} km</div><p class="cnote">${t(q)}</p>`);
+    }
+  }
+  const ps = pick(dd, 'precipitation_sum', m.id, true);
+  const prob = today
+    ? (k >= 0 && eh && nz(eh.precipitation_probability[k]) ? eh.precipitation_probability[k] : null)
+    : (ex && ex.daily && nz(ex.daily.precipitation_probability_max[D.day]) ? ex.daily.precipitation_probability_max[D.day] : null);
+  if(ps && nz(ps[D.day])) cards += card(t('cRain'),
+    `<div class="cbig">${fR(ps[D.day])}</div><p class="cnote">${nz(prob) ? Math.round(prob) + '%' : ''}</p>`);
+
+  return cards ? `<div class="wgrid">${cards}</div>` : '';
+}
+
+/* ----- Ten-day overview -----
+   The date strip answers "which day"; this answers "what kind of week".
+   Rows are tappable, so it is a second way into the same selection. */
+function renderTenDay(){
+  const d = D.main, dd = d && d.daily;
+  if(!dd || !dd.time || !dd.time.length) return '';
+  const m = M(D.loc.model || S.defaultModel);
+  const g = k => pick(dd, k, m.id, true);
+  const mx = g('temperature_2m_max'), mn = g('temperature_2m_min');
+  const cd = g('weather_code'), ps = g('precipitation_sum');
+  const all = [].concat(mx || [], mn || []).filter(nz);
+  if(!all.length) return '';
+  const lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+  const rng = (hi - lo) > 0 ? (hi - lo) : 1;
+  const rows = dd.time.map((day, i) => {
+    const a = mn ? mn[i] : null, b = mx ? mx[i] : null;
+    let left = nz(a) ? ((a - lo) / rng) * 100 : 0;
+    let wid = nz(a) && nz(b) ? Math.max(6, ((b - a) / rng) * 100) : 0;
+    if(left + wid > 100) left = Math.max(0, 100 - wid);
+    const label = i === 0 ? t('today')
+      : new Date(day + 'T12:00:00').toLocaleDateString(locale(), {weekday:'short'});
+    return `<button class="day${i === D.day ? ' on' : ''}" data-tenday="${i}">
+      <span class="dn">${esc(label)}</span>
+      <span class="di">${icon(wmo(cd ? cd[i] : 3).i, 28)}</span>
+      <span class="dp">${ps && nz(ps[i]) && ps[i] > 0 ? fR(ps[i]) : ''}</span>
+      <span class="bar"><i style="left:${left.toFixed(1)}%;width:${wid.toFixed(1)}%"></i></span>
+      <span class="dt"><i>${fT(a)}</i>${fT(b)}</span></button>`;
+  }).join('');
+  return `<div class="glass"><h4>${t('days10')}</h4>${rows}</div>`;
+}
+function bindTenDay(){
+  $$('#d-body [data-tenday]').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.tenday;
+    if(i === D.day) return;
+    D.day = i;
+    paintDetail();
+    /* the strip and the chart are above; jumping back makes the change visible */
+    $('#detail').scrollTop = 0;
+  }));
+}
+
 /* ----- Selected-day blocks ----- */
 /* the heading every per-day block carries, so nothing on the page is ambiguous
    about which of the ten days it describes */
@@ -1588,8 +1795,8 @@ function renderCells(){
    same weather lived in three places (spec §4.1). */
 function paintDetail(){
   if(!D.main){ $('#d-body').innerHTML = `<div class="big-msg"><p>${t('loading')}</p></div>`; return; }
-  $('#d-body').innerHTML = renderDayStrip() + renderTempChart() + renderProbChart()
-    + renderHourStrip() + renderCells() + renderAccuracyCard() + `
+  $('#d-body').innerHTML = renderDayStrip() + renderSummary() + renderTempChart() + renderProbChart()
+    + renderHourStrip() + renderCardGrid() + renderCells() + renderTenDay() + renderAccuracyCard() + `
     <div class="glass" style="padding-bottom:10px">
       <h4>${t('editName')}</h4>
       <div class="field" style="margin-bottom:10px"><label>${t('rename')}</label>
@@ -1598,6 +1805,7 @@ function paintDetail(){
       <button class="dangerbtn" id="d-remove">${t('rmLoc')}</button>
     </div>`;
   bindDayStrip();
+  bindTenDay();
   bindModelChips();
   buildChart('#ch-temp', {vari:'temp', fill:true, marks:true});
   buildChart('#ch-prob', {vari:'prob', fill:true, marks:false, yRange:[0,100]});
