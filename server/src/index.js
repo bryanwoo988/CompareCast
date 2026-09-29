@@ -82,17 +82,19 @@ async function forecast(cache, lat, lon, tz){
 }
 
 async function runDevice(env, dev, now, cache, seen){
-  const {day, min} = localNow(dev.tz, now);
-  const due = dueWindows(dev.notify.windows, min, CRON_SPAN_MIN);
-  if(!due.length) return;
-
-  for(const win of due){
-    const blocks = dev.blocks.filter(b => b.windows.includes(win.id));
-    for(const b of blocks){
+  /* Each plot is scheduled on its own clock, so "6am" means 6am at the field
+     rather than 6am wherever the phone happens to be. dev.tz is only the
+     fallback for a plot whose forecast had not loaded when it was synced. */
+  for(const b of dev.blocks){
+    const tz = b.tz || dev.tz;
+    const {day, min} = localNow(tz, now);
+    const due = dueWindows(dev.notify.windows, min, CRON_SPAN_MIN)
+      .filter(w => b.windows.includes(w.id));
+    for(const win of due){
       const key = sentKey(dev.id, b.id, win.id, day);
       if(seen.has(key) || await env.KV.get(key)) continue;
 
-      const fc = await forecast(cache, b.lat, b.lon, dev.tz);
+      const fc = await forecast(cache, b.lat, b.lon, tz);
       if(!fc || !fc.hourly || !fc.hourly.time) continue;
 
       /* a wrapping window runs into tomorrow, so both days are sliced and the

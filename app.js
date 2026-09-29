@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.6.1';
+const APP_VERSION = '3.7.0';
 
 const MODELS = [
   {id:'best_match', short:'Best Match', color:'#38bdf8',
@@ -89,6 +89,7 @@ zh:{
   ntMaster:'启用提醒', ntWindows:'时段', ntRules:'提醒条件', ntBlocks:'地块',
   wMorning:'早上', wAfternoon:'下午', wEvening:'晚上', wNight:'凌晨',
   ntFrom:'起', ntTo:'止', ntAt:'提醒时间', ntCross:'此时段跨天',
+  ntTzNote:(z)=>`时间按地块所在时区计算（${z}）`,
   ntDigest:'每天摘要', ntThreshold:'仅超阈值',
   rRainProb:'降雨概率', rRainSum:'降雨量', rTMax:'最高温', rTMin:'最低温', rWind:'风速', rGust:'阵风',
   ntNoLoc:'还没有地点。先加一个，才能设定要提醒哪一块。',
@@ -160,6 +161,7 @@ en:{
   ntMaster:'Enable reminders', ntWindows:'Time windows', ntRules:'Alert when', ntBlocks:'Locations',
   wMorning:'Morning', wAfternoon:'Afternoon', wEvening:'Evening', wNight:'Overnight',
   ntFrom:'From', ntTo:'To', ntAt:'Notify at', ntCross:'This window crosses midnight',
+  ntTzNote:(z)=>`Times are in each location's own time zone (${z})`,
   ntDigest:'Daily summary', ntThreshold:'Only when exceeded',
   rRainProb:'Rain chance', rRainSum:'Rainfall', rTMax:'High temp', rTMin:'Low temp', rWind:'Wind', rGust:'Gusts',
   ntNoLoc:'No locations yet. Add one first, then choose which ones to be reminded about.',
@@ -231,6 +233,7 @@ ms:{
   ntMaster:'Aktifkan peringatan', ntWindows:'Tempoh masa', ntRules:'Beritahu apabila', ntBlocks:'Lokasi',
   wMorning:'Pagi', wAfternoon:'Petang', wEvening:'Malam', wNight:'Dini hari',
   ntFrom:'Dari', ntTo:'Hingga', ntAt:'Beritahu pada', ntCross:'Tempoh ini melepasi tengah malam',
+  ntTzNote:(z)=>`Masa mengikut zon waktu lokasi itu sendiri (${z})`,
   ntDigest:'Ringkasan harian', ntThreshold:'Hanya bila melebihi',
   rRainProb:'Peluang hujan', rRainSum:'Jumlah hujan', rTMax:'Suhu tertinggi', rTMin:'Suhu terendah', rWind:'Angin', rGust:'Tiupan',
   ntNoLoc:'Belum ada lokasi. Tambah satu dahulu, kemudian pilih yang mana hendak diperingatkan.',
@@ -2097,12 +2100,39 @@ function renderMatrix(){
   return `<table class="nt-mx"><thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+/* the zone the reminders will actually use: the plots', when they agree */
+function zoneLabel(){
+  const zones = new Set(S.locations.filter(l => (l.notify || []).length)
+    .map(l => (cache[l.id] && cache[l.id].timezone)).filter(Boolean));
+  if(zones.size === 1) return [...zones][0];
+  if(zones.size > 1) return [...zones].join(', ');
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+}
+
+/* toggles the "crosses midnight" line for one card, in place */
+function refreshCrossNote(w, inp){
+  const card = inp.closest('.nt-win'); if(!card) return;
+  const body = card.querySelector('.nt-win-body'); if(!body) return;
+  const need = minutesOf(w.to) <= minutesOf(w.from);
+  let note = card.querySelector('.nt-cross');
+  if(need && !note){
+    note = document.createElement('div');
+    note.className = 'nt-cross';
+    note.textContent = t('ntCross');
+    body.insertBefore(note, body.querySelector('.nt-mode'));
+  } else if(!need && note){
+    note.remove();
+  }
+}
+
 function paintNotify(){
   const N = S.notify;
   $('#nt-body').innerHTML = `
     <div class="nt-master"><b>${t('ntMaster')}</b><span id="nt-on">${sw(N.enabled)}</span></div>
     ${renderPermission()}
-    <div class="glass"><h4>${t('ntWindows')}</h4>${renderWindows()}</div>
+    <div class="glass"><h4>${t('ntWindows')}</h4>
+      <p class="nt-note" style="margin:-4px 0 12px">${esc(t('ntTzNote')(zoneLabel()))}</p>
+      ${renderWindows()}</div>
     <div class="glass"><h4>${t('ntRules')}</h4>${renderRules()}</div>
     <div class="glass"><h4>${t('ntBlocks')}</h4>${renderMatrix()}</div>`;
   bindNotify();
@@ -2122,9 +2152,13 @@ function bindNotify(){
     const [id, field] = inp.dataset.wt.split(':');
     const w = S.notify.windows.find(x => x.id === id);
     if(!w) return;
-    if(minutesOf(inp.value) < 0){ paintNotify(); return; }   // cleared or invalid
+    /* A native time picker fires change while the wheel is still spinning.
+       Repainting here tore the open picker out of the DOM mid-gesture, so
+       this updates the model and touches only the one line that can change. */
+    if(minutesOf(inp.value) < 0){ inp.value = w[field]; return; }
     w[field] = inp.value;
-    redraw();
+    save(); scheduleSync();
+    refreshCrossNote(w, inp);
   }));
   $$('#nt-body [data-wm]').forEach(b => b.addEventListener('click', () => {
     const [id, mode] = b.dataset.wm.split(':');
@@ -2138,10 +2172,11 @@ function bindNotify(){
   }));
   $$('#nt-body [data-rv]').forEach(inp => inp.addEventListener('change', () => {
     const k = inp.dataset.rv, n = parseFloat(inp.value);
-    if(!Number.isFinite(n)){ paintNotify(); return; }
-    /* stored metric, shown converted — convert back exactly once */
+    /* same reason: reset this one field rather than rebuilding the page
+       around a control the user is still in */
+    if(!Number.isFinite(n)){ inp.value = ruleShown(k); return; }
     S.notify.rules[k].v = RULE_UNIT[k].back(n);
-    redraw();
+    save(); scheduleSync();
   }));
 
   $$('#nt-body [data-mx]').forEach(el2 => el2.addEventListener('click', () => {
@@ -2248,8 +2283,12 @@ async function syncPush(){
       units:S.units,
       sub:{endpoint:sub.endpoint, keys:{p256dh:keys.p256dh, auth:keys.auth}},
       notify:{windows:S.notify.windows, rules:S.notify.rules},
+      /* the plot's own zone, so "6am" means 6am at the field — right even if
+         the phone is somewhere else. Falls back to the device's zone only
+         when the forecast for that plot has not loaded yet. */
       blocks:S.locations.filter(l => (l.notify || []).length).map(l =>
-        ({id:l.id, name:l.name, lat:l.lat, lon:l.lon, windows:l.notify}))
+        ({id:l.id, name:l.name, lat:l.lat, lon:l.lon, windows:l.notify,
+          tz:(cache[l.id] && cache[l.id].timezone) || undefined}))
     };
     const res = await fetch(PUSH_API + '/sub', {method:'POST',
       headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});

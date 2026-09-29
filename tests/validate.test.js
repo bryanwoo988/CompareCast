@@ -70,3 +70,13 @@ test('没有任何有效地块时被拒', () => {
 test('语言非法时回落到 en', () => {
   assert.strictEqual(validateSub(ok({lang:'xx'})).value.lang, 'en');
 });
+
+test('地块自带的合法时区被保留', () => {
+  const r = validateSub(ok({blocks:[{id:'l1', name:'A', lat:1, lon:2, windows:['morning'], tz:'Asia/Kuala_Lumpur'}]}));
+  assert.strictEqual(r.value.blocks[0].tz, 'Asia/Kuala_Lumpur');
+});
+test('地块时区非法时丢弃而不是让整条请求失败', () => {
+  const r = validateSub(ok({blocks:[{id:'l1', name:'A', lat:1, lon:2, windows:['morning'], tz:'Not/AZone'}]}));
+  assert.strictEqual(r.ok, true);
+  assert.strictEqual(r.value.blocks[0].tz, undefined);
+});

@@ -49,7 +49,10 @@ function validateSub(body){
     if(!num(b.lat, -90, 90) || !num(b.lon, -180, 180)) return bad('coords');
     const windows = (Array.isArray(b.windows) ? b.windows : []).filter(w => live.has(w));
     if(!windows.length) continue;              // nothing to send for this block
-    blocks.push({id:b.id, name:String(b.name || '').slice(0, 80), lat:b.lat, lon:b.lon, windows});
+    /* the plot's own zone when the client knew it; validated the same way as
+       the device zone so a bad value cannot break the cron */
+    const btz = validTz(b.tz) ? b.tz : undefined;
+    blocks.push({id:b.id, name:String(b.name || '').slice(0, 80), lat:b.lat, lon:b.lon, windows, tz:btz});
   }
   if(!blocks.length) return bad('noBlocks');
 
