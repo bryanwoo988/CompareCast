@@ -1,7 +1,7 @@
 /* 天气预测 · service worker
    Shell is cached so the app opens offline.
    Weather data is NEVER cached — forecasts must always be fresh. */
-const VERSION = 'pw-v3.11.0';
+const VERSION = 'pw-v3.11.1';
 const SHELL = VERSION + '-shell';
 const SHELL_FILES = [
   './', './index.html', './swpolicy.js', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './app.js', './manifest.webmanifest',
@@ -9,7 +9,13 @@ const SHELL_FILES = [
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
 ];
-importScripts('./swpolicy.js');
+/* Unguarded, a failed import takes the whole worker down — and with it
+   offline support AND push notifications, silently. The policy file is in the
+   shell so this only bites on a cold install over a bad connection; falling
+   back to not intercepting keeps the app working online-only until the next
+   launch repairs the worker. */
+try{ importScripts('./swpolicy.js'); }catch(e){}
+const strategyFor = (typeof cacheStrategy === 'function') ? cacheStrategy : (() => 'never');
 
 /* How long to wait for the network before falling back to cache. Long enough
    for a slow mobile connection to win, short enough that a dead one does not
@@ -36,7 +42,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if(req.method !== 'GET') return;
-  const how = cacheStrategy(req.url, self.location.origin);
+  const how = strategyFor(req.url, self.location.origin);
   if(how === 'never') return;
 
   if(how === 'immutable'){
