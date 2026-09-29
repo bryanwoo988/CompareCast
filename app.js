@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.7.0';
+const APP_VERSION = '3.8.0';
 
 const MODELS = [
   {id:'best_match', short:'Best Match', color:'#38bdf8',
@@ -2002,6 +2002,8 @@ const ruleShown = k => {
 
 function openNotify(){
   normalizeNotify();
+  /* nothing used to re-try a failed registration; opening the page does */
+  if(S.notify.enabled) scheduleSync(1);
   const page = $('#notify');
   page.scrollTop = 0;
   page.classList.add('on');
@@ -2031,13 +2033,14 @@ function renderPermission(){
     top = `<p class="nt-note" style="margin-bottom:12px">✓ ${t('ntPermOn')}</p>`;
   else if(supported && perm === 'denied')
     top = `<p class="nt-note" style="margin-bottom:12px">${t('ntPermDenied')}</p>`;
-  /* the honest status, now that a server exists: the iPhone caveat is still
-     true and still always expanded */
+  /* success has to be earned: syncMessage never reports ok for a device that
+     has not actually registered */
+  const m = syncMessage(syncState, !!S.notify.enabled, perm);
   let warn;
-  if(!S.notify.enabled || perm !== 'granted') warn = `<p class="nt-warn">${t('ntNeedPerm')}<br>${t('ntIosHint')}</p>`;
-  else if(syncState === 'syncing') warn = `<p class="nt-warn">${t('ntSyncing')}</p>`;
-  else if(syncState === 'failed')  warn = `<p class="nt-warn">${t('ntSyncFail')}</p>`;
-  else warn = `<p class="nt-ok">✓ ${t('ntSynced')}<br>${t('ntIosHint')}</p>`;
+  if(m.kind === 'ok')        warn = `<p class="nt-ok">✓ ${t('ntSynced')}<br>${t('ntIosHint')}</p>`;
+  else if(m.kind === 'busy') warn = `<p class="nt-warn">${t('ntSyncing')}</p>`;
+  else if(m.kind === 'warn') warn = `<p class="nt-warn">${t('ntNeedPerm')}<br>${t('ntIosHint')}</p>`;
+  else warn = `<p class="nt-warn">${t('ntSyncFail')}<br><code class="nt-why">${esc(m.reason)}${lastSyncError ? ' · ' + lastSyncError : ''}</code><br>${t('ntIosHint')}</p>`;
   const test = (supported && perm === 'granted')
     ? `<button class="cta ghost" id="nt-test">${t('ntTest')}</button>` : '';
   return top + warn + test;
@@ -2225,7 +2228,8 @@ function sendTestNotification(){
    to wake and when. Anything that changes the schedule re-syncs. */
 const PUSH_API = 'https://comparecast-push.hockhynnwoo.workers.dev';
 const VAPID_PUBLIC = 'BBjBjJlP2b9oTWJFPK1CvEXXrrafJC0xmhlbOurC6GssgQQegLTVxAtfSk-iFVYmFPtkZqGIVTJhX3uRHP9TO1M';
-let syncState = 'idle', syncTimer = null;
+/* 'unknown' until a registration actually succeeds — see syncMessage() */
+let syncState = 'unknown', syncTimer = null, lastSyncError = '';
 
 function deviceId(){
   if(!S.deviceId){
@@ -2245,15 +2249,20 @@ const bytesToB64 = buf => btoa(String.fromCharCode.apply(null, new Uint8Array(bu
   .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 /* debounced: changing four settings in a row is one registration, not four */
-function scheduleSync(){
+function scheduleSync(ms){
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(syncPush, 3000);
+  syncTimer = setTimeout(syncPush, ms === undefined ? 3000 : ms);
 }
 
 async function syncPush(){
-  if(!('serviceWorker' in navigator) || typeof Notification === 'undefined') return;
-  const reg = await navigator.serviceWorker.getRegistration();
-  if(!reg || !reg.pushManager) return;
+  const done = st => { syncState = st; if($('#notify').classList.contains('on')) paintNotify(); };
+  if(!('serviceWorker' in navigator) || typeof Notification === 'undefined'
+     || typeof PushManager === 'undefined') return done('unsupported');
+  /* `ready` rather than getRegistration(): on a cold start the worker may not
+     have taken control yet, and the old code silently gave up in that window */
+  let reg;
+  try{ reg = await navigator.serviceWorker.ready; }catch(e){ return done('nosw'); }
+  if(!reg || !reg.pushManager) return done('nosw');
 
   /* switched off, or permission gone: withdraw rather than leave the worker
      pushing at a device that no longer wants it */
@@ -2264,17 +2273,22 @@ async function syncPush(){
       await fetch(PUSH_API + '/sub', {method:'DELETE', headers:{'Content-Type':'application/json'},
         body:JSON.stringify({id:deviceId()})});
     }catch(e){}
-    syncState = 'idle';
-    if($('#notify').classList.contains('on')) paintNotify();
-    return;
+    return done('unknown');
   }
 
-  syncState = 'syncing';
-  if($('#notify').classList.contains('on')) paintNotify();
+  done('syncing');
+  let sub;
   try{
-    let sub = await reg.pushManager.getSubscription();
+    sub = await reg.pushManager.getSubscription();
     if(!sub) sub = await reg.pushManager.subscribe(
       {userVisibleOnly:true, applicationServerKey:b64ToBytes(VAPID_PUBLIC)});
+  }catch(e){
+    /* iOS refuses this outright unless the app was opened from the Home
+       Screen, and that refusal used to vanish into a bare catch */
+    lastSyncError = (e && (e.name + ': ' + e.message)) || 'subscribe';
+    return done('subscribe');
+  }
+  try{
     const keys = sub.toJSON().keys || {};
     const body = {
       id:deviceId(),
@@ -2292,11 +2306,18 @@ async function syncPush(){
     };
     const res = await fetch(PUSH_API + '/sub', {method:'POST',
       headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-    syncState = res.ok ? 'synced' : 'failed';
+    if(!res.ok){
+      let why = '';
+      try{ why = (await res.json()).error || ''; }catch(e2){}
+      lastSyncError = 'HTTP ' + res.status + (why ? ' · ' + why : '');
+      return done('http' + res.status);
+    }
+    lastSyncError = '';
+    return done('synced');
   }catch(e){
-    syncState = 'failed';
+    lastSyncError = (e && (e.name + ': ' + e.message)) || 'network';
+    return done('failed');
   }
-  if($('#notify').classList.contains('on')) paintNotify();
 }
 
 /* ---------- 12. Model picker ---------- */
@@ -2588,6 +2609,8 @@ window.addEventListener('popstate', () => {
   initReorder();
   initPullRefresh();
   loadAll();
+  /* a subscription that failed in an earlier session repairs itself here */
+  if(S.notify && S.notify.enabled) scheduleSync(4000);
   try{
     if(sessionStorage.getItem('pw:updated')){ sessionStorage.removeItem('pw:updated'); toast(t('updated')); }
   }catch(e){}

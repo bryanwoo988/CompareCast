@@ -105,4 +105,20 @@ function aggregate(hourly, idx){
   };
 }
 
-if(typeof module !== 'undefined') module.exports = {minutesOf, inWindow, windowSlice, breaches, dueWindows, spanDays, aggregate};
+/* What the reminder page should say about registration.
+
+   Written as its own function because the first version got this exactly
+   backwards: it treated every state that was not "syncing" or "failed" as
+   success, so a device that had never registered at all was shown a green
+   tick. The user trusted it and waited for a notification nothing would send.
+   Success is now a state that has to be earned, not a default. */
+function syncMessage(state, enabled, permission){
+  if(!enabled) return {kind:'warn', reason:'disabled'};
+  if(permission !== 'granted') return {kind:'warn', reason:'permission'};
+  if(state === 'synced') return {kind:'ok'};
+  if(state === 'syncing') return {kind:'busy'};
+  /* anything else — including never having tried — is not success */
+  return {kind:'err', reason:state || 'unknown'};
+}
+
+if(typeof module !== 'undefined') module.exports = {minutesOf, inWindow, windowSlice, breaches, dueWindows, spanDays, aggregate, syncMessage};
