@@ -101,6 +101,7 @@ zh:{
   ntSynced:'已登记，提醒会按上面的设定送达。',
   ntSyncing:'正在登记…', ntSyncFail:'登记失败，稍后会自动重试。检查一下网络。',
   ntNeedPerm:'打开主开关并允许通知后，提醒才会送达。',
+  ntNoBlocksSel:'还没有勾选任何地块。在下面的表格里选一个，提醒才有对象。',
   ntIosHint:'iPhone 必须先把这个应用「加到主屏幕」，只在浏览器里开着收不到通知。',
   mapHint:'按 + 放置一个地点，或在上方搜索地名', mapAdd:'添加此处', locsUnit:n=>'个地点',
   railLocate:'定位到我', railAdd:'加一个地点', railLayer:'底图', mapSearchPh:'搜索地名',
@@ -173,6 +174,7 @@ en:{
   ntSynced:'Registered — reminders will arrive as configured above.',
   ntSyncing:'Registering…', ntSyncFail:'Registration failed; it will retry. Check your connection.',
   ntNeedPerm:'Turn the switch on and allow notifications, then reminders will arrive.',
+  ntNoBlocksSel:'No locations ticked yet. Pick one in the table below and reminders will have something to report on.',
   ntIosHint:'On iPhone the app must be added to the Home Screen first — notifications never arrive while it only runs in the browser.',
   mapHint:'Press + to place a location, or search for a place above', mapAdd:'Add this spot', locsUnit:n=>n === 1 ? 'location' : 'locations',
   railLocate:'Locate me', railAdd:'Add a location', railLayer:'Basemap', mapSearchPh:'Search for a place',
@@ -245,6 +247,7 @@ ms:{
   ntSynced:'Didaftarkan — peringatan akan sampai mengikut tetapan di atas.',
   ntSyncing:'Mendaftar…', ntSyncFail:'Pendaftaran gagal; ia akan cuba lagi. Semak sambungan anda.',
   ntNeedPerm:'Hidupkan suis dan benarkan pemberitahuan, barulah peringatan akan sampai.',
+  ntNoBlocksSel:'Belum ada lokasi ditanda. Pilih satu dalam jadual di bawah.',
   ntIosHint:'Pada iPhone, aplikasi mesti ditambah ke Skrin Utama dahulu — pemberitahuan tidak sampai jika hanya dibuka dalam pelayar.',
   mapHint:'Tekan + untuk letak lokasi, atau cari nama tempat di atas', mapAdd:'Tambah tempat ini', locsUnit:n=>'lokasi',
   railLocate:'Cari saya', railAdd:'Tambah lokasi', railLayer:'Peta asas', mapSearchPh:'Cari nama tempat',
@@ -650,11 +653,25 @@ function renderList(){
 }
 /* swap a single card in place — a finished request no longer rebuilds
    every card and every map marker on the page */
+/* ids whose refresh landed while their card was under the user's finger */
+const deferredCards = new Set();
+
 function updateCard(id){
   const l = S.locations.find(x => x.id === id);
   const old = document.querySelector(`#loc-list [data-id="${id}"]`);
-  if(!l || !old){ renderList(); return; }
+  if(!l || !old){ if(!(drag && drag.on)) renderList(); return; }
+  /* Replacing the node being dragged detaches it: the transform goes, the
+     handler holds a dead element, and the drop silently does nothing. A pull
+     to refresh followed by a drag hits this every time, so the refresh waits. */
+  if(drag && drag.on && drag.card === old){ deferredCards.add(id); return; }
   old.replaceWith(makeCard(l));
+}
+
+function flushDeferredCards(){
+  if(!deferredCards.size) return;
+  const ids = [...deferredCards];
+  deferredCards.clear();
+  ids.forEach(updateCard);
 }
 async function loadCard(l){
   try{ cache[l.id] = await getSummary(l); }
@@ -743,6 +760,9 @@ function endDrag(){
   if(d.to !== d.from){
     S.locations = moveItem(S.locations, d.from, d.to);
     save(); renderList(); refreshPins();
+    deferredCards.clear();          // renderList already rebuilt every card
+  } else {
+    flushDeferredCards();
   }
 }
 
@@ -1511,7 +1531,8 @@ function paintDetail(){
   paintAccuracyCard();
   $('#d-saveName').addEventListener('click', () => {
     const v = $('#d-rename').value.trim(); if(!v) return;
-    D.loc.name = v; save(); paintHead(); renderList(); refreshPins(); toast(t('savedOk'));
+    /* the worker uses this as the notification title */
+    D.loc.name = v; save(); paintHead(); renderList(); refreshPins(); scheduleSync(); toast(t('savedOk'));
   });
   $('#d-remove').addEventListener('click', () => {
     S.locations = S.locations.filter(x => x.id !== D.loc.id);
@@ -2008,7 +2029,14 @@ function openNotify(){
   page.scrollTop = 0;
   page.classList.add('on');
   document.body.style.overflow = 'hidden';
-  try{ history.pushState({pw:'notify'}, ''); }catch(e){}
+  try{
+    /* Opened from the settings sheet, which already owns a history entry.
+       hide()'s history.back() is async and used to land AFTER this push,
+       swallowing it — leaving the page open with no way for the back button
+       to close it and body scroll locked. One overlay, one entry. */
+    if(history.state && history.state.pw === 'sheet') history.replaceState({pw:'notify'}, '');
+    else history.pushState({pw:'notify'}, '');
+  }catch(e){}
   paintNotify();
 }
 function closeNotify(){
@@ -2039,7 +2067,7 @@ function renderPermission(){
   let warn;
   if(m.kind === 'ok')        warn = `<p class="nt-ok">✓ ${t('ntSynced')}<br>${t('ntIosHint')}</p>`;
   else if(m.kind === 'busy') warn = `<p class="nt-warn">${t('ntSyncing')}</p>`;
-  else if(m.kind === 'warn') warn = `<p class="nt-warn">${t('ntNeedPerm')}<br>${t('ntIosHint')}</p>`;
+  else if(m.kind === 'warn') warn = `<p class="nt-warn">${m.reason === 'noblocks' ? t('ntNoBlocksSel') : t('ntNeedPerm')}<br>${t('ntIosHint')}</p>`;
   else warn = `<p class="nt-warn">${t('ntSyncFail')}<br><code class="nt-why">${esc(m.reason)}${lastSyncError ? ' · ' + lastSyncError : ''}</code><br>${t('ntIosHint')}</p>`;
   const test = (supported && perm === 'granted')
     ? `<button class="cta ghost" id="nt-test">${t('ntTest')}</button>` : '';
@@ -2128,11 +2156,30 @@ function refreshCrossNote(w, inp){
   }
 }
 
+/* Refreshes only the status block.
+
+   The sync lands three seconds after an edit, and repainting the whole page
+   there tore out whatever time picker the user had open — the same fault as
+   the change handler, just delayed enough to look like a different bug. */
+function paintSyncStatus(){
+  const host = $('#nt-status'); if(!host) return;
+  host.innerHTML = renderPermission();
+  bindStatusButtons();
+}
+function bindStatusButtons(){
+  const ask = $('#nt-ask');
+  if(ask) ask.addEventListener('click', () => {
+    Notification.requestPermission().then(() => { paintSyncStatus(); scheduleSync(0); }).catch(() => {});
+  });
+  const test = $('#nt-test');
+  if(test) test.addEventListener('click', sendTestNotification);
+}
+
 function paintNotify(){
   const N = S.notify;
   $('#nt-body').innerHTML = `
     <div class="nt-master"><b>${t('ntMaster')}</b><span id="nt-on">${sw(N.enabled)}</span></div>
-    ${renderPermission()}
+    <div id="nt-status">${renderPermission()}</div>
     <div class="glass"><h4>${t('ntWindows')}</h4>
       <p class="nt-note" style="margin:-4px 0 12px">${esc(t('ntTzNote')(zoneLabel()))}</p>
       ${renderWindows()}</div>
@@ -2201,12 +2248,7 @@ function bindNotify(){
     redraw();
   }));
 
-  const ask = $('#nt-ask');
-  if(ask) ask.addEventListener('click', () => {
-    Notification.requestPermission().then(() => { paintNotify(); scheduleSync(); }).catch(() => {});
-  });
-  const test = $('#nt-test');
-  if(test) test.addEventListener('click', sendTestNotification);
+  bindStatusButtons();
 }
 
 /* the one thing on this page that really does fire today — it proves the
@@ -2255,7 +2297,7 @@ function scheduleSync(ms){
 }
 
 async function syncPush(){
-  const done = st => { syncState = st; if($('#notify').classList.contains('on')) paintNotify(); };
+  const done = st => { syncState = st; if($('#notify').classList.contains('on')) paintSyncStatus(); };
   if(!('serviceWorker' in navigator) || typeof Notification === 'undefined'
      || typeof PushManager === 'undefined') return done('unsupported');
   /* `ready` rather than getRegistration(): on a cold start the worker may not
@@ -2274,6 +2316,17 @@ async function syncPush(){
         body:JSON.stringify({id:deviceId()})});
     }catch(e){}
     return done('unknown');
+  }
+
+  const blocks = S.locations.filter(l => (l.notify || []).length);
+  if(!blocks.length){
+    /* the worker has nothing to send for this device; leaving a stale
+       subscription registered would be worse than withdrawing it */
+    try{
+      await fetch(PUSH_API + '/sub', {method:'DELETE', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id:deviceId()})});
+    }catch(e){}
+    return done('noblocks');
   }
 
   done('syncing');
@@ -2300,7 +2353,7 @@ async function syncPush(){
       /* the plot's own zone, so "6am" means 6am at the field — right even if
          the phone is somewhere else. Falls back to the device's zone only
          when the forecast for that plot has not loaded yet. */
-      blocks:S.locations.filter(l => (l.notify || []).length).map(l =>
+      blocks:blocks.map(l =>
         ({id:l.id, name:l.name, lat:l.lat, lon:l.lon, windows:l.notify,
           tz:(cache[l.id] && cache[l.id].timezone) || undefined}))
     };
@@ -2398,7 +2451,9 @@ function drawSettings(){
           <svg viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19 7"/></svg></button></div>`).join('')}
     </div>`;
   const nb = $('#set-notify');
-  if(nb) nb.addEventListener('click', () => { hide(); openNotify(); });
+  /* closeSheetNow, not hide: hide() rewinds history and would race the entry
+     openNotify is about to take over */
+  if(nb) nb.addEventListener('click', () => { closeSheetNow(); openNotify(); });
   body.querySelectorAll('[data-unit]').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.unit;
     if(S.units[k] === b.dataset.val) return;

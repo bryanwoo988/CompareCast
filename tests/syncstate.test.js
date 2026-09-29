@@ -33,3 +33,9 @@ test('各种失败都带上可辨认的原因', () => {
     assert.ok(m.reason, s + ' 缺少原因');
   });
 });
+
+test('一个地块都没勾不是错误，是「还没选」', () => {
+  const m = syncMessage('noblocks', true, 'granted');
+  assert.strictEqual(m.kind, 'warn', '不该报成错误');
+  assert.strictEqual(m.reason, 'noblocks');
+});

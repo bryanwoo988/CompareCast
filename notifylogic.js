@@ -115,6 +115,9 @@ function aggregate(hourly, idx){
 function syncMessage(state, enabled, permission){
   if(!enabled) return {kind:'warn', reason:'disabled'};
   if(permission !== 'granted') return {kind:'warn', reason:'permission'};
+  /* nothing ticked is a choice, not a failure — the server rightly rejects an
+     empty block list, but showing the user HTTP 400 for it would be absurd */
+  if(state === 'noblocks') return {kind:'warn', reason:'noblocks'};
   if(state === 'synced') return {kind:'ok'};
   if(state === 'syncing') return {kind:'busy'};
   /* anything else — including never having tried — is not success */
