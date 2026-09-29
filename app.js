@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.9.0';
+const APP_VERSION = '3.10.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.9.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.10.0',
+   zh:['更新现在开一次就到位，不用再开两次'],
+   en:['Updates now land on the first launch instead of the second'],
+   ms:['Kemas kini kini tiba pada lancaran pertama, bukan kedua']},
   {v:'3.9.0',
    zh:['更新后会弹出这张说明，告诉你这一版改了什么',
        '修好了设定提醒时间时，时间选择器会自己收起来的问题',
