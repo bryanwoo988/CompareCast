@@ -2754,9 +2754,8 @@ window.addEventListener('popstate', () => {
   /* a subscription that failed in an earlier session repairs itself here */
   if(S.notify && S.notify.enabled) scheduleSync(4000);
   maybeShowReleaseNotes();
-  try{
-    if(sessionStorage.getItem('pw:updated')){ sessionStorage.removeItem('pw:updated'); toast(t('updated')); }
-  }catch(e){}
+  /* the release-notes sheet says this and more, so no toast on top of it */
+  try{ sessionStorage.removeItem('pw:updated'); }catch(e){}
   if('serviceWorker' in navigator && location.protocol !== 'file:'){
     const reg = () => navigator.serviceWorker.register('sw.js').catch(() => {});
     if(document.readyState === 'complete') reg();
