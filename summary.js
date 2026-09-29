@@ -49,20 +49,26 @@ function summarize(o){
   const ahead = all.slice(from);
   if(!ahead.some(num)) return {kind:'unknown'};
 
+  /* Hours already past were not examined, so the caller must not word the
+     result as a claim about the whole day. Saying "no rain all day" on an
+     evening when the morning was wet contradicts every other figure on the
+     page, which is how this flag came to exist. */
+  const rest = from > 0;
+
   const runs = rainRuns(ahead, RAIN_PROB, RUN_LEN);
   if(runs.length){
     const r = runs.reduce((a, b) => (b.peak > a.peak ? b : a));
-    return {kind:'rain', from:r.from + from, to:r.to + from, peak:r.peak,
+    return {kind:'rain', rest, from:r.from + from, to:r.to + from, peak:r.peak,
             part:partOfDay(r.from + from)};
   }
 
   /* nothing sustained, but a single hour over the line still deserves a word */
   let peak = 0, at = -1;
   ahead.forEach((v, i) => { if(num(v) && v > peak){ peak = v; at = i + from; } });
-  if(peak >= RAIN_PROB) return {kind:'showers', peak, at, part:partOfDay(at)};
+  if(peak >= RAIN_PROB) return {kind:'showers', rest, peak, at, part:partOfDay(at)};
 
-  if(num(o.tMax) && o.tMax >= HOT_C) return {kind:'hot', tMax:o.tMax};
-  return {kind:'calm'};
+  if(num(o.tMax) && o.tMax >= HOT_C) return {kind:'hot', rest, tMax:o.tMax};
+  return {kind:'calm', rest};
 }
 
 if(typeof module !== 'undefined') module.exports = {rainRuns, partOfDay, summarize, RAIN_PROB};

@@ -74,3 +74,30 @@ test('全 null 时不下结论', () => {
 test('数据为空时不下结论', () => {
   assert.strictEqual(summarize({probs:[], tMax:null, from:0}).kind, 'unknown');
 });
+
+/* ---- scope of the sentence ----
+   The judgement only ever looks from `from` onward, so the wording has to be
+   able to say "from here on" instead of "all day". Without this the sentence
+   read "no rain all day" on an evening when 1.1 mm had already fallen, while
+   the ten-day row directly below it said 1.1 mm — the same page contradicting
+   itself. */
+test('整天的结论标记为非局部', () => {
+  assert.strictEqual(summarize({probs:Array(24).fill(3), tMax:30, from:0}).rest, false);
+});
+test('只看剩余时段的结论标记为局部', () => {
+  assert.strictEqual(summarize({probs:Array(24).fill(3), tMax:30, from:12}).rest, true);
+});
+test('局部标记在有雨的结论上也带着', () => {
+  const probs = [...Array(12).fill(2), ...Array(12).fill(90)];
+  const s = summarize({probs, tMax:30, from:6});
+  assert.strictEqual(s.kind, 'rain');
+  assert.strictEqual(s.rest, true);
+});
+test('高温结论也带局部标记', () => {
+  const s = summarize({probs:Array(24).fill(3), tMax:36, from:9});
+  assert.strictEqual(s.kind, 'hot');
+  assert.strictEqual(s.rest, true);
+});
+test('数据不足时不谈范围', () => {
+  assert.strictEqual(summarize({probs:[], tMax:null, from:5}).kind, 'unknown');
+});
