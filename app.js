@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.14.0';
+const APP_VERSION = '3.15.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,19 @@ const APP_VERSION = '3.14.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.15.0',
+   zh:['切到水滴，小时条变成降雨强度柱：柱高就是雨量，全天同一把尺，底下是降雨机率',
+       '切到风，小时条变成一条贯穿全天的风速曲线，现在之前虚线、现在一个圆点，浅色带是阵风',
+       '每小时的风向箭头现在是真的风向，按当时风往哪吹转',
+       '气温页不再显示降雨百分比（那是降雨页的事）',
+       '十天列表跟着切换：降雨看当天逐时柱状 + 总雨量 + 机率，风看曲线 + 风速范围',
+       '十天那个「未来 10 天」标题拿掉了，十行日期本来就说得清楚'],
+   en:['The droplet tab turns the hourly strip into precipitation bars \u2014 bar height is the amount, one scale for the whole day, chance of rain underneath',
+       'The wind tab turns it into one speed line across the day: dashed before now, a dot at now, a lighter band for gusts',
+       'The hourly wind arrows now show the real direction for that hour',
+       'The temperature tab no longer prints rain percentages \u2014 those belong to the rain tab',
+       'The ten-day list follows the same switch: hourly bars + total + chance for rain, a line + a speed range for wind',
+       'Dropped the \u201cNext 10 days\u201d heading; ten dated rows already say it']},
   {v:'3.14.0',
    zh:['详情页重新排序，学 iOS 天气：实况小时条排在前面，十天概览接着，多模式对比图挪到下面',
        '实况卡片加了气温 / 降雨 / 风速三个切换，按一下就看接下来每小时的那一项',
@@ -189,11 +202,11 @@ zh:{
   sumRain:(p,pk)=>`${p}有雨，最高 ${pk}%`, sumShowers:(p,pk)=>`${p}可能有零星阵雨，最高 ${pk}%`,
   sumHot:(t)=>`全天无雨，最高 ${t}`, sumCalm:'全天无明显降雨', sumUnknown:'暂无足够数据',
   pNight:'凌晨', pMorning:'早上', pAfternoon:'下午', pEvening:'晚上',
-  condT:'实况', vRain:'降雨', vWind:'风速',
+  condT:'实况', vRain:'降雨', vWind:'风速', sInten:'强度', sChance:'降雨机率',
   cWind:'风', cPress:'气压', cSun:'日出日落', cUV:'紫外线', cHumid:'湿度', cVis:'能见度', cRain:'降雨',
   dewPoint:(v)=>`露点 ${v}`, visClear:'视野通透', visOk:'一般', visPoor:'有雾或霾',
   uvLow:'低', uvMid:'中等', uvHigh:'高', uvVeryHigh:'很高', uvExtreme:'极高',
-  pressLow:'低', pressHigh:'高', days10:'未来 10 天', today:'今天',
+  pressLow:'低', pressHigh:'高', today:'今天',
   ntEntry:'通知提醒', ntOff:'未开启', ntSummary:(b,w)=>`${b} 个地块 · ${w} 个时段`,
   ntMaster:'启用提醒', ntWindows:'时段', ntRules:'提醒条件', ntBlocks:'地块',
   wMorning:'早上', wAfternoon:'下午', wEvening:'晚上', wNight:'凌晨',
@@ -265,11 +278,11 @@ en:{
   sumRain:(p,pk)=>`Rain ${p}, peaking at ${pk}%`, sumShowers:(p,pk)=>`Scattered showers possible ${p}, up to ${pk}%`,
   sumHot:(t)=>`No rain, high of ${t}`, sumCalm:'No significant rain', sumUnknown:'Not enough data yet',
   pNight:'overnight', pMorning:'in the morning', pAfternoon:'in the afternoon', pEvening:'in the evening',
-  condT:'Conditions', vRain:'Precipitation', vWind:'Wind',
+  condT:'Conditions', vRain:'Precipitation', vWind:'Wind', sInten:'Intensity', sChance:'Chance of rain',
   cWind:'Wind', cPress:'Pressure', cSun:'Sun', cUV:'UV index', cHumid:'Humidity', cVis:'Visibility', cRain:'Rain',
   dewPoint:(v)=>`Dew point ${v}`, visClear:'Clear view', visOk:'Moderate', visPoor:'Haze or fog',
   uvLow:'Low', uvMid:'Moderate', uvHigh:'High', uvVeryHigh:'Very high', uvExtreme:'Extreme',
-  pressLow:'Low', pressHigh:'High', days10:'Next 10 days', today:'Today',
+  pressLow:'Low', pressHigh:'High', today:'Today',
   ntEntry:'Reminders', ntOff:'Off', ntSummary:(b,w)=>`${b} location${b===1?'':'s'} · ${w} window${w===1?'':'s'}`,
   ntMaster:'Enable reminders', ntWindows:'Time windows', ntRules:'Alert when', ntBlocks:'Locations',
   wMorning:'Morning', wAfternoon:'Afternoon', wEvening:'Evening', wNight:'Overnight',
@@ -341,11 +354,11 @@ ms:{
   sumRain:(p,pk)=>`Hujan ${p}, tertinggi ${pk}%`, sumShowers:(p,pk)=>`Mungkin hujan renyai ${p}, sehingga ${pk}%`,
   sumHot:(t)=>`Tiada hujan, tertinggi ${t}`, sumCalm:'Tiada hujan ketara', sumUnknown:'Data belum cukup',
   pNight:'dini hari', pMorning:'pagi', pAfternoon:'petang', pEvening:'malam',
-  condT:'Keadaan', vRain:'Hujan', vWind:'Angin',
+  condT:'Keadaan', vRain:'Hujan', vWind:'Angin', sInten:'Keamatan', sChance:'Kebarangkalian hujan',
   cWind:'Angin', cPress:'Tekanan', cSun:'Matahari', cUV:'Indeks UV', cHumid:'Kelembapan', cVis:'Penglihatan', cRain:'Hujan',
   dewPoint:(v)=>`Takat embun ${v}`, visClear:'Pandangan jelas', visOk:'Sederhana', visPoor:'Jerebu atau kabus',
   uvLow:'Rendah', uvMid:'Sederhana', uvHigh:'Tinggi', uvVeryHigh:'Sangat tinggi', uvExtreme:'Ekstrem',
-  pressLow:'Rendah', pressHigh:'Tinggi', days10:'10 hari akan datang', today:'Hari ini',
+  pressLow:'Rendah', pressHigh:'Tinggi', today:'Hari ini',
   ntEntry:'Peringatan', ntOff:'Tidak aktif', ntSummary:(b,w)=>`${b} lokasi · ${w} tempoh`,
   ntMaster:'Aktifkan peringatan', ntWindows:'Tempoh masa', ntRules:'Beritahu apabila', ntBlocks:'Lokasi',
   wMorning:'Pagi', wAfternoon:'Petang', wEvening:'Malam', wNight:'Dini hari',
@@ -561,6 +574,10 @@ const nz = v => v !== null && v !== undefined && !Number.isNaN(v);
 const fT = v => nz(v) ? Math.round(v) + '°' : '—';
 const fW = v => nz(v) ? (S.units.wind === 'ms' ? v.toFixed(1) : Math.round(v)) + ' ' + uW() : '—';
 const fR = v => nz(v) ? (S.units.rain === 'inch' ? v.toFixed(2) : v.toFixed(1)) + ' ' + uR() : '—';
+/* bare numbers, for the places that print the unit once in a header instead of
+   on every value; the API already answers in the user's units */
+const rainOut   = v => S.units.rain === 'inch' ? v.toFixed(2) : v.toFixed(1);
+const windShown = v => S.units.wind === 'ms' ? v.toFixed(1) : String(Math.round(v));
 const compass = deg => {
   if(!nz(deg)) return '—';
   const pts = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
@@ -599,7 +616,7 @@ const unitParams = () => ({
    model-specific (precipitation_probability, uv_index) is fetched separately. */
 const SAFE_CURRENT = 'temperature_2m,relative_humidity_2m,visibility,dew_point_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,surface_pressure,precipitation,is_day';
 const MIN_CURRENT  = 'temperature_2m,wind_speed_10m,is_day';
-const SAFE_HOURLY  = 'temperature_2m,precipitation,weather_code,wind_speed_10m,is_day';
+const SAFE_HOURLY  = 'temperature_2m,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,is_day';
 const MIN_HOURLY   = 'temperature_2m,precipitation';
 const SAFE_DAILY   = 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,sunrise,sunset';
 const MIN_DAILY    = 'temperature_2m_max,temperature_2m_min,precipitation_sum';
@@ -1707,33 +1724,127 @@ function renderCardGrid(){
 /* ----- Ten-day overview -----
    The date strip answers "which day"; this answers "what kind of week".
    Rows are tappable, so it is a second way into the same selection. */
+/* The ten-day list answers the same question as the strip above it, one row
+   per day instead of one per hour, so it shows whichever metric is selected —
+   and carries no heading, because ten dated rows are not ambiguous. */
 function renderTenDay(){
-  const d = D.main, dd = d && d.daily;
+  const d = D.main, dd = d && d.daily, hh = d && d.hourly;
   if(!dd || !dd.time || !dd.time.length) return '';
   const m = M(D.loc.model || S.defaultModel);
   const g = k => pick(dd, k, m.id, true);
+  const nameOf = (day, i) => i === 0 ? t('today')
+    : new Date(day + 'T12:00:00').toLocaleDateString(locale(), {weekday:'short'});
+  const rows = D.hvar === 'rain' ? tenDayRain(dd, hh, g, m, nameOf)
+             : D.hvar === 'wind' ? tenDayWind(dd, hh, m, nameOf)
+             : tenDayTemp(dd, g, nameOf);
+  return rows ? `<div class="glass tenday">${rows}</div>` : '';
+}
+
+function dayRow(i, name, inner){
+  return `<button class="day${i === D.day ? ' on' : ''}" data-tenday="${i}">
+    <span class="dn">${esc(name)}</span>${inner}</button>`;
+}
+/* hours of one day out of the ten-day hourly series */
+function hoursOf(hh, day, arr){
+  if(!hh || !hh.time || !arr) return null;
+  const {start, n} = sliceDay(hh.time, day);
+  if(start < 0) return null;
+  const out = [];
+  for(let k = 0; k < n; k++) out.push(nz(arr[start + k]) ? arr[start + k] : null);
+  return out;
+}
+
+function tenDayTemp(dd, g, nameOf){
   const mx = g('temperature_2m_max'), mn = g('temperature_2m_min');
   const cd = g('weather_code'), ps = g('precipitation_sum');
   const all = [].concat(mx || [], mn || []).filter(nz);
   if(!all.length) return '';
   const lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
   const rng = (hi - lo) > 0 ? (hi - lo) : 1;
-  const rows = dd.time.map((day, i) => {
+  return dd.time.map((day, i) => {
     const a = mn ? mn[i] : null, b = mx ? mx[i] : null;
     let left = nz(a) ? ((a - lo) / rng) * 100 : 0;
     let wid = nz(a) && nz(b) ? Math.max(6, ((b - a) / rng) * 100) : 0;
     if(left + wid > 100) left = Math.max(0, 100 - wid);
-    const label = i === 0 ? t('today')
-      : new Date(day + 'T12:00:00').toLocaleDateString(locale(), {weekday:'short'});
-    return `<button class="day${i === D.day ? ' on' : ''}" data-tenday="${i}">
-      <span class="dn">${esc(label)}</span>
-      <span class="di">${icon(wmo(cd ? cd[i] : 3).i, 28)}</span>
-      <span class="dp">${ps && nz(ps[i]) && ps[i] > 0 ? fR(ps[i]) : ''}</span>
-      <span class="bar"><i style="left:${left.toFixed(1)}%;width:${wid.toFixed(1)}%"></i></span>
-      <span class="dt"><i>${fT(a)}</i>${fT(b)}</span></button>`;
+    return dayRow(i, nameOf(day, i),
+      `<span class="di">${icon(wmo(cd ? cd[i] : 3).i, 28)}</span>
+       <span class="dp">${ps && nz(ps[i]) && ps[i] > 0 ? fR(ps[i]) : ''}</span>
+       <span class="bar"><i style="left:${left.toFixed(1)}%;width:${wid.toFixed(1)}%"></i></span>
+       <span class="dt"><i>${fT(a)}</i>${fT(b)}</span>`);
   }).join('');
-  return `<div class="glass"><h4>${t('days10')}</h4>${rows}</div>`;
 }
+
+function tenDayRain(dd, hh, g, m, nameOf){
+  const ps = g('precipitation_sum');
+  const ex = (D.ext && D.ext !== 'fail') ? D.ext : null;
+  const pp = ex && ex.daily && ex.daily.precipitation_probability_max;
+  const H = hh ? pick(hh, 'precipitation', m.id, true) : null;
+  /* one scale across all ten days, or a damp Friday would draw itself as
+     heavily as a flooded Wednesday */
+  let top = 0;
+  const series = dd.time.map(day => {
+    const a = hoursOf(hh, day, H);
+    if(a) a.forEach(x => { if(nz(x) && x > top) top = x; });
+    return a;
+  });
+  top = Math.max(top, 0.6);
+  return dd.time.map((day, i) => dayRow(i, nameOf(day, i),
+    `<span class="spark">${series[i] ? sparkBars(series[i], top) : ''}</span>
+     <span class="dv">${ps && nz(ps[i]) && ps[i] > 0 ? rainOut(ps[i]) + ' ' + uR() : '—'}</span>
+     <span class="dq">${pp && nz(pp[i]) ? DROP + pp[i] + '%' : ''}</span>`)).join('');
+}
+
+function tenDayWind(dd, hh, m, nameOf){
+  const W2 = hh ? pick(hh, 'wind_speed_10m', m.id, true) : null;
+  const G2 = hh ? pick(hh, 'wind_gusts_10m', m.id, true) : null;
+  let lo = Infinity, hi = -Infinity;
+  const series = dd.time.map(day => {
+    const sp = hoursOf(hh, day, W2);
+    if(!sp) return null;
+    const gu = hoursOf(hh, day, G2) || sp.map(() => null);
+    sp.concat(gu).forEach(x => { if(nz(x)){ if(x < lo) lo = x; if(x > hi) hi = x; } });
+    return {sp, gu};
+  });
+  if(!isFinite(lo)) return '';
+  return dd.time.map((day, i) => {
+    const s = series[i];
+    const vals = s ? s.sp.filter(nz) : [];
+    const range = vals.length
+      ? `${windShown(Math.min.apply(null, vals))} – ${windShown(Math.max.apply(null, vals))}`
+      : '—';
+    return dayRow(i, nameOf(day, i),
+      `<span class="spark">${s ? sparkLine(s.sp, s.gu, lo, hi) : ''}</span>
+       <span class="dv wide">${range} <em>${uW()}</em></span>`);
+  }).join('');
+}
+
+const SPK_W = 96, SPK_H = 22;
+function sparkBars(a, top){
+  const step = SPK_W / a.length, bw = Math.max(1.5, step - 1.5);
+  const bars = a.map((x, k) => {
+    const wet = nz(x) && x > 0;
+    const h = wet ? Math.max(2.5, x / top * SPK_H) : 2.5;
+    return `<rect class="${wet ? 'wet' : 'dry'}" x="${(k * step).toFixed(1)}" y="${(SPK_H - h).toFixed(1)}"
+      width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="0.8"/>`;
+  }).join('');
+  return `<svg class="sbar" width="${SPK_W}" height="${SPK_H}" viewBox="0 0 ${SPK_W} ${SPK_H}">${bars}</svg>`;
+}
+function sparkLine(sp, gu, lo, hi){
+  const n = sp.length;
+  if(n < 2) return '';
+  const x = k => (k / (n - 1) * SPK_W);
+  const y = val => hi === lo ? SPK_H / 2
+                 : SPK_H - 2 - (val - lo) / (hi - lo) * (SPK_H - 4);
+  const pts = arr => arr.map((val, k) => nz(val) ? `${x(k).toFixed(1)},${y(val).toFixed(1)}` : null)
+                        .filter(Boolean);
+  const line = pts(sp), band = pts(gu);
+  if(line.length < 2) return '';
+  const shade = (band.length === line.length && gu.some((val, k) => nz(val) && nz(sp[k]) && val > sp[k] + 0.5))
+    ? `<polygon class="wband" points="${band.concat(line.slice().reverse()).join(' ')}"/>` : '';
+  return `<svg class="sline" width="${SPK_W}" height="${SPK_H}" viewBox="0 0 ${SPK_W} ${SPK_H}">
+    ${shade}<polyline points="${line.join(' ')}"/></svg>`;
+}
+
 function bindTenDay(){
   $$('#d-body [data-tenday]').forEach(b => b.addEventListener('click', () => {
     const i = +b.dataset.tenday;
@@ -1765,6 +1876,14 @@ const HVARS = [
   ['wind', 'vWind', '<path d="M3 8h10a2.6 2.6 0 1 0-2.6-2.6M3 12h14a2.6 2.6 0 1 1-2.6 2.6M3 16h8"/>']
 ];
 
+/* Each metric is shown in the form that reads fastest, the way iOS does it:
+   temperature as a glyph and a number, precipitation as intensity bars you can
+   scan for the wet hours, wind as one continuous line carrying the day's shape.
+   Copying the layout without copying that would miss the point. */
+const HCOL_W = 62, HCOL_GAP = 6, RAIN_H = 46, WIND_H = 36;   /* must match index.html */
+const DROP = '<svg class="hdrop" viewBox="0 0 24 24"><path d="M12 3.2s5 5.6 5 8.8a5 5 0 0 1-10 0c0-3.2 5-8.8 5-8.8z"/></svg>';
+const xOf = k => k * (HCOL_W + HCOL_GAP) + HCOL_W / 2;
+
 function renderHourStrip(){
   const d = D.main, m = M(D.loc.model || S.defaultModel);
   const hh = d && d.hourly, dd = d && d.daily;
@@ -1781,40 +1900,106 @@ function renderHourStrip(){
   const T2 = pick(hh,'temperature_2m',m.id,true);
   const R2 = pick(hh,'precipitation',m.id,true);
   const W2 = pick(hh,'wind_speed_10m',m.id,true);
+  const G2 = pick(hh,'wind_gusts_10m',m.id,true);
+  const Wd = pick(hh,'wind_direction_10m',m.id,true);
   const C2 = pick(hh,'weather_code',m.id,true), Dy = pick(hh,'is_day',m.id,true);
-  const unit = v === 'temp' ? uT() : v === 'rain' ? uR() : uW();
-  const valueOf = i => v === 'temp' ? fT(T2 ? T2[i] : null)
-                     : v === 'rain' ? (R2 && nz(R2[i]) ? fR(R2[i]) : '—')
-                     : fW(W2 ? W2[i] : null);
+  const hourAt = k => k === nowAt ? t('now2') : hh.time[start + k].slice(11,16);
+  const probAt = k => { const p = P2[hh.time[start + k]]; return nz(p) ? p : null; };
+  const head = k => `<div class="hh">${hourAt(k)}</div>`;
+  const cls = k => `hcol${k === nowAt ? ' nowcol' : ''}`;
 
-  let strip = '';
-  for(let k = 0; k < n; k++){
-    const i = start + k;
-    /* on the wind tab an arrow beats a cloud: it is the quantity being read */
-    const glyph = v === 'wind'
-      ? `<svg class="harrow" viewBox="0 0 24 24"><path d="M12 19V6M12 6l-5 5M12 6l5 5"/></svg>`
-      : icon(iconFor(C2 ? C2[i] : 3, Dy ? Dy[i] : 1), 30);
-    strip += `<div class="hcol${k === nowAt ? ' nowcol' : ''}">
-      <div class="hh">${k === nowAt ? t('now2') : hh.time[i].slice(11,16)}</div>
-      <div class="hi">${glyph}</div>
-      <div class="ht">${valueOf(i)}</div>
-      <div class="hp">${nz(P2[hh.time[i]]) ? P2[hh.time[i]] + '%' : ''}</div>
-    </div>`;
+  let cols = '', over = '', sub;
+
+  if(v === 'rain'){
+    /* bars are read against each other, so one scale for the whole day — with a
+       floor of 1 mm, or a drizzle would draw itself as a downpour */
+    const mm = [];
+    for(let k = 0; k < n; k++) mm.push(nz(R2 && R2[start + k]) ? R2[start + k] : 0);
+    const top = Math.max(1, ...mm);
+    for(let k = 0; k < n; k++){
+      const h = mm[k] > 0 ? Math.max(4, Math.round(mm[k] / top * RAIN_H)) : 0;
+      const p = probAt(k);
+      cols += `<div class="${cls(k)}">${head(k)}
+        <div class="hmm">${mm[k] > 0 ? rainOut(mm[k]) : ''}</div>
+        <div class="hbar"><i style="height:${h}px"></i></div>
+        <div class="hp">${p === null ? '' : DROP + p + '%'}</div></div>`;
+    }
+    sub = `${t('sInten')} (${uR()}) · ${t('sChance')}`;
+
+  } else if(v === 'wind'){
+    const sp = [], gu = [];
+    for(let k = 0; k < n; k++){
+      sp.push(nz(W2 && W2[start + k]) ? W2[start + k] : null);
+      gu.push(nz(G2 && G2[start + k]) ? G2[start + k] : null);
+    }
+    for(let k = 0; k < n; k++){
+      /* the arrow points where the wind is going: a bearing is reported as the
+         direction it blows FROM, so the glyph is turned the other way round */
+      const dir = Wd && nz(Wd[start + k]) ? (Wd[start + k] + 180) % 360 : null;
+      const turn = dir === null ? 'style="opacity:.35"' : `style="transform:rotate(${dir.toFixed(0)}deg)"`;
+      cols += `<div class="${cls(k)}">${head(k)}
+        <div class="harrowbox"><svg class="harrow" viewBox="0 0 24 24" ${turn}><path d="M12 19V6M12 6l-5 5M12 6l5 5"/></svg></div>
+        <div class="ht">${nz(sp[k]) ? windShown(sp[k]) : '—'}</div>
+        <div class="hu">${uW()}</div></div>`;
+    }
+    over = windLine(sp, gu, n, nowAt);
+    sub = `${t('vWind')} (${uW()}) · ${t('gust')}`;
+
+  } else {
+    for(let k = 0; k < n; k++){
+      const i = start + k;
+      cols += `<div class="${cls(k)}">${head(k)}
+        <div class="hi">${icon(iconFor(C2 ? C2[i] : 3, Dy ? Dy[i] : 1), 30)}</div>
+        <div class="ht">${fT(T2 ? T2[i] : null)}</div></div>`;
+    }
+    sub = `${t('vTemp')} (${uT()})`;
   }
 
-  const label = v === 'temp' ? t('vTemp') : v === 'rain' ? t('vRain') : t('vWind');
   const sw2 = HVARS.map(([id, key, path]) =>
     `<button class="hsw${id === v ? ' on' : ''}" data-hvar="${id}" aria-label="${t(key)}" title="${t(key)}">
       <svg viewBox="0 0 24 24">${path}</svg></button>`).join('');
+  const w = n * HCOL_W + (n - 1) * HCOL_GAP;
 
   return `<div class="glass cond">
     <div class="cond-hd">
       <div><h4 style="margin:0">${t('condT')}</h4>
-        <p class="cond-sub">${esc(label)} (${unit}) · ${esc(dayLabel())}</p></div>
+        <p class="cond-sub">${esc(sub)}</p></div>
       <div class="hswrow">${sw2}</div>
     </div>
-    <div class="hstrip">${strip}</div></div>`;
+    <div class="hstrip ${v}"><div class="hrow" style="width:${w}px">${cols}${over}</div></div></div>`;
 }
+
+/* One line across the whole day rather than a number per column: the shape is
+   the information. Dashed behind the current hour, solid ahead of it, with the
+   gust band shaded above so a calm average with violent gusts cannot hide. */
+function windLine(sp, gu, n, nowAt){
+  const seen = sp.concat(gu).filter(nz);
+  if(seen.length < 2) return '';
+  const lo = Math.min(...seen), hi = Math.max(...seen);
+  const y = val => hi === lo ? WIND_H / 2
+                 : WIND_H - 4 - (val - lo) / (hi - lo) * (WIND_H - 8);
+  const at = (arr, k) => nz(arr[k]) ? `${xOf(k).toFixed(1)},${y(arr[k]).toFixed(1)}` : null;
+  const run = (arr, from, to) => { const p = []; for(let k = from; k <= to; k++){ const q = at(arr, k); if(q) p.push(q); } return p; };
+
+  const cut = (nowAt >= 0 && nowAt < n) ? nowAt : 0;
+  const past = run(sp, 0, cut), future = run(sp, cut, n - 1);
+  const gust = run(gu, 0, n - 1), speed = run(sp, 0, n - 1);
+
+  let band = '';
+  if(gust.length > 1 && speed.length === gust.length && gu.some((g, k) => nz(g) && nz(sp[k]) && g > sp[k] + 0.5))
+    band = `<polygon class="wband" points="${gust.concat(speed.slice().reverse()).join(' ')}"/>`;
+
+  const dot = (nowAt >= 0 && nz(sp[nowAt]))
+    ? `<circle class="wdot" cx="${xOf(nowAt).toFixed(1)}" cy="${y(sp[nowAt]).toFixed(1)}" r="3.4"/>` : '';
+  const w = n * HCOL_W + (n - 1) * HCOL_GAP;
+
+  return `<svg class="hline" width="${w}" height="${WIND_H}" viewBox="0 0 ${w} ${WIND_H}">
+    ${band}
+    ${past.length > 1 ? `<polyline class="wpast" points="${past.join(' ')}"/>` : ''}
+    ${future.length > 1 ? `<polyline class="wnow" points="${future.join(' ')}"/>` : ''}
+    ${dot}</svg>`;
+}
+
 function bindHourStrip(){
   $$('#d-body [data-hvar]').forEach(b => b.addEventListener('click', () => {
     if(D.hvar === b.dataset.hvar) return;

@@ -466,19 +466,54 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
 .hsw svg{width:17px;height:17px;fill:none;stroke:rgba(255,255,255,.8);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .hsw.on{background:#fff}
 .hsw.on svg{stroke:#141b3d}
-.harrow{width:26px;height:26px;fill:none;stroke:#cfe3fb;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.hstrip{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}
+.harrow{width:26px;height:26px;fill:none;stroke:#cfe3fb;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transform-origin:center}
+.hstrip{overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}
 .hstrip::-webkit-scrollbar{display:none}
+/* the row carries its own width so the wind line can span every column */
+.hrow{position:relative;display:flex;gap:6px}
 .hcol{flex:0 0 62px;text-align:center;padding:10px 4px;border-radius:16px;background:rgba(255,255,255,.09)}
 .hcol .hh{font-size:12.5px;color:rgba(255,255,255,.78)}
 .hcol .hi{width:30px;height:30px;margin:5px auto}
 .hcol .ht{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
-.hcol .hp{font-size:11.5px;color:#bfe0ff;margin-top:3px;min-height:15px}
+.hcol .hp{font-size:11.5px;color:#bfe0ff;margin-top:3px;min-height:15px;
+  display:flex;align-items:center;justify-content:center;gap:2px}
+.hdrop{width:9px;height:9px;fill:#5ac8fa;flex:0 0 9px}
+/* precipitation: bars share one scale, so the wet hours stand out at a glance */
+.hcol .hmm{font-size:11px;color:#bfe0ff;min-height:14px;font-variant-numeric:tabular-nums}
+.hcol .hbar{position:relative;height:46px;margin:3px 0 5px;display:flex;align-items:flex-end;
+  justify-content:center;border-bottom:1px solid rgba(255,255,255,.28)}
+/* the grid is dotted on its own layer, so the mask cannot perforate the bar */
+.hcol .hbar::before{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(to top,transparent 0 14px,rgba(255,255,255,.24) 14px 15px);
+  -webkit-mask-image:repeating-linear-gradient(to right,#000 0 2px,transparent 2px 5px);
+  mask-image:repeating-linear-gradient(to right,#000 0 2px,transparent 2px 5px)}
+.hcol .hbar i{position:relative;display:block;width:22px;border-radius:4px;
+  background:linear-gradient(to top,#3aa7ea,#5ac8fa)}
+/* wind: the shape of the day is the point, so one line runs under every column */
+.hstrip.wind .hcol{padding-bottom:42px}
+.hcol .harrowbox{height:30px;margin:5px auto;display:grid;place-items:center}
+.hcol .hu{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px}
+.hline{position:absolute;left:0;bottom:4px;pointer-events:none}
+.hline polyline{fill:none;stroke:#2ec5d3;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hline .wpast{stroke-dasharray:5 4;opacity:.75}
+.hline .wband{fill:rgba(46,197,211,.22);stroke:none}
+.hline .wdot{fill:#fff;stroke:#2ec5d3;stroke-width:2}
 .day{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid rgba(255,255,255,.13)}
 .day:first-child{border-top:0}
 .day .dn{width:52px;font-size:15.5px;font-weight:600}
 .day .di{width:30px;height:30px;flex:0 0 30px}
 .day .dp{width:60px;font-size:12.5px;color:#bfe0ff;text-align:right;font-variant-numeric:tabular-nums}
+/* metric rows: a sparkline of the day's hours, then that day's figure */
+.day .spark{flex:1;min-width:0;display:flex;justify-content:center}
+.day .dv{font-size:14.5px;font-variant-numeric:tabular-nums;text-align:right;width:66px;flex:0 0 66px}
+.day .dv.wide{width:104px;flex:0 0 104px}
+.day .dv em{font-style:normal;font-size:12px;color:rgba(255,255,255,.55)}
+.day .dq{width:52px;flex:0 0 52px;font-size:13.5px;color:#bfe0ff;font-variant-numeric:tabular-nums;
+  display:flex;align-items:center;justify-content:flex-end;gap:2px}
+.sbar .wet{fill:#5ac8fa}
+.sbar .dry{fill:rgba(255,255,255,.22)}
+.sline polyline{fill:none;stroke:#2ec5d3;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sline .wband{fill:rgba(46,197,211,.22);stroke:none}
 .day .bar{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.2);position:relative;min-width:34px}
 .day .bar i{position:absolute;height:100%;border-radius:3px;background:linear-gradient(90deg,#8ed0ff,#ffd76e)}
 .day .dt{font-size:15px;font-variant-numeric:tabular-nums;width:74px;text-align:right}
