@@ -114,6 +114,12 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
 .ptr-ring{display:grid;place-items:center}
 .ptr.spinning .ptr-ring{animation:ptrspin .8s linear infinite}
 @keyframes ptrspin{to{transform:rotate(360deg)}}
+.rel-v{display:flex;align-items:baseline;gap:9px;margin:16px 0 8px}
+.rel-v:first-child{margin-top:2px}
+.rel-v b{font-size:16px;font-weight:700}
+.rel-v small{font-size:12.5px;color:var(--dim)}
+.rel-l{margin:0;padding-left:19px}
+.rel-l li{font-size:14.5px;line-height:1.6;margin-bottom:6px;color:rgba(255,255,255,.9)}
 .list-hint{display:none;margin:0 2px 12px;font-size:13px;line-height:1.45;color:var(--dim)}
 /* the card being dragged rides above the rest and stops animating, so it
    tracks the finger exactly; the others glide into the gap it leaves */
@@ -567,6 +573,13 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 <div class="ptr" id="ptr"><div class="ptr-ring" id="ptr-ring">
   <svg viewBox="0 0 24 24"><path d="M3.6 12a8.4 8.4 0 1 1 2.6 6.1"/><path d="M3.2 6.4v5.2h5.2"/></svg>
 </div></div>
+
+<div class="sheet" id="sheet-rel">
+  <div class="grab"></div>
+  <div class="sheet-hdr"><div class="sp"></div><h3 data-t="relTitle">这一版有什么变化</h3>
+    <button class="done" id="rel-done" data-t="relDone">知道了</button></div>
+  <div class="sheet-body" id="rel-body"></div>
+</div>
 
 <div class="scrim" id="scrim"></div>
 

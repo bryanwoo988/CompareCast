@@ -8,7 +8,61 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.8.0';
+const APP_VERSION = '3.9.0';
+
+/* What changed, per release.
+
+   Newest first. tests/releases.test.js fails the build if APP_VERSION has no
+   entry here or the order slips, so a release cannot quietly ship without
+   telling the user what it did. */
+const RELEASES = [
+  {v:'3.9.0',
+   zh:['更新后会弹出这张说明，告诉你这一版改了什么',
+       '修好了设定提醒时间时，时间选择器会自己收起来的问题',
+       '修好了拖动排序时，后台刷新会让拖拽失效的问题',
+       '一个地块都没勾时不再报错，改为提示你去勾一个',
+       '从设定进通知页后，返回键现在能正常退回'],
+   en:['This panel now appears after an update, listing what changed',
+       'Fixed the time picker closing by itself while setting a reminder time',
+       'Fixed drag-to-reorder silently failing when a background refresh landed',
+       'Ticking no locations no longer shows an error — it explains what to do',
+       'The back button now works after opening reminders from settings'],
+   ms:['Panel ini kini muncul selepas kemas kini, menyenaraikan apa yang berubah',
+       'Pemilih masa tidak lagi tertutup sendiri semasa menetapkan masa peringatan',
+       'Susun-seret tidak lagi gagal senyap apabila muat semula latar tiba',
+       'Tiada lokasi ditanda tidak lagi dipaparkan sebagai ralat',
+       'Butang kembali kini berfungsi selepas membuka peringatan dari tetapan']},
+  {v:'3.8.0',
+   zh:['通知登记状态不再谎报成功，失败会说明原因', '登记失败后会自动重试'],
+   en:['Reminder registration no longer claims success when it failed, and says why',
+       'A failed registration now retries by itself'],
+   ms:['Pendaftaran peringatan tidak lagi mendakwa berjaya apabila gagal',
+       'Pendaftaran yang gagal kini mencuba semula sendiri']},
+  {v:'3.7.0',
+   zh:['提醒改用地块所在时区，「早上 6 点」指的是田里的 6 点', '「关于」里的版本号现在是真的'],
+   en:['Reminders follow each location\u2019s own time zone', 'The version in About is now the real one'],
+   ms:['Peringatan mengikut zon waktu lokasi itu sendiri', 'Versi dalam Perihal kini yang sebenar']},
+  {v:'3.6.0',
+   zh:['天气提醒上线：按时段、按地块推送'],
+   en:['Weather reminders are live: per time window, per location'],
+   ms:['Peringatan cuaca kini aktif: ikut tempoh masa dan lokasi']},
+  {v:'3.3.0',
+   zh:['下拉刷新，并会顺带检查有没有新版本'],
+   en:['Pull to refresh, which also checks for a new version'],
+   ms:['Tarik untuk muat semula, sekali gus menyemak versi baharu']},
+  {v:'3.2.0',
+   zh:['长按地点可拖动排序，排最前的成为地图默认视角'],
+   en:['Hold a location to drag it into order; the first becomes the map\u2019s default view'],
+   ms:['Tekan dan tahan lokasi untuk menyusunnya']},
+  {v:'3.1.0',
+   zh:['地图加了定位、加点与地名搜索', '修好了地图手势与页面滚动打架'],
+   en:['The map gained locate, add and place search', 'Fixed map gestures fighting page scroll'],
+   ms:['Peta kini ada cari lokasi, tambah dan carian tempat']},
+  {v:'3.0.0',
+   zh:['详情页改为按日期组织，图表可触摸查值'],
+   en:['The detail page is organised by date, with touch-readable charts'],
+   ms:['Halaman perincian disusun mengikut tarikh']}
+];
 
 const MODELS = [
   {id:'best_match', short:'Best Match', color:'#38bdf8',
@@ -135,7 +189,8 @@ zh:{
   unitSection:'单位', tempU:'温度', windU:'风速', rainU:'降雨',
   defModel:'新地点默认模式', defModelD:'加新地点时先用这个模式。之后每个地点都能单独改。',
   cmpSection:'对比哪些模式', cmpD:'勾选的模式会出现在每个地点的对比图和准度核对里。',
-  about:'关于', version:'版本', dataSrc:'数据来源', savedOk:'已保存', deleted:'已删除'
+  about:'关于', version:'版本',
+  relTitle:'这一版有什么变化', relDone:'知道了', relSince:(v)=>`自 ${v} 以来`, dataSrc:'数据来源', savedOk:'已保存', deleted:'已删除'
 },
 en:{
   app:'Predict Weather', subSaved:'My Locations', subMap:'Weather Map', tabSaved:'Saved', tabMap:'Map',
@@ -208,7 +263,8 @@ en:{
   unitSection:'Units', tempU:'Temperature', windU:'Wind', rainU:'Precipitation',
   defModel:'Default model for new locations', defModelD:'Used when you add a location. You can still change it per location.',
   cmpSection:'Models to compare', cmpD:'Ticked models appear in the compare chart and the accuracy check.',
-  about:'About', version:'Version', dataSrc:'Data sources', savedOk:'Saved', deleted:'Removed'
+  about:'About', version:'Version',
+  relTitle:'What changed', relDone:'Got it', relSince:(v)=>`Since ${v}`, dataSrc:'Data sources', savedOk:'Saved', deleted:'Removed'
 },
 ms:{
   app:'Ramalan Cuaca', subSaved:'Lokasi Saya', subMap:'Peta Cuaca', tabSaved:'Lokasi', tabMap:'Peta',
@@ -281,7 +337,8 @@ ms:{
   unitSection:'Unit', tempU:'Suhu', windU:'Angin', rainU:'Hujan',
   defModel:'Model asal untuk lokasi baharu', defModelD:'Digunakan bila anda tambah lokasi. Boleh tukar untuk setiap lokasi.',
   cmpSection:'Model untuk dibanding', cmpD:'Model bertanda muncul dalam carta banding dan semakan ketepatan.',
-  about:'Perihal', version:'Versi', dataSrc:'Sumber data', savedOk:'Disimpan', deleted:'Dibuang'
+  about:'Perihal', version:'Versi',
+  relTitle:'Apa yang berubah', relDone:'Faham', relSince:(v)=>`Sejak ${v}`, dataSrc:'Sumber data', savedOk:'Disimpan', deleted:'Dibuang'
 }};
 
 /* ---------- 3. Weather codes + icons ---------- */
@@ -2583,6 +2640,32 @@ function drawInfo(){
     <div class="group"><h4>${t('about')}</h4><p style="margin-bottom:10px">${t('app')} · ${t('version')} ${APP_VERSION}</p></div>`;
 }
 
+/* ---------- 14b. Release notes ----------
+   An update lands by itself — the service worker swaps the shell and the next
+   load is simply different. Without this the user has no idea anything moved,
+   which is exactly what happened when the version in About stayed at 2.0. */
+function drawReleases(list){
+  $('#rel-body').innerHTML = list.map(r => `
+    <div class="rel-v"><b>${esc(r.v)}</b></div>
+    <ul class="rel-l">${(r[S.lang] || r.en).map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('');
+}
+
+function maybeShowReleaseNotes(){
+  const seen = S.seenVersion;
+  /* a genuinely new install has nothing to catch up on; someone who already
+     has locations but no record predates this feature, and does */
+  const returning = S.locations.length > 0;
+  if(seen === APP_VERSION){ return; }
+  const list = notesSince(RELEASES, seen).slice(0, 4);
+  S.seenVersion = APP_VERSION;
+  save();
+  if(!list.length || (!seen && !returning)) return;
+  drawReleases(list);
+  setTimeout(() => show('#sheet-rel'), 900);
+}
+
+$('#rel-done').addEventListener('click', hide);
+
 /* ---------- 15. Tabs, language, boot ---------- */
 function setTab(which){
   const s = which === 'saved';
@@ -2666,6 +2749,7 @@ window.addEventListener('popstate', () => {
   loadAll();
   /* a subscription that failed in an earlier session repairs itself here */
   if(S.notify && S.notify.enabled) scheduleSync(4000);
+  maybeShowReleaseNotes();
   try{
     if(sessionStorage.getItem('pw:updated')){ sessionStorage.removeItem('pw:updated'); toast(t('updated')); }
   }catch(e){}

@@ -124,4 +124,22 @@ function syncMessage(state, enabled, permission){
   return {kind:'err', reason:state || 'unknown'};
 }
 
-if(typeof module !== 'undefined') module.exports = {minutesOf, inWindow, windowSlice, breaches, dueWindows, spanDays, aggregate, syncMessage};
+/* numeric, segment by segment — '3.10.0' is newer than '3.9.0', which a
+   string compare gets backwards */
+function cmpVersion(a, b){
+  const pa = String(a).split('.').map(Number), pb = String(b).split('.').map(Number);
+  for(let i = 0; i < Math.max(pa.length, pb.length); i++){
+    const x = pa[i] || 0, y = pb[i] || 0;
+    if(x !== y) return x < y ? -1 : 1;
+  }
+  return 0;
+}
+
+/* release entries newer than the version the user last saw */
+function notesSince(releases, seen){
+  if(!Array.isArray(releases)) return [];
+  if(!seen) return releases.slice();
+  return releases.filter(r => cmpVersion(r.v, seen) > 0);
+}
+
+if(typeof module !== 'undefined') module.exports = {minutesOf, inWindow, windowSlice, breaches, dueWindows, spanDays, aggregate, syncMessage, cmpVersion, notesSince};
