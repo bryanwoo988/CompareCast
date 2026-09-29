@@ -326,16 +326,17 @@ zh:{
   tMax:'最高气温', tMin:'最低气温', rainSum:'降雨总量', windMax:'最大风速',
   vTemp:'气温', hiMark:'高', loMark:'低',
   spreadTxt:(a,b,ut,ur)=>`各家模式对这一天最高气温的最大差距是 ${a} ${ut}，全日累计降雨的差距是 ${b} ${ur}。差距越大，预报越不确定。`,
-  accT7:'模式准度核对（过去 7 天）',
-  accIdle:'核对要另外向 ERA5 再分析取数，所以不在打开页面时自动进行。',
+  accT7:'模式预报准度',
+  accIdle:'核对要另外取数（各模式过去的预报 + ERA5 再分析），所以不在打开页面时自动进行。',
   accRun:'开始核对', accSub:'对照 ERA5 再分析',
-  accLoading:'正在比对各模式与 ERA5 再分析…',
-  accWindow:(a,b,n)=>`核对区间：${a} 至 ${b}（UTC），共 ${n} 个整点`,
-  accMethodEra:'方法：取上面这段区间，各模式的逐小时气温与 ECMWF ERA5 再分析同一时刻的气温相比，算平均绝对误差（MAE）。ERA5 同化了全球地面站、探空气球和卫星观测，是气象界通用的对照基准。数值越小，这段时间在这个位置贴得越近。',
-  accEraNote:'三点提醒：一、ERA5 本身也是模式产品（同化观测后重算的），不是你园区的实测值，它是公认基准但不能代替雨量筒。二、这是对过去几天的核对，样本小，只能当参考，不是模式排名。三、榜单里没有 Best Match：它不是一个预报模式，在历史时段 Open-Meteo 直接给的就是再分析数据（也就是这里的对照基准），放进来会永远是 0.00，没有意义。',
-  accNone:'ERA5 对照数据读不到（再分析有几天的滞后，或接口暂时无回应），所以这里改用「与多模式共识的偏离」来排序。这不是准确度评分。',
+  accLoading:'正在取各模式过去的预报，和 ERA5 再分析比对…',
+  accWindow:(a,b,n)=>`核对区间：${a} 至 ${b}（UTC），每个模式都用同样的 ${n} 个整点`,
+  accMethodEra:'方法：对区间里的每个整点，取各模式「提前 1 天」和「提前 3 天」对这一刻做的预报，和 ECMWF ERA5 再分析比，算平均绝对误差（MAE）。所有模式用同一组整点。数字越小，这个模式在你这里预报得越准。按提前 1 天排序。',
+  accEraNote:'三点提醒：一、ERA5 是再分析（同化观测后重算的），不是你园区的实测值，也不能代替雨量筒；它由 ECMWF 制作，对 ECMWF 可能略有利。二、ERA5 大约晚一周发布，所以这里核对的是一到两周前，样本只有一周多，只能当参考。三、Best Match 是几个模式拼起来的，不是单一模式，不在榜上。',
+  accNone:'ERA5 对照数据或各模式过去的预报读不到（ERA5 大约晚一周发布，或接口暂时无回应），所以这里改用「与多模式共识的偏离」来排序。这不是准确度评分。',
   accCons:'与共识的偏离', accConsD:'每个模式跟所有模式平均值的平均差距（未来 48 小时气温）。偏离小只代表跟大多数一致，不代表更准。',
-  accBest:'最贴近实测', accMae:'平均绝对误差',
+  accBest:'提前 1 天误差最小', accMae:'误差 · 提前 1 天 / 3 天',
+  accMissing:(s)=>`没有足够的过去预报可比，不在榜上：${s}`,
   editName:'重命名', rename:'新名称', rmLoc:'删除这个地点', failLoad:'读不到预报。检查网络后重试。',
   retry:'重试', offline:'目前离线，显示的是上次读到的数据。', noNet:'目前离线，连上网络后再试。',
   unitSection:'单位', tempU:'温度', windU:'风速', rainU:'降雨',
@@ -416,16 +417,17 @@ en:{
   tMax:'High', tMin:'Low', rainSum:'Total rain', windMax:'Max wind',
   vTemp:'Temperature', hiMark:'H', loMark:'L',
   spreadTxt:(a,b,ut,ur)=>`For this day the models differ by up to ${a} ${ut} on the high temperature and ${b} ${ur} on total rainfall. A wider spread means a less certain forecast.`,
-  accT7:'Model accuracy check (past 7 days)',
-  accIdle:'This check fetches the ERA5 reanalysis separately, so it does not run just because the page opened.',
+  accT7:'Forecast accuracy by model',
+  accIdle:'This check fetches each model\u2019s past forecasts and the ERA5 reanalysis separately, so it does not run just because the page opened.',
   accRun:'Run the check', accSub:'against ERA5 reanalysis',
-  accLoading:'Comparing each model against ERA5 reanalysis…',
-  accWindow:(a,b,n)=>`Window checked: ${a} to ${b} (UTC), ${n} hourly points`,
-  accMethodEra:'Method: over that window, each model\'s hourly temperature is compared with ECMWF ERA5 reanalysis at the same hour. The figure is mean absolute error (MAE). ERA5 assimilates surface stations, radiosondes and satellites worldwide and is the standard reference in meteorology. Lower means closer over that period at this spot.',
-  accEraNote:'Three cautions. ERA5 is itself a model product, recomputed after assimilating observations, not a measurement at your plot: it is an accepted reference but no substitute for a rain gauge. And this checks a few past days on a small sample, so treat it as indicative, not a model ranking. Best Match is left out: it is not a forecast model, and over past dates Open-Meteo serves the reanalysis for it — the very series used as truth here — so it would always score 0.00.',
-  accNone:'ERA5 data could not be read (reanalysis lags by a few days, or the endpoint did not respond), so this list falls back to how far each model sits from the multi-model consensus. That is agreement, not accuracy.',
+  accLoading:'Fetching each model\u2019s past forecasts and comparing them with ERA5 reanalysis\u2026',
+  accWindow:(a,b,n)=>`Window checked: ${a} to ${b} (UTC), the same ${n} hours for every model`,
+  accMethodEra:'Method: for every hour in the window, the forecast each model made 1 day ahead and 3 days ahead is compared with ECMWF ERA5 reanalysis for that hour, as mean absolute error (MAE). Every model is scored on the same hours. Smaller means that model forecast better here. Ranked by the 1-day-ahead error.',
+  accEraNote:'Three cautions. ERA5 is a reanalysis, recomputed after assimilating observations, not a measurement at your plot and no substitute for a rain gauge; it is made by ECMWF and may slightly favour ECMWF. ERA5 is published about a week late, so this checks one to two weeks back on little more than a week of data: treat it as a guide. Best Match stitches several models together, so it is not ranked.',
+  accNone:'ERA5 or the models\u2019 past forecasts could not be read (ERA5 is published about a week late, or the endpoint did not respond), so this list falls back to how far each model sits from the multi-model consensus. That is agreement, not accuracy.',
   accCons:'Distance from consensus', accConsD:'Average gap between each model and the mean of all models, over the next 48 hours of temperature. A small gap only means it agrees with the majority.',
-  accBest:'Closest to observed', accMae:'Mean absolute error',
+  accBest:'Smallest 1-day-ahead error', accMae:'Error · 1 day / 3 days ahead',
+  accMissing:(s)=>`Not enough past forecasts to score, left out: ${s}`,
   editName:'Rename', rename:'New name', rmLoc:'Remove this location', failLoad:'Could not load the forecast. Check your connection and try again.',
   retry:'Retry', offline:'Offline — showing the last data that loaded.', noNet:'You are offline. Try again once you are back online.',
   unitSection:'Units', tempU:'Temperature', windU:'Wind', rainU:'Precipitation',
@@ -506,16 +508,17 @@ ms:{
   tMax:'Tertinggi', tMin:'Terendah', rainSum:'Jumlah hujan', windMax:'Angin maksimum',
   vTemp:'Suhu', hiMark:'T', loMark:'R',
   spreadTxt:(a,b,ut,ur)=>`Untuk hari ini, model berbeza sehingga ${a} ${ut} pada suhu tertinggi dan ${b} ${ur} pada jumlah hujan. Jurang lebih besar bermakna ramalan kurang pasti.`,
-  accT7:'Semakan ketepatan model (7 hari lalu)',
-  accIdle:'Semakan ini mengambil data analisis semula ERA5 secara berasingan, jadi ia tidak berjalan hanya kerana halaman dibuka.',
+  accT7:'Ketepatan ramalan mengikut model',
+  accIdle:'Semakan ini mengambil ramalan lalu setiap model dan analisis semula ERA5 secara berasingan, jadi ia tidak berjalan hanya kerana halaman dibuka.',
   accRun:'Jalankan semakan', accSub:'berbanding analisis semula ERA5',
-  accLoading:'Membandingkan setiap model dengan analisis semula ERA5…',
-  accWindow:(a,b,n)=>`Tempoh disemak: ${a} hingga ${b} (UTC), ${n} titik jam`,
-  accMethodEra:'Kaedah: dalam tempoh itu, suhu setiap jam bagi setiap model dibandingkan dengan ERA5 ECMWF pada jam yang sama. Angka ini ialah ralat mutlak purata (MAE). ERA5 mengasimilasi stesen permukaan, belon radiosonde dan satelit di seluruh dunia, dan menjadi rujukan piawai dalam meteorologi. Lebih kecil bermakna lebih hampir dalam tempoh itu.',
-  accEraNote:'Tiga peringatan. ERA5 sendiri produk model, dikira semula selepas mengasimilasi cerapan, bukan ukuran di petak anda: ia rujukan yang diterima tetapi bukan ganti tolok hujan. Dan ini menyemak beberapa hari lepas dengan sampel kecil, jadi anggap sebagai panduan, bukan kedudukan model. Best Match tidak disenaraikan: ia bukan model ramalan, dan bagi tarikh lampau Open-Meteo memberi data analisis semula untuknya — siri yang sama digunakan sebagai rujukan di sini — jadi ia akan sentiasa mendapat 0.00.',
-  accNone:'Data ERA5 tidak dapat dibaca (analisis semula lewat beberapa hari, atau titik akhir tidak menjawab), jadi senarai ini beralih kepada jarak setiap model dari konsensus. Itu persetujuan, bukan ketepatan.',
+  accLoading:'Mengambil ramalan lalu setiap model dan membandingkannya dengan analisis semula ERA5\u2026',
+  accWindow:(a,b,n)=>`Tempoh disemak: ${a} hingga ${b} (UTC), ${n} jam yang sama untuk setiap model`,
+  accMethodEra:'Kaedah: untuk setiap jam dalam tempoh itu, ramalan setiap model yang dibuat 1 hari dan 3 hari lebih awal dibandingkan dengan analisis semula ERA5 ECMWF bagi jam itu, sebagai ralat mutlak purata (MAE). Semua model dinilai pada jam yang sama. Lebih kecil bermakna model itu meramal lebih tepat di sini. Disusun mengikut ralat 1 hari lebih awal.',
+  accEraNote:'Tiga peringatan. ERA5 ialah analisis semula, bukan ukuran di petak anda dan bukan ganti tolok hujan; ia dihasilkan oleh ECMWF dan mungkin sedikit memihak kepada ECMWF. ERA5 diterbitkan kira-kira seminggu lewat, jadi semakan ini melihat satu hingga dua minggu lalu dengan data lebih sedikit daripada dua minggu: jadikan panduan sahaja. Best Match menggabungkan beberapa model, jadi ia tidak disenaraikan.',
+  accNone:'ERA5 atau ramalan lalu model tidak dapat dibaca (ERA5 diterbitkan kira-kira seminggu lewat, atau titik akhir tidak menjawab), jadi senarai ini beralih kepada jarak setiap model dari konsensus. Itu persetujuan, bukan ketepatan.',
   accCons:'Jarak dari konsensus', accConsD:'Purata beza antara setiap model dengan purata semua model, untuk suhu 48 jam akan datang. Jurang kecil hanya bermakna ia sepakat dengan majoriti.',
-  accBest:'Paling hampir cerapan', accMae:'Ralat mutlak purata',
+  accBest:'Ralat 1 hari terkecil', accMae:'Ralat · 1 hari / 3 hari lebih awal',
+  accMissing:(s)=>`Tiada cukup ramalan lalu untuk dinilai, tidak disenaraikan: ${s}`,
   editName:'Tukar nama', rename:'Nama baharu', rmLoc:'Buang lokasi ini', failLoad:'Gagal memuatkan ramalan. Semak sambungan dan cuba lagi.',
   retry:'Cuba lagi', offline:'Di luar talian — data terakhir dipaparkan.', noNet:'Anda di luar talian. Cuba lagi bila ada sambungan.',
   unitSection:'Unit', tempU:'Suhu', windU:'Angin', rainU:'Hujan',
@@ -829,21 +832,33 @@ async function getCompare(loc, models){
   }
 }
 /* each model's own hourly output over past days, fixed units, for verification */
-async function getPast(loc, models, days){
+/* What each model forecast for past hours, 1 and 3 days before them.
+
+   This replaces past_days on the forecast API. For past hours that returns
+   each model's latest run about them — a 0-6 hour nowcast, not a forecast
+   made days earlier — so the old table ranked starting analyses, not
+   forecast skill (review finding B1). Checked on Kuala Lumpur over the same
+   216 hours before the change: the old method put ECMWF first; real 1-day
+   forecasts put GFS first and ECMWF third. */
+const PREV_RUNS = 'https://previous-runs-api.open-meteo.com/v1/forecast';
+async function getPrevRuns(loc, models, startDate, endDate){
   const mk = list => ({
     latitude:loc.lat, longitude:loc.lon, models:list.join(','), timezone:'UTC',
-    past_days:String(days), forecast_days:'1', hourly:'temperature_2m', temperature_unit:'celsius'
+    start_date:startDate, end_date:endDate, temperature_unit:'celsius',
+    hourly:'temperature_2m_previous_day1,temperature_2m_previous_day3'
   });
-  try{ return await jget(API + '?' + new URLSearchParams(mk(models)), 25000); }
+  try{ return await jget(PREV_RUNS + '?' + new URLSearchParams(mk(models)), 25000); }
   catch(e){
-    const rs = await Promise.allSettled(models.map(id => jget(API + '?' + new URLSearchParams(mk([id])), 20000)));
+    const rs = await Promise.allSettled(models.map(id => jget(PREV_RUNS + '?' + new URLSearchParams(mk([id])), 20000)));
     return mergeModels(rs, models);
   }
 }
-/* ECMWF ERA5 reanalysis — the verification reference */
+/* ERA5 reanalysis — the verification reference. models=era5 is explicit:
+   without it the archive serves a blend of IFS, ERA5 and ERA5-Land, and the
+   card was naming a reference it had not requested (finding A05). */
 function getEra5(loc, startDate, endDate){
   const p = {
-    latitude:loc.lat, longitude:loc.lon, start_date:startDate, end_date:endDate,
+    latitude:loc.lat, longitude:loc.lon, start_date:startDate, end_date:endDate, models:'era5',
     hourly:'temperature_2m', timezone:'UTC', temperature_unit:'celsius'
   };
   return jget(ARCHIVE + '?' + new URLSearchParams(p), 25000);
@@ -2220,6 +2235,9 @@ function renderCells(){
   const uv = ex && ex.daily ? ex.daily.uv_index_max : null;
   const sr = g(dd,'sunrise'), ss = g(dd,'sunset');
   const at = (arr, f) => (arr && nz(arr[i])) ? f(arr[i]) : null;
+  /* rain chance and UV always come from Best Match, but this card is headed
+     with the chosen model's name — so those two cells say their own source */
+  const bm = m.id === 'best_match' ? '' : ' <i class="src">Best Match</i>';
   const rows = [];
   if(today){
     const c = d.current;
@@ -2246,11 +2264,11 @@ function renderCells(){
     const eh = ex && ex.hourly ? ex.hourly : null;
     const k = eh ? nowIndex(eh.time, (d.current && d.current.time) || '') : -1;
     const hourly = (arr, f) => (k >= 0 && arr && nz(arr[k])) ? f(arr[k]) : null;
-    rows.push([t('rainChance'), hourly(eh && eh.precipitation_probability, v => Math.round(v) + '%')]);
-    rows.push([t('uv'), hourly(eh && eh.uv_index, v => String(Math.round(v)))]);
+    rows.push([t('rainChance') + bm, hourly(eh && eh.precipitation_probability, v => Math.round(v) + '%')]);
+    rows.push([t('uv') + bm, hourly(eh && eh.uv_index, v => String(Math.round(v)))]);
   } else {
-    rows.push([t('rainChanceMax'), at(pp, v => Math.round(v) + '%')]);
-    rows.push([t('uvMax'), at(uv, v => String(Math.round(v)))]);
+    rows.push([t('rainChanceMax') + bm, at(pp, v => Math.round(v) + '%')]);
+    rows.push([t('uvMax') + bm, at(uv, v => String(Math.round(v)))]);
   }
   rows.push([t('sunrise'), (sr && sr[i]) ? sr[i].slice(11,16) : null]);
   rows.push([t('sunset'), (ss && ss[i]) ? ss[i].slice(11,16) : null]);
@@ -2709,25 +2727,29 @@ function accCardHTML(){
     return `<div class="glass"><h4>${t('accT7')}</h4>
       <p class="note" style="margin:0 0 12px">${t('accNone')}</p>
       <button class="retry" id="a-retry" style="width:100%">${t('retry')}</button></div>`;
+  const skill = a.mode === 'skill';
   const rows = a.rows.map((r, i) => {
     const pct = a.max > 0 ? Math.min(100, (r.v / a.max) * 100) : 0;
+    const val = skill ? `${r.v.toFixed(2)} / ${r.v3.toFixed(2)} ${a.unit}` : `${r.v.toFixed(2)} ${a.unit}`;
     return `<div class="mrow" style="display:block">
       <div style="display:flex;align-items:center;gap:11px">
         <span class="mdot" style="background:${r.color}"></span>
         <span class="mn">${i === 0 ? '<b>' + r.name + '</b>' : r.name}</span>
-        <span class="mv">${r.v.toFixed(2)} ${a.unit}</span>
+        <span class="mv">${val}</span>
       </div>
       <div class="accbar"><i style="width:${(100 - pct).toFixed(0)}%;background:${r.color}"></i></div>
     </div>`;
   }).join('');
-  const isEra = a.mode === 'era5';
+  const missing = skill && a.missing.length
+    ? `<p class="note">${esc(t('accMissing')(a.missing.map(id => M(id).short).join(S.lang === 'zh' ? '、' : ', ')))}</p>` : '';
   return `<div class="glass">
-      <h4>${isEra ? t('accT7') : t('accCons')}<span class="r">${t('accMae')}</span></h4>
-      <p class="note" style="margin:0 0 12px">${isEra ? t('accWindow')(a.from, a.to, a.n) : t('accNone')}</p>
+      <h4>${skill ? t('accT7') : t('accCons')}<span class="r">${skill ? t('accMae') : ''}</span></h4>
+      <p class="note" style="margin:0 0 12px">${skill ? t('accWindow')(a.from, a.to, a.n) : t('accNone')}</p>
       <div class="mlist">${rows}</div>
-      <p class="note">${isEra ? t('accMethodEra') : t('accConsD')}</p>
-      <p class="note" style="margin-bottom:0"><b>${a.rows[0].name}</b> · ${a.rows[0].v.toFixed(2)} ${a.unit} — ${isEra ? t('accBest') : t('accCons')}</p>
-      ${isEra ? `<p class="note">${t('accEraNote')}</p>` : ''}
+      ${missing}
+      <p class="note">${skill ? t('accMethodEra') : t('accConsD')}</p>
+      <p class="note" style="margin-bottom:0"><b>${a.rows[0].name}</b> · ${a.rows[0].v.toFixed(2)} ${a.unit} — ${skill ? t('accBest') : t('accCons')}</p>
+      ${skill ? `<p class="note">${t('accEraNote')}</p>` : ''}
       <button class="retry" id="a-retry" style="width:100%">${t('retry')}</button>
     </div>`;
 }
@@ -2783,41 +2805,34 @@ async function runAccuracy(){
   try{
     if(!scored.length) throw new Error('no scorable model');
     const now = Date.now(), day = 86400000;
-    const from = new Date(now - 7 * day), to = new Date(now - 4 * day);
-    const [era, past] = await Promise.all([
-      getEra5(loc, ymd(from), ymd(to)),
-      getPast(loc, scored, 9)
-    ]);
+    /* ERA5 is published about a week late. The old window, days -7 to -4,
+       often had one day of it; two weeks back to six days back leaves
+       several full days, and the dates shown are the ones that came back. */
+    const from = ymd(new Date(now - 14 * day)), to = ymd(new Date(now - 6 * day));
+    const [era, prev] = await Promise.all([getEra5(loc, from, to), getPrevRuns(loc, scored, from, to)]);
     const truth = {};
-    if(era && era.hourly && era.hourly.time){
-      era.hourly.time.forEach((tm, i) => {
-        const v = era.hourly.temperature_2m[i];
-        if(nz(v)) truth[tm.slice(0,13)] = v;
-      });
-    }
-    const keys = Object.keys(truth);
-    if(keys.length >= 24 && past.hourly && past.hourly.time){
+    if(era && era.hourly && era.hourly.time)
+      era.hourly.time.forEach((tm, i) => { const v = era.hourly.temperature_2m[i]; if(nz(v)) truth[tm.slice(0, 13)] = v; });
+    const ph = prev && prev.hourly, nTruth = Object.keys(truth).length;
+    if(nTruth >= 24 && ph && ph.time){
       const single = scored.length === 1;
-      const times = past.hourly.time;
-      const rows = [];
-      scored.forEach(id => {
-        const v = pick(past.hourly, 'temperature_2m', id, single);
-        if(!v) return;
-        let sum = 0, cnt = 0;
-        for(let i = 0; i < times.length; i++){
-          const k = times[i].slice(0,13);
-          if(truth[k] === undefined || !nz(v[i])) continue;
-          sum += Math.abs(v[i] - truth[k]); cnt++;
-        }
-        if(cnt >= 24) rows.push({id, name:M(id).short, color:M(id).color, v:sum / cnt, n:cnt});
-      });
-      if(rows.length){
-        // MAE is a difference in °C; only the scale changes for °F, not the offset
+      const lead = (id, n) => pick(ph, 'temperature_2m_previous_day' + n, id, single) || [];
+      const idx = ph.time.map((tm, i) => ({k:tm.slice(0, 13), i})).filter(x => truth[x.k] !== undefined);
+      /* a model missing most of the window is left out rather than shrinking
+         everyone's sample to nothing */
+      const usable = scored.filter(id => idx.filter(x => nz(lead(id, 1)[x.i]) && nz(lead(id, 3)[x.i])).length >= 0.8 * idx.length);
+      /* every model scored on the same hours: each used to be averaged over
+         its own set and then ranked against the others */
+      const hours = idx.filter(x => usable.every(id => nz(lead(id, 1)[x.i]) && nz(lead(id, 3)[x.i])));
+      if(usable.length && hours.length >= 24){
+        /* MAE is a difference in °C; only the scale changes for °F */
         const conv = S.units.temp === 'fahrenheit' ? 1.8 : 1;
-        rows.forEach(r => r.v = r.v * conv);
-        rows.sort((a,b) => a.v - b.v);
-        out = {mode:'era5', rows, max:rows[rows.length-1].v, unit:uT(),
-               from:ymd(from), to:ymd(to), n:Math.max.apply(null, rows.map(r => r.n))};
+        const mae = (id, n) => hours.reduce((a, x) => a + Math.abs(lead(id, n)[x.i] - truth[x.k]), 0) / hours.length * conv;
+        const rows = usable.map(id => ({id, name:M(id).short, color:M(id).color, v:mae(id, 1), v3:mae(id, 3)}))
+          .sort((a, b) => a.v - b.v);
+        out = {mode:'skill', rows, unit:uT(), max:Math.max.apply(null, rows.map(r => Math.max(r.v, r.v3))),
+               from:hours[0].k.slice(0, 10), to:hours[hours.length - 1].k.slice(0, 10), n:hours.length,
+               missing:scored.filter(id => !usable.includes(id))};
       }
     }
   }catch(e){ /* fall through */ }
