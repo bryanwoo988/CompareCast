@@ -364,7 +364,7 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
 .accblock{margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.2)}
 .accblock .glass{background:rgba(8,13,34,.5)}
 .nt-title{font-size:17px;font-weight:600;margin-right:auto;margin-left:14px}
-#notify{background:linear-gradient(180deg,#0e1430,#1a2247 55%,#232f66)}
+#notify,#layout{background:linear-gradient(180deg,#0e1430,#1a2247 55%,#232f66)}
 .nt-master{display:flex;align-items:center;gap:12px;padding:15px 16px;border-radius:18px;
   background:rgba(22,34,66,.5);border:1px solid rgba(255,255,255,.14);margin-bottom:14px}
 .nt-master b{flex:1;font-size:16px;font-weight:600}
@@ -510,6 +510,22 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
 .day .dv em{font-style:normal;font-size:12px;color:rgba(255,255,255,.55)}
 .day .dq{width:52px;flex:0 0 52px;font-size:13.5px;color:#bfe0ff;font-variant-numeric:tabular-nums;
   display:flex;align-items:center;justify-content:flex-end;gap:2px}
+/* detail-page layout editor: uniform rows, press and hold to drag */
+#ly-list{position:relative}
+.ly-row{display:flex;align-items:center;gap:12px;padding:12px 10px;margin-bottom:8px;
+  border-radius:14px;background:rgba(255,255,255,.07);
+  touch-action:pan-y;-webkit-user-select:none;user-select:none;
+  transition:transform .16s cubic-bezier(.2,.8,.3,1),opacity .16s,background .16s}
+#ly-list.reordering .ly-row{transition:transform .16s cubic-bezier(.2,.8,.3,1)}
+.ly-row.dragging{transition:none;z-index:5;position:relative;background:rgba(255,255,255,.17);
+  box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.ly-row.off{opacity:.5}
+.ly-grip{width:20px;height:20px;flex:0 0 20px;color:rgba(255,255,255,.45)}
+.ly-grip svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.ly-txt{flex:1;min-width:0;display:block}
+.ly-txt b{display:block;font-size:15px;font-weight:600}
+.ly-note{display:block;margin-top:3px;font-size:12px;line-height:1.45;color:rgba(255,255,255,.6)}
+.ly-sw{background:none;padding:0;flex:0 0 auto}
 .sbar .wet{fill:#5ac8fa}
 .sbar .dry{fill:rgba(255,255,255,.22)}
 .sline polyline{fill:none;stroke:#2ec5d3;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -703,6 +719,14 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 </section>
 
 <!-- ============ notification settings ============ -->
+<section class="page" id="layout">
+  <div class="d-bar">
+    <button class="d-back" id="ly-back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <span class="nt-title" data-t="lyEntry">详情页排版</span>
+  </div>
+  <div class="d-body" id="ly-body"></div>
+</section>
+
 <section class="page" id="notify">
   <div class="d-bar">
     <button class="d-back" id="nt-back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -789,6 +813,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 <script src="listlogic.js"></script>
 <script src="notifylogic.js"></script>
 <script src="summary.js"></script>
+<script src="layout.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

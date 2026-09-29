@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.15.1';
+const APP_VERSION = '3.16.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,17 @@ const APP_VERSION = '3.15.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.16.0',
+   zh:['详情页现在可以自己排版：设置 → 详情页排版，长按一行拖动排序，右边的开关决定显示或隐藏',
+       '喷药看风、收成看雨——把你最常看的那块拖到最上面就好，不用每次滑到下面去找',
+       '可排的有八块：一句白话结论、实况、十天、数据卡片、当天数据格、气温对比图、降雨概率图、准确度',
+       '顶部的温度和日期条固定不动，所以不管怎么排都不会卡在某一天出不来',
+       '以后新增的卡片会自动出现在你的排版里，不用重排'],
+   en:['The detail page can be rearranged: Settings \u2192 Detail page layout. Press and hold a row to drag it; the switch on the right shows or hides that section',
+       'Spraying wants wind, harvesting wants rain \u2014 put the section you actually open the page for at the top instead of scrolling to it',
+       'Eight sections can be moved: the plain-language line, Conditions, ten days, data cards, day figures, the temperature comparison, the rain chance chart, accuracy',
+       'The temperature header and the date strip stay fixed, so no arrangement can strand you on one day',
+       'Sections added in later releases appear in your arrangement on their own \u2014 no need to redo it']},
   {v:'3.15.1',
    zh:['十天卡片挪到实况卡片正下方，跟 iPhone 一样——小时和十天是同一个问题的两个尺度，本来就该连着看；数据格子和对比图往下挪'],
    en:['The ten-day card now sits directly under the Conditions card, the way iPhone has it \u2014 hours and days are the same question at two scales, so they belong together; the data cards and comparison charts moved down'],
@@ -207,6 +218,13 @@ zh:{
   sumHot:(t)=>`全天无雨，最高 ${t}`, sumCalm:'全天无明显降雨', sumUnknown:'暂无足够数据',
   pNight:'凌晨', pMorning:'早上', pAfternoon:'下午', pEvening:'晚上',
   condT:'实况', vRain:'降雨', vWind:'风速', sInten:'强度', sChance:'降雨机率',
+  lyEntry:'详情页排版', lyDesc:'长按一行拖动排序，右边的开关决定显示或隐藏。顶部的温度和日期条固定不动。',
+  lySummary:'一句白话结论', lyTenday:'十天', lyCards:'数据卡片', lyCells:'当天数据格',
+  lyChartT:'气温对比图', lyChartP:'降雨概率图', lyAccuracy:'准确度',
+  lyChipNote:'模式选择在这张卡里。藏起来之后，改对比模式要来设置这边。',
+  lyReset:'恢复默认排版', lyHidden:'已隐藏', lyAllHidden:'中间的区块全部藏起来了，详情页只剩顶部和底部。',
+  lyOn:'显示', lyOff:'隐藏',
+  lyDefault:'默认', lyCustom:'已自定义', lyHiddenN:n => `已自定义 · 藏了 ${n} 项`,
   cWind:'风', cPress:'气压', cSun:'日出日落', cUV:'紫外线', cHumid:'湿度', cVis:'能见度', cRain:'降雨',
   dewPoint:(v)=>`露点 ${v}`, visClear:'视野通透', visOk:'一般', visPoor:'有雾或霾',
   uvLow:'低', uvMid:'中等', uvHigh:'高', uvVeryHigh:'很高', uvExtreme:'极高',
@@ -283,6 +301,13 @@ en:{
   sumHot:(t)=>`No rain, high of ${t}`, sumCalm:'No significant rain', sumUnknown:'Not enough data yet',
   pNight:'overnight', pMorning:'in the morning', pAfternoon:'in the afternoon', pEvening:'in the evening',
   condT:'Conditions', vRain:'Precipitation', vWind:'Wind', sInten:'Intensity', sChance:'Chance of rain',
+  lyEntry:'Detail page layout', lyDesc:'Press and hold a row to drag it. The switch on the right shows or hides that section. The temperature header and the date strip stay at the top.',
+  lySummary:'Plain-language line', lyTenday:'Ten days', lyCards:'Data cards', lyCells:'Day figures',
+  lyChartT:'Temperature comparison', lyChartP:'Rain chance chart', lyAccuracy:'Accuracy',
+  lyChipNote:'The model picker lives in this card. Hide it and models are changed from settings instead.',
+  lyReset:'Restore the default order', lyHidden:'Hidden', lyAllHidden:'Every middle section is hidden; the detail page is just the header and the footer.',
+  lyOn:'Shown', lyOff:'Hidden',
+  lyDefault:'Default', lyCustom:'Customised', lyHiddenN:n => `Customised · ${n} hidden`,
   cWind:'Wind', cPress:'Pressure', cSun:'Sun', cUV:'UV index', cHumid:'Humidity', cVis:'Visibility', cRain:'Rain',
   dewPoint:(v)=>`Dew point ${v}`, visClear:'Clear view', visOk:'Moderate', visPoor:'Haze or fog',
   uvLow:'Low', uvMid:'Moderate', uvHigh:'High', uvVeryHigh:'Very high', uvExtreme:'Extreme',
@@ -359,6 +384,13 @@ ms:{
   sumHot:(t)=>`Tiada hujan, tertinggi ${t}`, sumCalm:'Tiada hujan ketara', sumUnknown:'Data belum cukup',
   pNight:'dini hari', pMorning:'pagi', pAfternoon:'petang', pEvening:'malam',
   condT:'Keadaan', vRain:'Hujan', vWind:'Angin', sInten:'Keamatan', sChance:'Kebarangkalian hujan',
+  lyEntry:'Susunan halaman butiran', lyDesc:'Tekan dan tahan satu baris untuk seretnya. Suis di sebelah kanan menunjuk atau menyembunyikan bahagian itu. Suhu di atas dan jalur tarikh kekal di tempatnya.',
+  lySummary:'Ayat ringkas', lyTenday:'Sepuluh hari', lyCards:'Kad data', lyCells:'Angka hari itu',
+  lyChartT:'Graf perbandingan suhu', lyChartP:'Graf kebarangkalian hujan', lyAccuracy:'Ketepatan',
+  lyChipNote:'Pemilih model ada dalam kad ini. Jika disembunyikan, model ditukar dari tetapan.',
+  lyReset:'Pulihkan susunan asal', lyHidden:'Disembunyikan', lyAllHidden:'Semua bahagian tengah disembunyikan; halaman butiran tinggal bahagian atas dan bawah.',
+  lyOn:'Ditunjuk', lyOff:'Disembunyi',
+  lyDefault:'Asal', lyCustom:'Diubah suai', lyHiddenN:n => `Diubah suai · ${n} disembunyikan`,
   cWind:'Angin', cPress:'Tekanan', cSun:'Matahari', cUV:'Indeks UV', cHumid:'Kelembapan', cVis:'Penglihatan', cRain:'Hujan',
   dewPoint:(v)=>`Takat embun ${v}`, visClear:'Pandangan jelas', visOk:'Sederhana', visPoor:'Jerebu atau kabus',
   uvLow:'Rendah', uvMid:'Sederhana', uvHigh:'Tinggi', uvVeryHigh:'Sangat tinggi', uvExtreme:'Ekstrem',
@@ -494,7 +526,10 @@ let S = {
   lang:'zh', locations:[], defaultModel:'best_match',
   compare:MODELS.map(m => m.id),
   units:{temp:'celsius', wind:'kmh', rain:'mm'},
-  basemap:'sat'
+  basemap:'sat',
+  /* null means "whatever the build's default order is" — resolved against the
+     section registry on every render, never frozen into a list (layout.js) */
+  layout:null
 };
 const save = () => store.set(KEY, S);
 const t = k => T[S.lang][k];
@@ -567,6 +602,13 @@ function notifySummary(){
   const blocks = S.locations.filter(l => (l.notify || []).length).length;
   const wins = S.notify.windows.filter(w => w.on).length;
   return t('ntSummary')(blocks, wins);
+}
+/* the settings row says whether anything was changed, and what was hidden —
+   a layout the user forgot about is the likeliest reason a card "went missing" */
+function layoutSummary(){
+  if(isDefaultLayout(S.layout, sectionIds())) return t('lyDefault');
+  const off = resolveLayout(S.layout, sectionIds()).filter(x => !x.on).length;
+  return off ? t('lyHiddenN')(off) : t('lyCustom');
 }
 
 /* ---------- 5. Units ---------- */
@@ -1462,6 +1504,7 @@ function exitDetail(){
 }
 $('#d-back').addEventListener('click', exitDetail);
 $('#nt-back').addEventListener('click', exitNotify);
+$('#ly-back').addEventListener('click', exitLayout);
 $('#d-modelbtn').addEventListener('click', () => { drawModelPicker(); show('#sheet-model'); });
 
 function paintHead(){
@@ -2073,17 +2116,39 @@ function renderCells(){
 /* ----- The detail page -----
    One linear read from top to bottom, every block describing the day selected
    in the strip. There are no tabs: the old three-way split was the reason the
-   same weather lived in three places (spec §4.1). */
+   same weather lived in three places (spec §4.1).
+
+   The order below is the DEFAULT, not the law. Everyday use is "what are the
+   next few hours" and then "what about the rest of the week", so the hourly
+   strip and the ten-day list — the same question at two scales — lead, and the
+   multi-model comparison you open to interrogate them sits underneath. Which
+   is right for most people and wrong for some: spraying wants wind at the top,
+   harvesting wants accumulated rain. So this registry is what a saved layout
+   is resolved against, and adding a row here is all a new section needs to
+   reach people who already rearranged their page. */
+const SECTIONS = [
+  {id:'summary',  key:'lySummary',  render:renderSummary},
+  {id:'hourly',   key:'condT',      render:renderHourStrip},
+  {id:'tenday',   key:'lyTenday',   render:renderTenDay},
+  {id:'cards',    key:'lyCards',    render:renderCardGrid},
+  {id:'cells',    key:'lyCells',    render:renderCells},
+  {id:'chartT',   key:'lyChartT',   render:renderTempChart},
+  {id:'chartP',   key:'lyChartP',   render:renderProbChart},
+  {id:'accuracy', key:'lyAccuracy', render:renderAccuracyCard}
+];
+const sectionIds = () => SECTIONS.map(s => s.id);
+const sectionById = id => SECTIONS.find(s => s.id === id);
+
 function paintDetail(){
   if(!D.main){ $('#d-body').innerHTML = `<div class="big-msg"><p>${t('loading')}</p></div>`; return; }
-  /* Everyday use is "what are the next few hours" and then "what about the
-     rest of the week": the hourly strip and the ten-day list answer the same
-     question at two scales, so they sit together at the top. The multi-model
-     comparison is what you open when you want to interrogate that, so it goes
-     below rather than above. */
-  $('#d-body').innerHTML = renderDayStrip() + renderSummary() + renderHourStrip()
-    + renderTenDay() + renderCardGrid() + renderCells()
-    + renderTempChart() + renderProbChart() + renderAccuracyCard() + `
+  /* the day strip is fixed at the top: it and the ten-day list are the only
+     two ways to change the selected day, and it is the one that cannot be
+     hidden, so the page can never strand you on today */
+  const body = resolveLayout(S.layout, sectionIds())
+    .filter(x => x.on)
+    .map(x => sectionById(x.id).render())
+    .join('');
+  $('#d-body').innerHTML = renderDayStrip() + body + `
     <div class="glass" style="padding-bottom:10px">
       <h4>${t('editName')}</h4>
       <div class="field" style="margin-bottom:10px"><label>${t('rename')}</label>
@@ -2622,6 +2687,161 @@ function exitNotify(){
   else closeNotify();
 }
 
+/* ---------- 11c. Detail-page layout ----------
+   The same press-and-hold drag as the locations list, over a list of sections
+   instead of places. What is written back is the resolved override, so the
+   stored value is always canonical and a section added in a later release
+   still finds its way in (layout.js). */
+function openLayout(){
+  const page = $('#layout');
+  page.scrollTop = 0;
+  page.classList.add('on');
+  document.body.style.overflow = 'hidden';
+  try{
+    /* same one-overlay-one-entry rule as the notify page */
+    if(history.state && history.state.pw === 'sheet') history.replaceState({pw:'layout'}, '');
+    else history.pushState({pw:'layout'}, '');
+  }catch(e){}
+  paintLayout();
+}
+function closeLayout(){
+  $('#layout').classList.remove('on');
+  document.body.style.overflow = '';
+  if(openSheetId === '#sheet-set') drawSettings();
+}
+function exitLayout(){
+  if(history.state && history.state.pw === 'layout') history.back();
+  else closeLayout();
+}
+
+function layoutRows(){
+  return resolveLayout(S.layout, sectionIds());
+}
+/* every write goes through here, so nothing but a normalized layout is ever
+   stored and the detail page repaints only when it is actually open */
+function commitLayout(next){
+  S.layout = normalizeLayout(next, sectionIds());
+  save();
+  paintLayout();
+  if($('#detail').classList.contains('on') && D.main) paintDetail();
+}
+
+function paintLayout(){
+  const rows = layoutRows();
+  const body = rows.map(r => {
+    const sec = sectionById(r.id);
+    const note = r.id === 'chartT' ? `<small class="ly-note">${t('lyChipNote')}</small>` : '';
+    return `<div class="ly-row${r.on ? '' : ' off'}" data-ly="${r.id}">
+      <span class="ly-grip" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9h16M4 15h16"/></svg></span>
+      <span class="ly-txt"><b>${esc(t(sec.key))}</b>${note}</span>
+      <button class="ly-sw" data-lytoggle="${r.id}" role="switch" aria-checked="${r.on}"
+        aria-label="${esc(t(sec.key))} · ${r.on ? t('lyOn') : t('lyOff')}">${sw(r.on)}</button>
+    </div>`;
+  }).join('');
+  const none = rows.every(r => !r.on) ? `<p class="nt-note" style="margin:12px 0 0">${t('lyAllHidden')}</p>` : '';
+  const dflt = isDefaultLayout(S.layout, sectionIds());
+  $('#ly-body').innerHTML = `
+    <div class="group">
+      <p style="margin:0 0 12px">${t('lyDesc')}</p>
+      <div id="ly-list">${body}</div>
+      ${none}
+    </div>
+    <div class="group">
+      <button class="cta ghost" id="ly-reset"${dflt ? ' disabled' : ''}>${t('lyReset')}</button>
+    </div>`;
+
+  $$('#ly-body [data-lytoggle]').forEach(b => b.addEventListener('click', () => {
+    if(lyDrag && lyDrag.on) return;               // the press that ended a drag
+    const id = b.dataset.lytoggle;
+    const cur = layoutRows();
+    commitLayout({
+      order:  cur.map(x => x.id),
+      hidden: cur.filter(x => x.id === id ? x.on : !x.on).map(x => x.id)
+    });
+  }));
+  const rb = $('#ly-reset');
+  if(rb) rb.addEventListener('click', () => { S.layout = null; save(); paintLayout();
+    if($('#detail').classList.contains('on') && D.main) paintDetail(); });
+}
+
+/* The locations list drags whole cards against the window scroll; this list
+   drags uniform rows inside a page that scrolls itself. Same hold-then-move
+   rule, same pure arithmetic from listlogic.js, different geometry. */
+let lyDrag = null;
+function lyMetrics(){
+  const rows = Array.from(document.querySelectorAll('#ly-list .ly-row'));
+  const st = $('#layout').scrollTop;
+  return rows.map(el => {
+    const r = el.getBoundingClientRect();
+    return {el, h:r.height, centre:r.top + st + r.height / 2};
+  });
+}
+function lyBegin(){
+  if(!lyDrag) return;
+  const m = lyMetrics();
+  const from = m.findIndex(x => x.el === lyDrag.row);
+  if(from < 0){ lyDrag = null; return; }
+  lyDrag.on = true; lyDrag.from = from; lyDrag.to = from; lyDrag.metrics = m;
+  lyDrag.slot = m[from].h;
+  lyDrag.row.classList.add('dragging');
+  $('#ly-list').classList.add('reordering');
+}
+function lyPaint(){
+  if(!lyDrag || !lyDrag.on) return;
+  const st = $('#layout').scrollTop;
+  const dy = (lyDrag.clientY + st) - lyDrag.startPageY;
+  lyDrag.row.style.transform = `translateY(${dy}px) scale(1.02)`;
+  const to = targetIndex(lyDrag.metrics.map(x => x.centre), lyDrag.metrics[lyDrag.from].centre + dy);
+  lyDrag.to = to;
+  lyDrag.metrics.forEach((x, i) => {
+    if(i === lyDrag.from) return;
+    let shift = 0;
+    if(lyDrag.from < to && i > lyDrag.from && i <= to) shift = -lyDrag.slot;
+    else if(lyDrag.from > to && i >= to && i < lyDrag.from) shift = lyDrag.slot;
+    x.el.style.transform = shift ? `translateY(${shift}px)` : '';
+  });
+}
+function lyEnd(){
+  if(!lyDrag) return;
+  clearTimeout(lyDrag.holdTimer);
+  const d = lyDrag;
+  lyDrag = null;
+  if(!d.on) return;
+  $('#ly-list').classList.remove('reordering');
+  d.metrics.forEach(x => { x.el.style.transform = ''; });
+  d.row.classList.remove('dragging');
+  if(d.to === d.from) return;
+  const cur = layoutRows();
+  commitLayout({
+    order:  moveItem(cur.map(x => x.id), d.from, d.to),
+    hidden: cur.filter(x => !x.on).map(x => x.id)
+  });
+}
+function initLayoutReorder(){
+  const page = $('#layout');
+  page.addEventListener('pointerdown', e => {
+    if(e.button !== undefined && e.button !== 0) return;
+    const row = e.target.closest('#ly-list .ly-row');
+    if(!row) return;
+    lyDrag = {row, on:false, clientY:e.clientY,
+              startPageY:e.clientY + page.scrollTop, startClientY:e.clientY};
+    lyDrag.holdTimer = setTimeout(lyBegin, HOLD_MS);
+  });
+  page.addEventListener('pointermove', e => {
+    if(!lyDrag) return;
+    lyDrag.clientY = e.clientY;
+    if(!lyDrag.on){
+      if(Math.abs(e.clientY - lyDrag.startClientY) > SLOP){ clearTimeout(lyDrag.holdTimer); lyDrag = null; }
+      return;
+    }
+    lyPaint();
+  });
+  ['pointerup','pointercancel'].forEach(ev => page.addEventListener(ev, lyEnd));
+  /* touch-action cannot change mid-gesture, so page scrolling is held off for
+     as long as a drag is actually running */
+  page.addEventListener('touchmove', e => { if(lyDrag && lyDrag.on) e.preventDefault(); }, {passive:false});
+}
+
 const sw = on => `<span class="sw${on ? ' on' : ''}"><i></i></span>`;
 
 function renderPermission(){
@@ -3016,6 +3236,10 @@ function drawSettings(){
         <span class="val">${esc(notifySummary())}</span><span class="chev">›</span></button>
     </div>
     <div class="group">
+      <button class="nt-row" id="set-layout"><b>${t('lyEntry')}</b>
+        <span class="val">${esc(layoutSummary())}</span><span class="chev">›</span></button>
+    </div>
+    <div class="group">
       <h4>${t('cmpSection')}</h4><p>${t('cmpD')}</p>
       ${MODELS.map(m => `<div class="row">
         <span class="mdot" style="background:${m.color}"></span>
@@ -3027,6 +3251,8 @@ function drawSettings(){
   /* closeSheetNow, not hide: hide() rewinds history and would race the entry
      openNotify is about to take over */
   if(nb) nb.addEventListener('click', () => { closeSheetNow(); openNotify(); });
+  const lb = $('#set-layout');
+  if(lb) lb.addEventListener('click', () => { closeSheetNow(); openLayout(); });
   body.querySelectorAll('[data-unit]').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.unit;
     if(S.units[k] === b.dataset.val) return;
@@ -3240,6 +3466,7 @@ window.addEventListener('resize', () => {
 });
 window.addEventListener('popstate', () => {
   if(openSheetId){ closeSheetNow(); return; }
+  if($('#layout').classList.contains('on')){ closeLayout(); return; }
   if($('#notify').classList.contains('on')){ closeNotify(); return; }
   if($('#detail').classList.contains('on')) closeDetail();
 });
@@ -3261,6 +3488,7 @@ window.addEventListener('popstate', () => {
   applyLang();
   renderList();
   initReorder();
+  initLayoutReorder();
   initPullRefresh();
   loadAll();
   /* a subscription that failed in an earlier session repairs itself here */
