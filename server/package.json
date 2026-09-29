@@ -1,0 +1,12 @@
+{
+  "name": "comparecast-push",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@block65/webcrypto-web-push": "^2.0.0"
+  }
+}
