@@ -8,17 +8,17 @@ const L = {
   zh:{
     morning:'早上', afternoon:'下午', evening:'晚上', night:'凌晨',
     rainProb:'降雨概率', rainSum:'降雨', tMax:'最高', tMin:'最低', wind:'风', gust:'阵风',
-    sep:' · '
+    sep:' · ', colon:'：', many:(w, n) => `${w} · ${n} 个地块`
   },
   en:{
     morning:'Morning', afternoon:'Afternoon', evening:'Evening', night:'Overnight',
     rainProb:'Rain', rainSum:'Rainfall', tMax:'High', tMin:'Low', wind:'Wind', gust:'Gusts',
-    sep:' · '
+    sep:' · ', colon:': ', many:(w, n) => `${w} · ${n} locations`
   },
   ms:{
     morning:'Pagi', afternoon:'Petang', evening:'Malam', night:'Dini hari',
     rainProb:'Hujan', rainSum:'Jumlah hujan', tMax:'Tertinggi', tMin:'Terendah', wind:'Angin', gust:'Tiupan',
-    sep:' · '
+    sep:' · ', colon:': ', many:(w, n) => `${w} · ${n} lokasi`
   }
 };
 
@@ -40,13 +40,10 @@ function fmt(key, v, units){
   return round(v * (WIND_PER_KMH[u] || 1), 0) + ' ' + WIND_LBL[u];
 }
 
-/* returns null when there is nothing worth saying — the caller sends nothing
-   rather than a notification full of blanks */
-function messageFor(lang, win, stats, hits, rules, units, blockName){
-  const d = L[lang] || L.en;
-  const u = units || {};
+/* The figures for one plot in one window, or null when there is nothing
+   worth saying — the caller sends nothing rather than a line of blanks. */
+function partsFor(d, win, stats, hits, rules, u){
   const parts = [];
-
   if(win.mode === 'threshold'){
     (hits || []).forEach(k => {
       const shown = fmt(k, stats[k], u);
@@ -65,9 +62,32 @@ function messageFor(lang, win, stats, hits, rules, units, blockName){
     const w = fmt('wind', stats.wind, u);
     if(w !== null) parts.push(d.wind + ' ' + w);
   }
-
-  if(!parts.length) return null;
-  return {title:blockName, body:(d[win.id] || win.id) + d.sep + parts.join(d.sep)};
+  return parts.length ? parts.join(d.sep) : null;
 }
 
-export {messageFor};
+/* One notification per window, however many plots it covers.
+
+   Each plot used to get its own push, and every push carried the same tag, so
+   each one replaced the last and a ten-plot farm saw a single warning — the
+   last plot's — with nine gone without a sound. One message per window fixes
+   that, keeps noon to one buzz, and needs a tenth of the sends the worker is
+   allowed per run. A single plot keeps the old shape, its name as the title,
+   so nothing changes for anyone with one plot. */
+function messageForWindow(lang, win, entries, rules, units){
+  const d = L[lang] || L.en;
+  const u = units || {};
+  const lines = (entries || [])
+    .map(e => ({name:e.name, text:partsFor(d, win, e.stats || {}, e.hits, rules, u)}))
+    .filter(x => x.text);
+  if(!lines.length) return null;
+  const label = d[win.id] || win.id;
+  if(lines.length === 1) return {title:lines[0].name, body:label + d.sep + lines[0].text};
+  return {title:d.many(label, lines.length), body:lines.map(x => x.name + d.colon + x.text).join('\n')};
+}
+
+/* the single-plot form, kept for the tests that pin the wording */
+function messageFor(lang, win, stats, hits, rules, units, blockName){
+  return messageForWindow(lang, win, [{name:blockName, stats, hits}], rules, units);
+}
+
+export {messageFor, messageForWindow};

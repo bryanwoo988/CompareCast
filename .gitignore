@@ -3,3 +3,8 @@ server/.wrangler/
 server/.claude-flow/
 .wrangler/
 server/.wrangler/
+
+# local agent tooling state — never part of the app
+.claude-flow/
+.swarm/
+ruvector.db

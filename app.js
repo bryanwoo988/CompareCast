@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.16.1';
+const APP_VERSION = '3.17.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,25 @@ const APP_VERSION = '3.16.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.17.0',
+   zh:['同一时段的提醒合成一条通知，列出所有地块。以前每个地块各发一条，而且会互相覆盖——十个地块只看得到最后一个',
+       '晚上设的提醒现在讲的是接下来的时段。以前晚上九点提醒「早上时段」，报的是当天已经过去的那个早上',
+       '提醒发送失败（网络或服务器一时不通）会在一小时内自动补发，不再当天直接丢掉',
+       '提醒里的数字跟 App 对得上：地块选了哪个模式，提醒就用哪个模式；降雨机率照旧来自 Best Match',
+       '服务器加了防护：只接受真正的推送服务，限制请求大小和设备数量',
+       '更新下载不完整时，不会再把离线版本弄坏'],
+   en:['Reminders for the same window now arrive as one notification listing every location. Each location used to get its own, and they replaced each other \u2014 with ten locations you only saw the last one',
+       'An evening reminder now describes the window still ahead. A 9 pm reminder for the morning window used to report the morning that had already gone',
+       'A reminder that fails to send (network or server hiccup) is retried for up to an hour instead of being lost for the day',
+       'Reminder figures match the app: each location uses the model it is set to, with chance of rain still from Best Match',
+       'The server now accepts only real push services and limits request size and device count',
+       'An incomplete update download can no longer break the offline copy'],
+   ms:['Peringatan untuk tempoh yang sama kini tiba sebagai satu pemberitahuan yang menyenaraikan semua lokasi. Dahulu setiap lokasi mendapat satu, dan ia saling menggantikan \u2014 dengan sepuluh lokasi anda hanya nampak yang terakhir',
+       'Peringatan waktu malam kini menerangkan tempoh yang akan datang. Dahulu peringatan jam 9 malam untuk tempoh pagi melaporkan pagi yang sudah berlalu',
+       'Peringatan yang gagal dihantar dicuba semula sehingga sejam, tidak lagi hilang untuk hari itu',
+       'Angka dalam peringatan sepadan dengan aplikasi: setiap lokasi guna model yang ditetapkan, kebarangkalian hujan masih dari Best Match',
+       'Pelayan kini hanya menerima perkhidmatan push sebenar dan mengehadkan saiz permintaan serta bilangan peranti',
+       'Muat turun kemas kini yang tidak lengkap tidak lagi merosakkan salinan luar talian']},
   {v:'3.16.1',
    zh:['修好设置页滑不顺：在弹层里往下滑会被误判成下拉刷新，刷新逻辑再把弹层自己的滚动挡掉。现在弹层和覆盖页一律不触发下拉刷新',
        '全 App 的滚动更顺了：挡滚动的监听器以前一直挂着，现在只在真的在拖动或下拉时才挂',
@@ -260,7 +279,7 @@ zh:{
   ntNoLoc:'还没有地点。先加一个，才能设定要提醒哪一块。',
   ntNoWin:'四个时段都关闭了。上面至少打开一个，才有东西可以勾。',
   ntPermOn:'已允许通知', ntPermAsk:'允许通知', ntPermDenied:'通知被系统拒绝了。要改的话，去手机设置里找到这个网站或应用，重新允许。',
-  ntTest:'发一条测试通知', ntTestTitle:'天气预测', ntTestBody:'通知通路正常。真正的定时提醒还需要服务端。',
+  ntTest:'发一条测试通知', ntTestTitle:'天气预测', ntTestBody:'通知通路正常。定时提醒会按你的设定由服务器送出。',
   ntTestFail:'这个浏览器发不出通知。',
   ntSynced:'已登记，提醒会按上面的设定送达。',
   ntSyncing:'正在登记…', ntSyncFail:'登记失败，稍后会自动重试。检查一下网络。',
@@ -345,7 +364,7 @@ en:{
   ntNoLoc:'No locations yet. Add one first, then choose which ones to be reminded about.',
   ntNoWin:'All four windows are off. Turn at least one on above and it will appear here.',
   ntPermOn:'Notifications allowed', ntPermAsk:'Allow notifications', ntPermDenied:'Notifications are blocked by the system. To change it, find this site or app in your phone settings and allow them again.',
-  ntTest:'Send a test notification', ntTestTitle:'Predict Weather', ntTestBody:'The notification path works. Scheduled reminders still need a server.',
+  ntTest:'Send a test notification', ntTestTitle:'Predict Weather', ntTestBody:'The notification path works. Scheduled reminders are sent by the server on the times you set.',
   ntTestFail:'This browser cannot show notifications.',
   ntSynced:'Registered — reminders will arrive as configured above.',
   ntSyncing:'Registering…', ntSyncFail:'Registration failed; it will retry. Check your connection.',
@@ -430,7 +449,7 @@ ms:{
   ntNoLoc:'Belum ada lokasi. Tambah satu dahulu, kemudian pilih yang mana hendak diperingatkan.',
   ntNoWin:'Keempat-empat tempoh dimatikan. Hidupkan sekurang-kurangnya satu di atas.',
   ntPermOn:'Pemberitahuan dibenarkan', ntPermAsk:'Benarkan pemberitahuan', ntPermDenied:'Pemberitahuan disekat oleh sistem. Cari tapak atau aplikasi ini dalam tetapan telefon dan benarkan semula.',
-  ntTest:'Hantar pemberitahuan ujian', ntTestTitle:'Ramalan Cuaca', ntTestBody:'Laluan pemberitahuan berfungsi. Peringatan berjadual masih perlukan pelayan.',
+  ntTest:'Hantar pemberitahuan ujian', ntTestTitle:'Ramalan Cuaca', ntTestBody:'Laluan pemberitahuan berfungsi. Peringatan berjadual dihantar oleh pelayan pada masa yang anda tetapkan.',
   ntTestFail:'Pelayar ini tidak boleh memaparkan pemberitahuan.',
   ntSynced:'Didaftarkan — peringatan akan sampai mengikut tetapan di atas.',
   ntSyncing:'Mendaftar…', ntSyncFail:'Pendaftaran gagal; ia akan cuba lagi. Semak sambungan anda.',
@@ -2914,7 +2933,7 @@ function renderPermission(){
   if(m.kind === 'ok')        warn = `<p class="nt-ok">✓ ${t('ntSynced')}<br>${t('ntIosHint')}</p>`;
   else if(m.kind === 'busy') warn = `<p class="nt-warn">${t('ntSyncing')}</p>`;
   else if(m.kind === 'warn') warn = `<p class="nt-warn">${m.reason === 'noblocks' ? t('ntNoBlocksSel') : t('ntNeedPerm')}<br>${t('ntIosHint')}</p>`;
-  else warn = `<p class="nt-warn">${t('ntSyncFail')}<br><code class="nt-why">${esc(m.reason)}${lastSyncError ? ' · ' + lastSyncError : ''}</code><br>${t('ntIosHint')}</p>`;
+  else warn = `<p class="nt-warn">${t('ntSyncFail')}<br><code class="nt-why">${esc(m.reason)}${lastSyncError ? ' · ' + esc(lastSyncError) : ''}</code><br>${t('ntIosHint')}</p>`;
   const test = (supported && perm === 'granted')
     ? `<button class="cta ghost" id="nt-test">${t('ntTest')}</button>` : '';
   return top + warn + test;
@@ -3201,7 +3220,9 @@ async function syncPush(){
          when the forecast for that plot has not loaded yet. */
       blocks:blocks.map(l =>
         ({id:l.id, name:l.name, lat:l.lat, lon:l.lon, windows:l.notify,
-          tz:(cache[l.id] && cache[l.id].timezone) || undefined}))
+          tz:(cache[l.id] && cache[l.id].timezone) || undefined,
+          /* the plot's model, so a reminder quotes the figures its page shows */
+          model:l.model || S.defaultModel}))
     };
     const res = await fetch(PUSH_API + '/sub', {method:'POST',
       headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});

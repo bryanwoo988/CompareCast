@@ -72,14 +72,47 @@ function dueWindows(windows, nowMin, spanMin){
   });
 }
 
+/* 'YYYY-MM-DD' moved by n days on the calendar alone. Noon UTC keeps the
+   arithmetic clear of any daylight-saving edge; the result is only a date. */
+function addDays(dayISO, n){
+  const d = new Date(dayISO + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
 /* The dates a window touches. A wrapping window runs into the next day, and
    an hourly slice taken for one date alone would silently lose that half. */
 function spanDays(win, dayISO){
   const from = minutesOf(win && win.from), to = minutesOf(win && win.to);
   if(from < 0 || to < 0 || to > from) return [dayISO];
-  const d = new Date(dayISO + 'T12:00:00Z');
-  d.setUTCDate(d.getUTCDate() + 1);
-  return [dayISO, d.toISOString().slice(0, 10)];
+  return [dayISO, addDays(dayISO, 1)];
+}
+
+/* Which instance of a window a reminder is about, from the local date and
+   minute a run sees.
+
+   atDay  — the date the notify time fell on. A run just after midnight can
+            still be delivering a 23:50 reminder, and that belongs to the day
+            before. Every retry of one reminder must agree on it, because it
+            keys the de-duplication.
+   day    — the date that instance of the window starts on. A reminder is
+            about what is still ahead: once the window has ended by the notify
+            time it means the next one. This used to be missing, so a 21:00
+            reminder for the 06:00-12:00 slot summarised the morning that had
+            already gone — the one case, planning tomorrow's spraying the night
+            before, that an evening reminder exists for.
+   cutoff — hours before the notify time's own hour are over and are left
+            out, the rule the in-app sentence follows too. */
+function occurrence(win, nowMin, dayISO){
+  const from = minutesOf(win && win.from), to = minutesOf(win && win.to), at = minutesOf(win && win.at);
+  if(from < 0 || to < 0 || at < 0 || !(nowMin >= 0) || !dayISO) return null;
+  const atDay = at <= nowMin ? dayISO : addDays(dayISO, -1);
+  const day = to > from
+    ? (at >= to ? addDays(atDay, 1) : atDay)
+    /* wrapping: before `to` the instance that began last night is running */
+    : (at < to ? addDays(atDay, -1) : atDay);
+  const hh = String(Math.floor(at / 60)).padStart(2, '0');
+  return {atDay, day, cutoff:`${atDay}T${hh}:00`};
 }
 
 /* Aggregates for the hours named by `idx`. A series with nothing usable in it
@@ -142,4 +175,4 @@ function notesSince(releases, seen){
   return releases.filter(r => cmpVersion(r.v, seen) > 0);
 }
 
-if(typeof module !== 'undefined') module.exports = {minutesOf, inWindow, windowSlice, breaches, dueWindows, spanDays, aggregate, syncMessage, cmpVersion, notesSince};
+if(typeof module !== 'undefined') module.exports = {minutesOf, inWindow, windowSlice, breaches, dueWindows, spanDays, addDays, occurrence, aggregate, syncMessage, cmpVersion, notesSince};
