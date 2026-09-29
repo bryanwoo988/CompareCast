@@ -223,9 +223,87 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
   background:linear-gradient(180deg,#5fa0e8,#7fb6ee 45%,#9cc8f2)}
 .page.on{transform:translateX(0)}
 .page:not(.on){pointer-events:none}
+.page.clear{background:linear-gradient(180deg,#3f7fc4,#5fa0dd 45%,#8fc4ec)}
 .page.rain{background:linear-gradient(180deg,#4a6f9e,#6b8db5 45%,#8aa8c9)}
 .page.cloud{background:linear-gradient(180deg,#557dae,#7295c2 45%,#93aed3)}
 .page.night{background:linear-gradient(180deg,#1a2a5c,#2c407e 45%,#44579b)}
+/* ---- weather backdrop ----
+   Pure CSS on purpose: these run on the compositor, the browser stops them
+   when the page is hidden, and they cannot contend with the chart's pointer
+   handling or the map's drag the way a requestAnimationFrame canvas would.
+   Every layer moves with transform or opacity only — nothing that forces
+   layout. */
+/* Sticky, not absolute or fixed. As an absolute child of the scrolling page
+   it scrolled away and the lower half of a rainy day had no rain; fixed does
+   not help either, because .page carries a transform and that demotes fixed
+   descendants to scrolling with it. Sticky pins it to the top of the scroll
+   port, and the negative margin keeps it out of the flow so it pushes
+   nothing down. */
+.wx{position:sticky;top:0;left:0;width:100%;height:100dvh;margin-bottom:-100dvh;
+  z-index:0;overflow:hidden;pointer-events:none}
+/* percentages inside these layers must map to the viewport, or a gradient
+   positioned at "82% 8%" lands off-screen. Only the layers that actually
+   translate get slack, and only on the axis they move along. */
+.wx span{position:absolute;inset:0;opacity:0;transition:opacity .6s}
+/* the detail page stays in the layout when closed, so without this the
+   animations would keep burning battery behind the locations list. Only the
+   play state needs forcing — the page is translated off-screen, so the layers
+   are already invisible. */
+.page:not(.on) .wx span{animation-play-state:paused!important}
+.d-bar,.d-head,.d-ic,.d-now,.d-badge,.d-body{position:relative;z-index:1}
+
+/* rain: two sheets at different speeds, the far one fainter and slower */
+.page.rain .wx span:nth-child(1){opacity:1;top:-60px;bottom:-60px;
+  background:repeating-linear-gradient(8deg,transparent 0 13px,rgba(255,255,255,.20) 13px 15px,transparent 15px 30px);
+  animation:wx-fall 0.62s linear infinite}
+.page.rain .wx span:nth-child(2){opacity:.55;top:-60px;bottom:-60px;
+  background:repeating-linear-gradient(-6deg,transparent 0 21px,rgba(255,255,255,.13) 21px 22px,transparent 22px 44px);
+  animation:wx-fall2 1.05s linear infinite}
+@keyframes wx-fall{from{transform:translateY(0)}to{transform:translateY(30px)}}
+@keyframes wx-fall2{from{transform:translateY(0)}to{transform:translateY(44px)}}
+
+/* cloud: two soft masses drifting at different rates */
+.page.cloud .wx span:nth-child(1),.page.rain .wx span:nth-child(3){opacity:.5;left:-12%;right:-12%;
+  background:radial-gradient(42% 26% at 22% 30%,rgba(255,255,255,.30),transparent 70%),
+             radial-gradient(38% 22% at 74% 18%,rgba(255,255,255,.22),transparent 70%);
+  animation:wx-drift 52s ease-in-out infinite alternate}
+.page.cloud .wx span:nth-child(2){opacity:.4;left:-12%;right:-12%;
+  background:radial-gradient(48% 24% at 60% 55%,rgba(255,255,255,.22),transparent 72%);
+  animation:wx-drift2 74s ease-in-out infinite alternate}
+@keyframes wx-drift{from{transform:translateX(-4%)}to{transform:translateX(5%)}}
+@keyframes wx-drift2{from{transform:translateX(4%)}to{transform:translateX(-5%)}}
+
+/* clear day: a warm corner glow that breathes, and very faint slow rays */
+.page.clear .wx span:nth-child(1){opacity:1;
+  background:radial-gradient(34% 22% at 82% 8%,rgba(255,236,170,.55),transparent 70%);
+  animation:wx-glow 9s ease-in-out infinite alternate}
+.page.clear .wx span:nth-child(2){opacity:.16;
+  background:conic-gradient(from 0deg at 82% 8%,rgba(255,240,190,.9) 0 6deg,transparent 6deg 30deg,
+             rgba(255,240,190,.7) 30deg 34deg,transparent 34deg 60deg);
+  animation:wx-spin 140s linear infinite}
+@keyframes wx-glow{from{opacity:.75;transform:scale(1)}to{opacity:1;transform:scale(1.06)}}
+@keyframes wx-spin{to{transform:rotate(360deg)}}
+
+/* night: two star fields twinkling out of phase */
+.page.night .wx span:nth-child(1){opacity:1;
+  background:radial-gradient(1.4px 1.4px at 18% 22%,#fff,transparent),
+             radial-gradient(1.2px 1.2px at 63% 14%,#fff,transparent),
+             radial-gradient(1.6px 1.6px at 38% 41%,#fff,transparent),
+             radial-gradient(1.2px 1.2px at 87% 33%,#fff,transparent),
+             radial-gradient(1.3px 1.3px at 8% 52%,#fff,transparent);
+  animation:wx-twinkle 4.5s ease-in-out infinite alternate}
+.page.night .wx span:nth-child(2){opacity:1;
+  background:radial-gradient(1.1px 1.1px at 46% 9%,#fff,transparent),
+             radial-gradient(1.5px 1.5px at 72% 48%,#fff,transparent),
+             radial-gradient(1.2px 1.2px at 28% 62%,#fff,transparent),
+             radial-gradient(1.3px 1.3px at 93% 18%,#fff,transparent);
+  animation:wx-twinkle 6.2s ease-in-out .8s infinite alternate}
+@keyframes wx-twinkle{from{opacity:.25}to{opacity:.85}}
+
+/* someone who asked the system for less motion means it */
+@media (prefers-reduced-motion:reduce){
+  .wx span{animation:none!important}
+}
 .d-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
   padding:calc(var(--safe-t) + 12px) 16px 8px}
 /* the bar is sticky, so without this the page content scrolls out from under
@@ -547,6 +625,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 
 <!-- ============ detail page ============ -->
 <section class="page" id="detail">
+  <div class="wx" id="wx" aria-hidden="true"><span></span><span></span><span></span></div>
   <div class="d-bar">
     <button class="d-back" id="d-back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
     <button class="d-model" id="d-modelbtn">

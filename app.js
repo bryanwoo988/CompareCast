@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.10.0';
+const APP_VERSION = '3.11.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,13 @@ const APP_VERSION = '3.10.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.11.0',
+   zh:['详情页加了天气动画：下雨会下雨、阴天有云飘、晴天有阳光、夜晚有星星',
+       '晴天以前没有专属配色，现在有了'],
+   en:['The detail page now animates the weather: rain falls, clouds drift, sun glows, stars twinkle',
+       'Clear days finally have their own colour scheme'],
+   ms:['Halaman perincian kini beranimasi mengikut cuaca: hujan turun, awan hanyut, matahari bersinar, bintang berkelip',
+       'Hari cerah kini ada skema warna tersendiri']},
   {v:'3.10.0',
    zh:['更新现在开一次就到位，不用再开两次'],
    en:['Updates now land on the first launch instead of the second'],
@@ -1400,7 +1407,7 @@ function paintHead(){
   $('#d-modelname').textContent = m.short;
   $('#d-badge').innerHTML = `<span class="dot" style="background:${m.color}"></span>${m.short}`;
   const page = $('#detail');
-  page.classList.remove('rain','cloud','night');
+  page.classList.remove('rain','cloud','night','clear');
   if(sum && sum.current){
     const c = sum.current, code = pick(c,'weather_code',m.id,true), day = pick(c,'is_day',m.id,true);
     const w = wmo(code);
@@ -1410,6 +1417,7 @@ function paintHead(){
     if(day === 0) page.classList.add('night');
     else if(w.s === 'rain') page.classList.add('rain');
     else if(w.s === 'cloud') page.classList.add('cloud');
+    else page.classList.add('clear');   /* sunny had no class at all before */
   } else {
     $('#d-icon').innerHTML = icon('cloud', 110);
     $('#d-temp').textContent = '—'; $('#d-cond').textContent = t('loading');
