@@ -1,5 +1,8 @@
 const {test} = require('node:test');
 const assert = require('node:assert');
+/* test-only key material in the real encoded shapes */
+const K_P = 'BIJ7_6fCuHIGqiaM98xjRy_s5QgJ3ea8xuf5Fngx1iJo5O8_DuaKulY-oFHX-fdRezaLS0t6hrvFS6hoROxcaso';
+const K_A = 'azNDjVHPx0DLt25K4u5NMg';
 const {handle, MAX_BODY, MAX_DEVICES} = require('../server/src/index.js');
 
 const ORIGIN = 'https://bryanwoo988.github.io';
@@ -18,7 +21,7 @@ function mkEnv(n){
 }
 const BODY = id => ({
   id, tz:'Asia/Kuala_Lumpur', lang:'zh',
-  sub:{endpoint:'https://web.push.apple.com/x', keys:{p256dh:'p', auth:'a'}},
+  sub:{endpoint:'https://web.push.apple.com/x', keys:{p256dh:K_P, auth:K_A}},
   notify:{windows:[{id:'morning', on:true, from:'06:00', to:'12:00', at:'06:00', mode:'threshold'}], rules:{}},
   blocks:[{id:'l1', name:'A', lat:3, lon:101, windows:['morning']}]
 });
@@ -58,4 +61,18 @@ test('注销删除设备', async () => {
     headers:{'Content-Type':'application/json', Origin:ORIGIN}, body:JSON.stringify({id:'abcdefgh1234'})}), env);
   assert.strictEqual(r.status, 204);
   assert.ok(!env.store.has('dev:abcdefgh1234'));
+});
+
+/* A02: switching off every window a plot used made the POST fail validation
+   (noBlocks), and the old record — with the old schedule — stayed and kept
+   sending. An empty effective schedule now withdraws the record. */
+test('生效的地块为零时，服务器删掉旧记录', async () => {
+  const env = mkEnv();
+  await handle(post(BODY('abcdefgh1234')), env);
+  assert.ok(env.store.has('dev:abcdefgh1234'));
+  const off = BODY('abcdefgh1234');
+  off.notify.windows[0].on = false;
+  const r = await handle(post(off), env);
+  assert.strictEqual(r.status, 400);
+  assert.ok(!env.store.has('dev:abcdefgh1234'), '旧排程还留着，会继续发');
 });

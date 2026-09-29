@@ -88,6 +88,25 @@ function spanDays(win, dayISO){
   return [dayISO, addDays(dayISO, 1)];
 }
 
+/* The hours of one instance of a window, as explicit indices into `times`.
+
+   The window is one dated interval: from `from` on dayISO to `to` on the
+   same day, or on the next when it crosses midnight (an equal start and end
+   is a full day). windowSlice's start-and-count could only describe
+   consecutive matches, and a window crossing midnight never is on one date —
+   the cron read 00:00-03:00 twice and missed the evening entirely. Times are
+   Open-Meteo's local wall-clock strings, so they compare as text. */
+function windowIndices(times, dayISO, win){
+  const from = minutesOf(win && win.from), to = minutesOf(win && win.to);
+  if(from < 0 || to < 0 || !dayISO || !Array.isArray(times)) return [];
+  const hhmm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  const start = `${dayISO}T${hhmm(from)}`;
+  const end = `${to > from ? dayISO : addDays(dayISO, 1)}T${hhmm(to)}`;
+  const out = [];
+  times.forEach((t, i) => { const s = String(t).slice(0, 16); if(s >= start && s < end) out.push(i); });
+  return out;
+}
+
 /* Which instance of a window a reminder is about, from the local date and
    minute a run sees.
 
@@ -157,6 +176,33 @@ function syncMessage(state, enabled, permission){
   return {kind:'err', reason:state || 'unknown'};
 }
 
+/* The plots a device actually wants reminders for: each one's ticked windows
+   narrowed to those switched on, and plots left with none dropped. The local
+   ticks are not touched, so switching a window back on restores them.
+
+   Checking only "has ticks" used to POST plots whose windows were all off;
+   the server rejected the lot and the old schedule kept sending. */
+function effectiveBlocks(locations, windows){
+  const on = new Set((Array.isArray(windows) ? windows : []).filter(w => w && w.on).map(w => w.id));
+  return (Array.isArray(locations) ? locations : [])
+    .map(l => ({loc:l, windows:(Array.isArray(l && l.notify) ? l.notify : []).filter(id => on.has(id))}))
+    .filter(x => x.windows.length)
+    .map(x => ({id:x.loc.id, loc:x.loc, windows:x.windows}));
+}
+
+/* The id this device registers under — the server's only proof of ownership,
+   so it has to be unguessable, and it has to match the server's pattern.
+   The old fallback (Date.now() + Math.random()) carried a '.', so phones
+   without randomUUID were refused on every attempt, permanently. */
+const DEVICE_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
+const validDeviceId = id => typeof id === 'string' && DEVICE_ID_RE.test(id);
+function makeDeviceId(c){
+  if(c && typeof c.randomUUID === 'function') return c.randomUUID().replace(/-/g, '').slice(0, 32);
+  const b = new Uint8Array(16);
+  c.getRandomValues(b);
+  return Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+}
+
 /* numeric, segment by segment — '3.10.0' is newer than '3.9.0', which a
    string compare gets backwards */
 function cmpVersion(a, b){
@@ -175,4 +221,4 @@ function notesSince(releases, seen){
   return releases.filter(r => cmpVersion(r.v, seen) > 0);
 }
 
-if(typeof module !== 'undefined') module.exports = {minutesOf, inWindow, windowSlice, breaches, dueWindows, spanDays, addDays, occurrence, aggregate, syncMessage, cmpVersion, notesSince};
+if(typeof module !== 'undefined') module.exports = {minutesOf, inWindow, windowSlice, breaches, dueWindows, spanDays, addDays, occurrence, windowIndices, aggregate, syncMessage, cmpVersion, notesSince, effectiveBlocks, makeDeviceId, validDeviceId};

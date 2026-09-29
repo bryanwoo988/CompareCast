@@ -38,6 +38,20 @@ function validTz(tz){
 
 const num = (v, lo, hi) => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi;
 
+/* the bytes a base64url string decodes to, or null if it is not one */
+function b64urlBytes(s){
+  if(typeof s !== 'string' || !/^[A-Za-z0-9_-]+={0,2}$/.test(s) || s.length > 200) return null;
+  try{
+    const bin = atob(s.replace(/=+$/, '').replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(bin, c => c.charCodeAt(0));
+  }catch(e){ return null; }
+}
+/* p256dh is an uncompressed P-256 point (65 bytes, leading 0x04) and auth a
+   16-byte secret. Anything else cannot be encrypted for, and would fail on
+   every run rather than once, here. */
+const validP256dh = s => { const b = b64urlBytes(s); return !!b && b.length === 65 && b[0] === 4; };
+const validAuth = s => { const b = b64urlBytes(s); return !!b && b.length === 16; };
+
 function cleanUnits(u){
   const src = u && typeof u === 'object' ? u : {};
   const out = {};
@@ -84,8 +98,8 @@ function validateSub(body){
   try{ url = new URL(sub.endpoint); }catch(e){ return bad('endpoint'); }
   if(url.protocol !== 'https:' || !PUSH_HOSTS.some(ok => ok(url.hostname))) return bad('endpoint');
   const keys = sub.keys || {};
-  if(typeof keys.p256dh !== 'string' || !keys.p256dh || keys.p256dh.length > 200) return bad('p256dh');
-  if(typeof keys.auth !== 'string' || !keys.auth || keys.auth.length > 100) return bad('auth');
+  if(!validP256dh(keys.p256dh)) return bad('p256dh');
+  if(!validAuth(keys.auth)) return bad('auth');
 
   const notify = body.notify;
   if(!notify || typeof notify !== 'object') return bad('notify');

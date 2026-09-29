@@ -171,3 +171,83 @@ test('时间不合法时不给结果', () => {
   assert.strictEqual(occurrence(OW('06:00','12:00',''), 360, D0), null);
   assert.strictEqual(occurrence(OW('06:00','12:00','06:00'), 360, ''), null);
 });
+
+/* ---- windowIndices: one dated interval, explicit indices ----
+   windowSlice returned a start and a count, which only describes a run of
+   consecutive hours. For a window crossing midnight the matches on one date
+   are not consecutive (00:00, 01:00 … then 22:00, 23:00), so the cron read
+   00:00-03:00 twice and never the evening at all. */
+const {windowIndices} = require('../notifylogic.js');
+const HOURS = days => days.flatMap(d => Array.from({length:24}, (_, h) => `${d}T${String(h).padStart(2, '0')}:00`));
+const at = (times, idx) => idx.map(i => times[i]);
+const WW = (from, to) => ({id:'x', on:true, from, to, at:from, mode:'digest'});
+
+test('跨午夜的时段：前一天晚上接到第二天凌晨，恰好四个小时', () => {
+  const t = HOURS(['2026-09-29', '2026-09-30']);
+  assert.deepStrictEqual(at(t, windowIndices(t, '2026-09-29', WW('22:00', '02:00'))),
+    ['2026-09-29T22:00', '2026-09-29T23:00', '2026-09-30T00:00', '2026-09-30T01:00']);
+});
+test('跨月也对', () => {
+  const t = HOURS(['2026-09-30', '2026-10-01']);
+  assert.deepStrictEqual(at(t, windowIndices(t, '2026-09-30', WW('22:00', '02:00'))),
+    ['2026-09-30T22:00', '2026-09-30T23:00', '2026-10-01T00:00', '2026-10-01T01:00']);
+});
+test('不跨午夜的时段照旧', () => {
+  const t = HOURS(['2026-09-30']);
+  assert.deepStrictEqual(at(t, windowIndices(t, '2026-09-30', WW('06:00', '09:00'))),
+    ['2026-09-30T06:00', '2026-09-30T07:00', '2026-09-30T08:00']);
+});
+test('开始等于结束：一整天，从开始时间起算', () => {
+  const t = HOURS(['2026-09-30', '2026-10-01']);
+  const got = at(t, windowIndices(t, '2026-09-30', WW('06:00', '06:00')));
+  assert.strictEqual(got.length, 24);
+  assert.strictEqual(got[0], '2026-09-30T06:00');
+  assert.strictEqual(got[23], '2026-10-01T05:00');
+});
+test('只有部分日期的数据时，只取得到的那些', () => {
+  const t = HOURS(['2026-09-30']);
+  assert.deepStrictEqual(at(t, windowIndices(t, '2026-09-30', WW('22:00', '02:00'))),
+    ['2026-09-30T22:00', '2026-09-30T23:00']);
+});
+test('时间不合法时为空', () => {
+  assert.deepStrictEqual(windowIndices(HOURS(['2026-09-30']), '2026-09-30', WW('', '02:00')), []);
+});
+
+/* ---- effectiveBlocks: what the server would actually send for ----
+   The client used to ask only "does this plot have windows ticked", so a plot
+   whose ticked windows had all been switched off was still POSTed, rejected,
+   and the old schedule left running. */
+const {effectiveBlocks, makeDeviceId, validDeviceId} = require('../notifylogic.js');
+const WINS = [{id:'morning', on:true}, {id:'afternoon', on:false}, {id:'evening', on:true}];
+test('只留下勾选且开着的时段', () => {
+  const locs = [{id:'a', notify:['morning', 'afternoon']}, {id:'b', notify:['afternoon']}, {id:'c', notify:[]}, {id:'d'}];
+  assert.deepStrictEqual(effectiveBlocks(locs, WINS).map(x => [x.id, x.windows]), [['a', ['morning']]]);
+});
+test('时段全关时为空', () => {
+  assert.deepStrictEqual(effectiveBlocks([{id:'a', notify:['morning']}], WINS.map(w => ({...w, on:false}))), []);
+});
+test('本地的勾选不被改动（以后重新打开时段还在）', () => {
+  const loc = {id:'a', notify:['morning', 'afternoon']};
+  effectiveBlocks([loc], WINS);
+  assert.deepStrictEqual(loc.notify, ['morning', 'afternoon']);
+});
+
+/* ---- device id ----
+   Without crypto.randomUUID the fallback was Date.now() + Math.random(),
+   which contains a '.', so the server rejected every registration — and the
+   id was saved, so the phone stayed broken for good. */
+const RE = /^[A-Za-z0-9_-]{8,64}$/;
+test('有 randomUUID 时用它，去掉横线', () => {
+  const id = makeDeviceId({randomUUID:() => '12345678-1234-1234-1234-123456789abc', getRandomValues:null});
+  assert.strictEqual(id, '12345678123412341234123456789abc');
+});
+test('没有 randomUUID 时用 getRandomValues，结果服务器接受', () => {
+  const id = makeDeviceId({getRandomValues:a => { a.fill(171); return a; }});
+  assert.match(id, RE);
+  assert.strictEqual(id.length, 32);
+});
+test('识别出旧的坏 id', () => {
+  assert.strictEqual(validDeviceId('1790000000000' + 0.123), false);
+  assert.strictEqual(validDeviceId('12345678123412341234123456789abc'), true);
+  assert.strictEqual(validDeviceId(undefined), false);
+});

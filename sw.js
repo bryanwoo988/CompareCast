@@ -1,7 +1,7 @@
 /* 天气预测 · service worker
    Shell is cached so the app opens offline.
    Weather data is NEVER cached — forecasts must always be fresh. */
-const VERSION = 'pw-v3.17.0';
+const VERSION = 'pw-v3.18.0';
 const SHELL = VERSION + '-shell';
 const SHELL_FILES = [
   './', './index.html', './swpolicy.js', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './summary.js', './layout.js', './app.js', './manifest.webmanifest',
@@ -122,15 +122,22 @@ self.addEventListener('push', e => {
        The worker now tags each reminder itself; without one, stand alone. */
     tag: d.tag || '',
     renotify: false,
-    data: {url: './'}
+    /* a reminder about one plot carries its id, so tapping it opens that plot */
+    data: {loc: typeof d.loc === 'string' ? d.loc : ''}
   }));
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
+  const loc = (e.notification.data && e.notification.data.loc) || '';
   e.waitUntil((async () => {
     const all = await self.clients.matchAll({type:'window', includeUncontrolled:true});
-    for(const c of all){ if('focus' in c) return c.focus(); }
-    if(self.clients.openWindow) return self.clients.openWindow('./');
+    for(const c of all){
+      if(!('focus' in c)) continue;
+      await c.focus();
+      if(loc) c.postMessage({type:'open-loc', loc});
+      return;
+    }
+    if(self.clients.openWindow) return self.clients.openWindow(loc ? './?loc=' + encodeURIComponent(loc) : './');
   })());
 });

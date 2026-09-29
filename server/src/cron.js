@@ -2,7 +2,7 @@
 
    Kept apart from the HTTP entry point so it can be driven end to end with
    KV, Open-Meteo and the push service all stood in (tests/cron.test.js). */
-import {dueWindows, occurrence, spanDays, windowSlice, aggregate, breaches} from '../../notifylogic.js';
+import {minutesOf, dueWindows, occurrence, windowIndices, aggregate, breaches} from '../../notifylogic.js';
 import {messageForWindow} from './message.js';
 import {sentKey, sendOne, readLedger, writeLedger} from './send.js';
 import {modelsParam, forModel} from './models.js';
@@ -13,7 +13,7 @@ const API = 'https://api.open-meteo.com/v1/forecast';
    every 15 minutes and a window used to be due in exactly one of those runs,
    so one slow reply from Open-Meteo or the push service at 06:00 meant no
    reminder that day. Four runs of grace, with the ledger stopping repeats. */
-const DUE_GRACE_MIN = 60;
+const DUE_GRACE_MIN = 60, CRON_SPAN_MIN = 15;
 
 /* the device's own wall clock, from its IANA zone — never a hand-rolled
    UTC offset, which would be wrong twice a year */
@@ -30,7 +30,9 @@ function localNow(tz, now){
    windows want it; null when it fails, which leaves those plots for the next
    run rather than deciding them on nothing */
 function forecast(run, lat, lon, tz, model){
-  const key = `${lat.toFixed(4)},${lon.toFixed(4)},${modelsParam(model)}`;
+  /* the zone is part of the key: it decides which wall-clock hours the reply
+     is laid out in */
+  const key = `${lat.toFixed(4)},${lon.toFixed(4)},${tz},${modelsParam(model)}`;
   if(run.cache.has(key)) return run.cache.get(key);
   const q = new URLSearchParams({
     latitude:String(lat), longitude:String(lon), timezone:tz, forecast_days:'3',
@@ -59,9 +61,13 @@ function dueGroups(dev, now){
       if(!mine.includes(win.id)) continue;
       const occ = occurrence(win, min, day);
       if(!occ) continue;
+      /* the last run still inside the grace hour: after this one the window
+         is no longer due, so an undecided plot has to be decided now */
+      let age = min - minutesOf(win.at); if(age < 0) age += 1440;
+      const lastChance = age + CRON_SPAN_MIN >= DUE_GRACE_MIN;
       const key = sentKey(dev.id, win.id, occ.atDay);
       if(!groups.has(key)) groups.set(key, {key, win, atDay:occ.atDay, items:[]});
-      groups.get(key).items.push({b, tz, occ});
+      groups.get(key).items.push({b, tz, occ, lastChance});
     }
   }
   return [...groups.values()];
@@ -78,35 +84,39 @@ async function runDevice(env, dev, now, run){
     const done = await readLedger(env, g.key);
     const entries = [], decided = [];
 
-    for(const {b, tz, occ} of g.items){
+    for(const {b, tz, occ, lastChance} of g.items){
       if(done.has(b.id)) continue;
       const fc = await forecast(run, b.lat, b.lon, tz, b.model);
-      if(!fc) continue;
-      /* both dates of a wrapping window, less the hours already behind the
-         notify time */
-      const idx = [];
-      for(const d of spanDays(g.win, occ.day)){
-        const {start, n} = windowSlice(fc.time, d, g.win);
-        for(let i = 0; i < n; i++) if(String(fc.time[start + i]) >= occ.cutoff) idx.push(start + i);
+      /* one dated interval — a window crossing midnight included — less the
+         hours already behind the notify time */
+      const idx = fc ? windowIndices(fc.time, occ.day, g.win).filter(i => String(fc.time[i]) >= occ.cutoff) : [];
+      if(!idx.length){
+        if(run.stats) run.stats.noForecast++;
+        /* retried by the next run; on the last one, said out loud instead —
+           in threshold mode silence would read as "all clear" */
+        if(lastChance){ decided.push(b.id); entries.push({id:b.id, name:b.name, noData:true}); }
+        continue;
       }
-      if(!idx.length) continue;
       decided.push(b.id);
       const stats = aggregate(fc, idx);
       const hits = g.win.mode === 'threshold' ? breaches(dev.notify.rules, stats) : [];
       if(g.win.mode === 'threshold' && !hits.length) continue;
-      entries.push({name:b.name, stats, hits});
+      entries.push({id:b.id, name:b.name, stats, hits});
     }
     if(!decided.length) continue;
 
     const msg = messageForWindow(dev.lang, g.win, entries, dev.notify.rules, dev.units);
-    let result = 'quiet';
+    let result = 'quiet', loc;
     if(msg){
       /* its own tag, so it can never replace another reminder — the shared
          default is what used to leave one warning standing out of ten */
       msg.tag = `pw:${g.win.id}:${g.atDay}:${decided[0]}`;
+      /* a reminder about one plot opens that plot when tapped */
+      if(msg.ids.length === 1) loc = msg.loc = msg.ids[0];
+      delete msg.ids;
       result = await sendOne(env, dev, msg, run.post);
     }
-    report.push({key:g.key, result, title:msg && msg.title, body:msg && msg.body, tag:msg && msg.tag, ids:decided});
+    report.push({key:g.key, result, title:msg && msg.title, body:msg && msg.body, tag:msg && msg.tag, loc, ids:decided});
     if(result === 'expired') break;                // the device is gone
     if(result === 'failed') continue;              // undecided: the next run tries again
     await writeLedger(env, g.key, [...done, ...decided]);

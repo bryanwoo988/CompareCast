@@ -112,3 +112,11 @@ test('确实产出了 aes128gcm 密文与 VAPID 授权头', async () => {
   const raw = Buffer.from(seenInit.body).toString('latin1');
   assert.ok(!raw.includes('Alpha'), '明文泄漏在载荷里');
 });
+
+/* the cron POSTs with a JWT signed by this app's key: a push service that
+   redirects is not followed somewhere else */
+test('推送请求不跟随重定向', async () => {
+  let seen = null;
+  await sendOne(mkEnv(201), DEV, PAYLOAD, async (url, init) => { seen = init; return {status:201}; });
+  assert.strictEqual(seen.redirect, 'manual');
+});

@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.17.0';
+const APP_VERSION = '3.18.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,28 @@ const APP_VERSION = '3.17.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.18.0',
+   zh:['跨午夜的提醒时段（例如 22:00–02:00）现在读的是当晚到次日凌晨那几个小时。以前会读错小时',
+       '把某个地块用到的时段全部关掉后，服务器上的旧提醒会一并撤掉。以前旧排程会留着继续发',
+       '一小时内都取不到某地块的预报时，会发一条「暂时查不到预报」，不再沉默——沉默容易被当成没事',
+       '只讲一个地块的提醒，点开会直接打开那个地块',
+       '提醒设置页写明了：提醒里的数字用的是每个地块自己选的模式',
+       '没有 randomUUID 的旧手机，以前永远登记不上提醒，现在可以了',
+       '同步失败会自动重试几次；服务器端也更严格地检查推送密钥'],
+   en:['Reminder windows that cross midnight (e.g. 22:00\u201302:00) now read that evening and the early hours after it; they used to read the wrong hours',
+       'Switching off every window a location uses now withdraws its reminders from the server; the old schedule used to stay and keep sending',
+       'If a location\u2019s forecast cannot be fetched for a whole hour, a \u201cforecast unavailable\u201d notice is sent instead of silence, which could be mistaken for all clear',
+       'A reminder about a single location opens that location when tapped',
+       'The reminder page now says that reminder figures use each location\u2019s own model',
+       'Older phones without randomUUID could never register for reminders; now they can',
+       'Failed syncs retry a few times on their own, and the server checks push keys more strictly'],
+   ms:['Tempoh peringatan yang merentasi tengah malam (cth. 22:00\u201302:00) kini membaca malam itu dan awal pagi selepasnya; dahulu ia membaca jam yang salah',
+       'Mematikan semua tempoh yang digunakan sesuatu lokasi kini menarik balik peringatannya dari pelayan; jadual lama dahulu kekal dan terus menghantar',
+       'Jika ramalan sesuatu lokasi tidak dapat diperoleh selama sejam, notis \u201cramalan tidak dapat diperoleh\u201d dihantar, bukan diam',
+       'Peringatan tentang satu lokasi membuka lokasi itu apabila diketik',
+       'Halaman peringatan kini menyatakan angka peringatan menggunakan model setiap lokasi',
+       'Telefon lama tanpa randomUUID tidak pernah dapat mendaftar; kini boleh',
+       'Penyegerakan yang gagal dicuba semula beberapa kali, dan pelayan menyemak kunci push dengan lebih ketat']},
   {v:'3.17.0',
    zh:['同一时段的提醒合成一条通知，列出所有地块。以前每个地块各发一条，而且会互相覆盖——十个地块只看得到最后一个',
        '晚上设的提醒现在讲的是接下来的时段。以前晚上九点提醒「早上时段」，报的是当天已经过去的那个早上',
@@ -274,6 +296,7 @@ zh:{
   wMorning:'早上', wAfternoon:'下午', wEvening:'晚上', wNight:'凌晨',
   ntFrom:'起', ntTo:'止', ntAt:'提醒时间', ntCross:'此时段跨天',
   ntTzNote:(z)=>`时间按地块所在时区计算（${z}）`,
+  ntModelNote:'提醒里的温度、雨量和风，用的是每个地块自己选的模式；降雨机率来自 Best Match，跟详情页一样。',
   ntDigest:'每天摘要', ntThreshold:'仅超阈值',
   rRainProb:'降雨概率', rRainSum:'降雨量', rTMax:'最高温', rTMin:'最低温', rWind:'风速', rGust:'阵风',
   ntNoLoc:'还没有地点。先加一个，才能设定要提醒哪一块。',
@@ -285,6 +308,7 @@ zh:{
   ntSyncing:'正在登记…', ntSyncFail:'登记失败，稍后会自动重试。检查一下网络。',
   ntNeedPerm:'打开主开关并允许通知后，提醒才会送达。',
   ntNoBlocksSel:'还没有勾选任何地块。在下面的表格里选一个，提醒才有对象。',
+  ntNoActive:'勾选的地块用到的时段都关着，目前不会发任何提醒。打开对应的时段就会恢复。',
   ntIosHint:'iPhone 必须先把这个应用「加到主屏幕」，只在浏览器里开着收不到通知。',
   mapHint:'按 + 放置一个地点，或在上方搜索地名', locsUnit:n=>'个地点',
   railLocate:'定位到我', railAdd:'加一个地点', railLayer:'底图', mapSearchPh:'搜索地名',
@@ -359,6 +383,7 @@ en:{
   wMorning:'Morning', wAfternoon:'Afternoon', wEvening:'Evening', wNight:'Overnight',
   ntFrom:'From', ntTo:'To', ntAt:'Notify at', ntCross:'This window crosses midnight',
   ntTzNote:(z)=>`Times are in each location's own time zone (${z})`,
+  ntModelNote:'Reminder temperatures, rainfall and wind use each location\u2019s own model; chance of rain comes from Best Match, as on the detail page.',
   ntDigest:'Daily summary', ntThreshold:'Only when exceeded',
   rRainProb:'Rain chance', rRainSum:'Rainfall', rTMax:'High temp', rTMin:'Low temp', rWind:'Wind', rGust:'Gusts',
   ntNoLoc:'No locations yet. Add one first, then choose which ones to be reminded about.',
@@ -370,6 +395,7 @@ en:{
   ntSyncing:'Registering…', ntSyncFail:'Registration failed; it will retry. Check your connection.',
   ntNeedPerm:'Turn the switch on and allow notifications, then reminders will arrive.',
   ntNoBlocksSel:'No locations ticked yet. Pick one in the table below and reminders will have something to report on.',
+  ntNoActive:'The windows your ticked locations use are all switched off, so no reminders will be sent. Switch one back on to resume.',
   ntIosHint:'On iPhone the app must be added to the Home Screen first — notifications never arrive while it only runs in the browser.',
   mapHint:'Press + to place a location, or search for a place above', locsUnit:n=>n === 1 ? 'location' : 'locations',
   railLocate:'Locate me', railAdd:'Add a location', railLayer:'Basemap', mapSearchPh:'Search for a place',
@@ -444,6 +470,7 @@ ms:{
   wMorning:'Pagi', wAfternoon:'Petang', wEvening:'Malam', wNight:'Dini hari',
   ntFrom:'Dari', ntTo:'Hingga', ntAt:'Beritahu pada', ntCross:'Tempoh ini melepasi tengah malam',
   ntTzNote:(z)=>`Masa mengikut zon waktu lokasi itu sendiri (${z})`,
+  ntModelNote:'Suhu, hujan dan angin dalam peringatan menggunakan model setiap lokasi; kebarangkalian hujan dari Best Match, sama seperti halaman butiran.',
   ntDigest:'Ringkasan harian', ntThreshold:'Hanya bila melebihi',
   rRainProb:'Peluang hujan', rRainSum:'Jumlah hujan', rTMax:'Suhu tertinggi', rTMin:'Suhu terendah', rWind:'Angin', rGust:'Tiupan',
   ntNoLoc:'Belum ada lokasi. Tambah satu dahulu, kemudian pilih yang mana hendak diperingatkan.',
@@ -455,6 +482,7 @@ ms:{
   ntSyncing:'Mendaftar…', ntSyncFail:'Pendaftaran gagal; ia akan cuba lagi. Semak sambungan anda.',
   ntNeedPerm:'Hidupkan suis dan benarkan pemberitahuan, barulah peringatan akan sampai.',
   ntNoBlocksSel:'Belum ada lokasi ditanda. Pilih satu dalam jadual di bawah.',
+  ntNoActive:'Tempoh yang digunakan oleh lokasi bertanda semuanya dimatikan, jadi tiada peringatan dihantar. Hidupkan semula untuk sambung.',
   ntIosHint:'Pada iPhone, aplikasi mesti ditambah ke Skrin Utama dahulu — pemberitahuan tidak sampai jika hanya dibuka dalam pelayar.',
   mapHint:'Tekan + untuk letak lokasi, atau cari nama tempat di atas', locsUnit:n=>'lokasi',
   railLocate:'Cari saya', railAdd:'Tambah lokasi', railLayer:'Peta asas', mapSearchPh:'Cari nama tempat',
@@ -2932,7 +2960,7 @@ function renderPermission(){
   let warn;
   if(m.kind === 'ok')        warn = `<p class="nt-ok">✓ ${t('ntSynced')}<br>${t('ntIosHint')}</p>`;
   else if(m.kind === 'busy') warn = `<p class="nt-warn">${t('ntSyncing')}</p>`;
-  else if(m.kind === 'warn') warn = `<p class="nt-warn">${m.reason === 'noblocks' ? t('ntNoBlocksSel') : t('ntNeedPerm')}<br>${t('ntIosHint')}</p>`;
+  else if(m.kind === 'warn') warn = `<p class="nt-warn">${m.reason === 'noblocks' ? t(S.locations.some(l => (l.notify || []).length) ? 'ntNoActive' : 'ntNoBlocksSel') : t('ntNeedPerm')}<br>${t('ntIosHint')}</p>`;
   else warn = `<p class="nt-warn">${t('ntSyncFail')}<br><code class="nt-why">${esc(m.reason)}${lastSyncError ? ' · ' + esc(lastSyncError) : ''}</code><br>${t('ntIosHint')}</p>`;
   const test = (supported && perm === 'granted')
     ? `<button class="cta ghost" id="nt-test">${t('ntTest')}</button>` : '';
@@ -3047,6 +3075,7 @@ function paintNotify(){
     <div id="nt-status">${renderPermission()}</div>
     <div class="glass"><h4>${t('ntWindows')}</h4>
       <p class="nt-note" style="margin:-4px 0 12px">${esc(t('ntTzNote')(zoneLabel()))}</p>
+      <p class="nt-note" style="margin:-4px 0 12px">${esc(t('ntModelNote'))}</p>
       ${renderWindows()}</div>
     <div class="glass"><h4>${t('ntRules')}</h4>${renderRules()}</div>
     <div class="glass"><h4>${t('ntBlocks')}</h4>${renderMatrix()}</div>`;
@@ -3139,12 +3168,32 @@ const VAPID_PUBLIC = 'BBjBjJlP2b9oTWJFPK1CvEXXrrafJC0xmhlbOurC6GssgQQegLTVxAtfSk
 let syncState = 'unknown', syncTimer = null, lastSyncError = '';
 
 function deviceId(){
-  if(!S.deviceId){
-    S.deviceId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random())
-      .replace(/-/g, '').slice(0, 32);
+  /* also replaces an id saved by the old fallback, which the server refused
+     forever because it carried a '.' (notifylogic.js) */
+  if(!validDeviceId(S.deviceId)){
+    S.deviceId = makeDeviceId(crypto);
     save();
   }
   return S.deviceId;
+}
+
+/* Withdraw this device from the worker. The response used to go unchecked,
+   so a failed withdrawal looked exactly like a successful one while the old
+   schedule kept sending. 404 means there was nothing to withdraw. */
+async function withdrawDevice(){
+  const res = await fetch(PUSH_API + '/sub', {method:'DELETE', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:deviceId()})});
+  if(!res.ok && res.status !== 404) throw new Error('HTTP ' + res.status);
+}
+
+/* A sync that failed for a reason time can fix — the network, a server
+   error, a withdrawal that did not land — tries again a few times with a
+   growing gap, instead of waiting for the next time the app is opened. */
+let syncRetries = 0;
+function retrySync(){
+  if(syncRetries >= 5) return;
+  syncRetries++;
+  scheduleSync(30000 * syncRetries);
 }
 
 const b64ToBytes = b64 => {
@@ -3177,20 +3226,29 @@ async function syncPush(){
     try{
       const old = await reg.pushManager.getSubscription();
       if(old) await old.unsubscribe();
-      await fetch(PUSH_API + '/sub', {method:'DELETE', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({id:deviceId()})});
-    }catch(e){}
+      await withdrawDevice();
+    }catch(e){
+      lastSyncError = (e && e.message) || 'withdraw';
+      retrySync();
+      return done('withdraw');
+    }
+    syncRetries = 0;
     return done('unknown');
   }
 
-  const blocks = S.locations.filter(l => (l.notify || []).length);
+  /* what the worker would actually send for: ticked windows that are also
+     switched on. Ticks alone used to be enough to POST, and a plot whose
+     windows were all off got the whole registration rejected while the old
+     schedule stayed live on the server. */
+  const blocks = effectiveBlocks(S.locations, S.notify.windows);
   if(!blocks.length){
-    /* the worker has nothing to send for this device; leaving a stale
-       subscription registered would be worse than withdrawing it */
-    try{
-      await fetch(PUSH_API + '/sub', {method:'DELETE', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({id:deviceId()})});
-    }catch(e){}
+    try{ await withdrawDevice(); }
+    catch(e){
+      lastSyncError = (e && e.message) || 'withdraw';
+      retrySync();
+      return done('withdraw');
+    }
+    syncRetries = 0;
     return done('noblocks');
   }
 
@@ -3218,8 +3276,8 @@ async function syncPush(){
       /* the plot's own zone, so "6am" means 6am at the field — right even if
          the phone is somewhere else. Falls back to the device's zone only
          when the forecast for that plot has not loaded yet. */
-      blocks:blocks.map(l =>
-        ({id:l.id, name:l.name, lat:l.lat, lon:l.lon, windows:l.notify,
+      blocks:blocks.map(({loc:l, windows}) =>
+        ({id:l.id, name:l.name, lat:l.lat, lon:l.lon, windows,
           tz:(cache[l.id] && cache[l.id].timezone) || undefined,
           /* the plot's model, so a reminder quotes the figures its page shows */
           model:l.model || S.defaultModel}))
@@ -3230,11 +3288,15 @@ async function syncPush(){
       let why = '';
       try{ why = (await res.json()).error || ''; }catch(e2){}
       lastSyncError = 'HTTP ' + res.status + (why ? ' · ' + why : '');
+      /* a 4xx will not fix itself; a 5xx might */
+      if(res.status >= 500) retrySync();
       return done('http' + res.status);
     }
     lastSyncError = '';
+    syncRetries = 0;
     return done('synced');
   }catch(e){
+    retrySync();
     lastSyncError = (e && (e.name + ': ' + e.message)) || 'network';
     return done('failed');
   }
@@ -3545,6 +3607,23 @@ window.addEventListener('popstate', () => {
   if($('#detail').classList.contains('on')) closeDetail();
 });
 
+/* A reminder about a single plot opens that plot when tapped: the service
+   worker either opens the app with ?loc= or, if it is already open, sends a
+   message. Anything else on screen is closed first so the plot is what shows. */
+function openFromNotice(id){
+  if(!id) return;
+  try{ history.replaceState(history.state, '', location.pathname); }catch(e){}
+  if(!S.locations.some(l => l.id === id)) return;
+  if(openSheetId) closeSheetNow();
+  if($('#notify').classList.contains('on')) closeNotify();
+  if($('#layout').classList.contains('on')) closeLayout();
+  openDetail(id);
+}
+if('serviceWorker' in navigator)
+  navigator.serviceWorker.addEventListener('message', e => {
+    if(e.data && e.data.type === 'open-loc') openFromNotice(String(e.data.loc || ''));
+  });
+
 (async function boot(){
   const saved = await store.get(KEY);
   if(saved) S = Object.assign(S, saved);
@@ -3568,6 +3647,7 @@ window.addEventListener('popstate', () => {
   /* a subscription that failed in an earlier session repairs itself here */
   if(S.notify && S.notify.enabled) scheduleSync(4000);
   maybeShowReleaseNotes();
+  openFromNotice(new URLSearchParams(location.search).get('loc'));
   /* the release-notes sheet says this and more, so no toast on top of it */
   try{ sessionStorage.removeItem('pw:updated'); }catch(e){}
   if('serviceWorker' in navigator && location.protocol !== 'file:'){

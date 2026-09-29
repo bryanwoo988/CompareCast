@@ -176,3 +176,45 @@ test('设备记录残缺时不抛出', async () => {
   const bad = {id:'x', tz:'Asia/Kuala_Lumpur', notify:null, blocks:[A]};
   assert.deepStrictEqual(await runDevice(mkEnv(), bad, at(12), mkRun({})), []);
 });
+
+/* ---- from the external reviews (v3.10.0 snapshot), still open in 3.17.0 ---- */
+
+test('跨午夜的时段读的是当晚到次日凌晨那几个小时', async () => {
+  /* rain chance = the hour on 30 Sep, 50 + hour on 1 Oct: the reported
+     maximum says exactly which hours were read */
+  const f = {hourly:hourly((di, hr) => ({p:di === 0 ? hr : 50 + hr}))};
+  const night = {id:'night', on:true, from:'22:00', to:'02:00', at:'21:00', mode:'digest'};
+  const blk = {id:'A', name:'Alpha', lat:1, lon:101, windows:['night']};
+  const rep = await runDevice(mkEnv(), mkDev([blk], [night]), at(21), mkRun({1:f}));
+  /* 30 Sep 22:00, 23:00 and 1 Oct 00:00, 01:00 → max is 51, never 53 */
+  assert.match(rep[0].body, /51%/);
+});
+
+test('一小时内都取不到预报：最后一次机会时发一条告知，不再沉默', async () => {
+  const env = mkEnv();
+  for(const m of [0, 15, 30]){
+    const r = await runDevice(env, mkDev([A]), at(12, m), mkRun({1:null}));
+    assert.deepStrictEqual(r, [], `第 ${m} 分钟不该发`);
+  }
+  const last = mkRun({1:null});
+  const rep = await runDevice(env, mkDev([A]), at(12, 45), last);
+  assert.strictEqual(last.posts, 1);
+  assert.match(rep[0].body, /暂时查不到预报/);
+  /* and it is not repeated */
+  const after = mkRun({1:null});
+  await runDevice(env, mkDev([A]), at(12, 45), after);
+  assert.strictEqual(after.posts, 0);
+});
+
+test('取不到的地块和有数据的地块在同一条通知里', async () => {
+  const rep = await runDevice(mkEnv(), mkDev([A, B]), at(12, 45), mkRun({1:WET, 2:null}));
+  assert.match(rep[0].body, /Alpha：降雨概率 90%/);
+  assert.match(rep[0].body, /Beta：暂时查不到预报/);
+});
+
+test('只讲一个地块的通知带上地块 id，点开能直达；多个地块的不带', async () => {
+  const one = await runDevice(mkEnv(), mkDev([A, B]), at(12), mkRun({1:WET, 2:DRY}));
+  assert.strictEqual(one[0].loc, 'A');
+  const two = await runDevice(mkEnv(), mkDev([A, B]), at(12), mkRun({1:WET, 2:WET}));
+  assert.strictEqual(two[0].loc, undefined);
+});
