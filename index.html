@@ -279,6 +279,66 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
    everything above it rather than reading as one more per-day section */
 .accblock{margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.2)}
 .accblock .glass{background:rgba(8,13,34,.5)}
+.nt-title{font-size:17px;font-weight:600;margin-right:auto;margin-left:14px}
+#notify{background:linear-gradient(180deg,#0e1430,#1a2247 55%,#232f66)}
+.nt-master{display:flex;align-items:center;gap:12px;padding:15px 16px;border-radius:18px;
+  background:rgba(22,34,66,.5);border:1px solid rgba(255,255,255,.14);margin-bottom:14px}
+.nt-master b{flex:1;font-size:16px;font-weight:600}
+/* the "this will not arrive yet" notice is a deliverable, not decoration —
+   it is always expanded and never behind a disclosure */
+.nt-warn{margin:0 0 14px;padding:13px 15px;border-radius:14px;font-size:13.5px;line-height:1.55;
+  background:rgba(120,88,20,.3);border:1px solid rgba(240,190,90,.35);color:#f4e3bd}
+/* a bare span ignores width/height — without this the track vanishes and only
+   the absolutely positioned knob is left floating */
+.sw{display:inline-block;position:relative;width:50px;height:30px;flex:0 0 50px;border-radius:15px;
+  background:rgba(255,255,255,.16);transition:background .18s;vertical-align:middle}
+.sw i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;
+  transition:transform .18s}
+.sw.on{background:#5b9ce6}
+.sw.on i{transform:translateX(20px)}
+.nt-win{border-radius:18px;background:rgba(22,34,66,.42);border:1px solid rgba(255,255,255,.12);
+  padding:13px 15px;margin-bottom:10px}
+.nt-win-hd{display:flex;align-items:center;gap:12px}
+.nt-win-hd b{flex:1;font-size:15.5px;font-weight:600}
+.nt-win-body{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+/* 12-hour locales render these inputs with an AM/PM field, which will not fit
+   three-across at phone width, so the notify time gets its own row */
+.nt-times{display:flex;gap:8px}
+.nt-times .nt-fld{flex:1 1 0}
+.nt-fld{flex:1;min-width:0}
+.nt-fld label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px}
+.nt-fld input{width:100%;padding:9px 10px;border:0;border-radius:10px;background:rgba(255,255,255,.1);
+  color:#fff;font-size:15px;font-variant-numeric:tabular-nums;outline:none}
+.nt-cross{font-size:12.5px;color:#f0c98a}
+.nt-mode{display:flex;gap:6px;padding:4px;border-radius:14px;background:rgba(255,255,255,.07)}
+.nt-mode button{flex:1;padding:8px 0;border-radius:11px;font-size:13.5px;font-weight:600;color:var(--dim)}
+.nt-mode button.on{background:#fff;color:#141b3d}
+.nt-rule{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid rgba(255,255,255,.1)}
+.nt-rule:first-child{border-top:0}
+.nt-rule .rn{flex:1;font-size:15px}
+.nt-rule .op{font-size:15px;color:var(--dim);font-variant-numeric:tabular-nums}
+.nt-rule input{width:62px;padding:8px 9px;border:0;border-radius:10px;background:rgba(255,255,255,.1);
+  color:#fff;font-size:15px;text-align:right;font-variant-numeric:tabular-nums;outline:none}
+.nt-rule .un{width:46px;font-size:13px;color:var(--dim)}
+.nt-rule.off .rn,.nt-rule.off .op,.nt-rule.off .un{opacity:.45}
+.nt-rule.off input{opacity:.45}
+.nt-mx{width:100%;border-collapse:collapse}
+.nt-mx th{font-size:12px;font-weight:600;color:var(--dim);padding:0 0 9px;text-align:center}
+.nt-mx th:first-child{text-align:left}
+.nt-mx th button{font-size:12px;font-weight:600;color:var(--dim);padding:4px 2px;width:100%}
+.nt-mx td{padding:7px 0;border-top:1px solid rgba(255,255,255,.1)}
+.nt-mx td:first-child{font-size:14.5px;max-width:0;width:44%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px}
+.nt-cell{width:30px;height:30px;margin:0 auto;display:grid;place-items:center;border-radius:9px;
+  background:rgba(255,255,255,.1)}
+.nt-cell.on{background:#5b9ce6}
+.nt-cell svg{width:15px;height:15px;fill:none;stroke:#0d1330;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.nt-cell.on svg{opacity:1}
+.nt-note{font-size:13.5px;line-height:1.5;color:var(--dim);margin:0}
+.nt-row{display:flex;align-items:center;gap:10px;width:100%;padding:15px 16px;border-radius:16px;
+  background:rgba(22,34,66,.5);border:1px solid rgba(255,255,255,.14)}
+.nt-row b{flex:1;text-align:left;font-size:16px;font-weight:600}
+.nt-row .val{font-size:14px;color:var(--dim)}
+.nt-row .chev{color:var(--dim);font-size:19px}
 .d-body{padding:16px 16px calc(46px + var(--safe-b))}
 .glass{background:rgba(22,34,66,.34);backdrop-filter:blur(14px);border-radius:20px;padding:16px;margin-bottom:14px;
   border:1px solid rgba(255,255,255,.14)}
@@ -492,6 +552,15 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
   <div class="d-body" id="d-body"></div>
 </section>
 
+<!-- ============ notification settings ============ -->
+<section class="page" id="notify">
+  <div class="d-bar">
+    <button class="d-back" id="nt-back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <span class="nt-title" data-t="ntEntry">通知提醒</span>
+  </div>
+  <div class="d-body" id="nt-body"></div>
+</section>
+
 <div class="ptr" id="ptr"><div class="ptr-ring" id="ptr-ring">
   <svg viewBox="0 0 24 24"><path d="M3.6 12a8.4 8.4 0 1 1 2.6 6.1"/><path d="M3.2 6.4v5.2h5.2"/></svg>
 </div></div>
@@ -561,6 +630,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 <script src="daylogic.js"></script>
 <script src="maplogic.js"></script>
 <script src="listlogic.js"></script>
+<script src="notifylogic.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
