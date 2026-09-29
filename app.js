@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.13.0';
+const APP_VERSION = '3.13.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.13.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.13.1',
+   zh:['风向与气压两张卡片重做：密齿刻度环，风向用「来向圆点 + 去向箭头」，四个方位都标'],
+   en:['Rebuilt the wind and pressure cards: a proper tick ring, wind shown as a dot for where it comes from and an arrow for where it goes'],
+   ms:['Kad angin dan tekanan dibina semula: cincin penanda sebenar, angin ditunjuk dengan titik arah datang dan anak panah arah tuju']},
   {v:'3.13.0',
    zh:['详情页顶部加了一句白话结论，例如「下午有雨，最高 86%」——不用自己从一堆数字里推',
        '数据格子改成卡片：风向罗盘、气压表盘、日出日落弧线、紫外线色阶条',
@@ -1550,38 +1554,77 @@ function renderSummary(){
    without knowing where it sits, and "SE" means nothing without a dial. */
 const card = (title, body) => `<div class="wcard"><h5>${title}</h5>${body}</div>`;
 
+/* Bearing to a point on a circle: 0deg is north, which in SVG is straight up. */
+const onRing = (deg, r, cx, cy) => {
+  const t = (deg - 90) * Math.PI / 180;
+  return [ (cx + r * Math.cos(t)), (cy + r * Math.sin(t)) ];
+};
+
+/* A dense ring of ticks, cardinals longer. Sparse ticks read as a clock face;
+   the density is what makes it read as an instrument. */
+function tickRing(from, to, step, rOuter, shortLen, longEvery, longLen){
+  let out = '';
+  for(let d = from; d <= to; d += step){
+    const isLong = Math.round(d / step) % longEvery === 0;
+    const len = isLong ? longLen : shortLen;
+    const [x1, y1] = onRing(d, rOuter, 50, 50);
+    const [x2, y2] = onRing(d, rOuter - len, 50, 50);
+    out += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
+      stroke="rgba(255,255,255,${isLong ? '.5' : '.26'})" stroke-width="${isLong ? 1.5 : 1}" stroke-linecap="round"/>`;
+  }
+  return out;
+}
+
 function windCard(c, m){
   const g = k => pick(c, k, m.id, true);
   const sp = g('wind_speed_10m'), dir = g('wind_direction_10m'), gust = g('wind_gusts_10m');
   if(!nz(sp)) return '';
-  const a = nz(dir) ? dir : 0;
-  const ticks = Array.from({length:24}, (_, i) =>
-    `<line x1="50" y1="6" x2="50" y2="${i % 6 === 0 ? 13 : 10}" stroke="rgba(255,255,255,.35)"
-      stroke-width="${i % 6 === 0 ? 1.6 : 1}" transform="rotate(${i * 15} 50 50)"/>`).join('');
-  return card(t('cWind'), `<div class="dial"><svg viewBox="0 0 100 100">${ticks}
-    <text x="50" y="18" fill="rgba(255,255,255,.7)" font-size="9" text-anchor="middle">N</text>
-    <g transform="rotate(${a} 50 50)">
-      <path d="M50 22 L55 50 L50 45 L45 50 Z" fill="#fff"/>
-      <circle cx="50" cy="78" r="3.4" fill="rgba(255,255,255,.55)"/></g>
-    <text x="50" y="48" fill="#fff" font-size="17" font-weight="600" text-anchor="middle">${S.units.wind === 'ms' ? sp.toFixed(1) : Math.round(sp)}</text>
-    <text x="50" y="60" fill="rgba(255,255,255,.7)" font-size="8.5" text-anchor="middle">${uW()}</text>
-    </svg></div><p class="cnote">${nz(gust) ? t('gust') + ' ' + fW(gust) : ''} ${nz(dir) ? compass(dir) : ''}</p>`);
+  const val = S.units.wind === 'ms' ? sp.toFixed(1) : String(Math.round(sp));
+
+  let marks = '';
+  if(nz(dir)){
+    /* the dot sits where the wind comes FROM, the arrow shows where it goes —
+       the pair is what makes the direction unambiguous */
+    const [dx, dy] = onRing(dir, 33, 50, 50);
+    const [ax, ay] = onRing(dir + 180, 33, 50, 50);
+    marks = `<circle cx="${dx.toFixed(1)}" cy="${dy.toFixed(1)}" r="3.2" fill="#fff"/>
+      <g transform="translate(${ax.toFixed(1)} ${ay.toFixed(1)}) rotate(${(dir + 180).toFixed(1)})">
+        <path d="M0 5 L-3.6 -2.5 L0 -1 L3.6 -2.5 Z" fill="#fff"/>
+      </g>`;
+  }
+  const lab = (d, txt) => {
+    const [x, y] = onRing(d, 23, 50, 50);
+    return `<text x="${x.toFixed(1)}" y="${(y + 3).toFixed(1)}" fill="rgba(255,255,255,.72)"
+      font-size="8.5" text-anchor="middle">${txt}</text>`;
+  };
+  return card(t('cWind'), `<div class="dial"><svg viewBox="0 0 100 100">
+    ${tickRing(0, 355, 5, 40, 3.5, 6, 6)}
+    ${lab(0,'N')}${lab(90,'E')}${lab(180,'S')}${lab(270,'W')}
+    ${marks}
+    <text x="50" y="50" fill="#fff" font-size="19" font-weight="600" text-anchor="middle">${val}</text>
+    <text x="50" y="61" fill="rgba(255,255,255,.7)" font-size="8" text-anchor="middle">${uW()}</text>
+    </svg></div><p class="cnote">${nz(gust) ? t('gust') + ' ' + fW(gust) : ''}${nz(dir) ? ' ' + compass(dir) : ''}</p>`);
 }
 
+/* Pressure sits on the same kind of ring rather than a car-style needle: the
+   question is "where in the range is it", not "how fast is it going". */
 function pressureCard(c, m){
   const v = pick(c, 'surface_pressure', m.id, true);
   if(!nz(v)) return '';
-  const lo = 980, hi = 1040;
+  const lo = 980, hi = 1040, SWEEP = 135;
   const frac = Math.max(0, Math.min(1, (v - lo) / (hi - lo)));
-  const ang = -90 + frac * 180;
-  return card(t('cPress'), `<div class="dial"><svg viewBox="0 0 100 66">
-    <path d="M12 58 A38 38 0 0 1 88 58" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="5" stroke-linecap="round"/>
-    <g transform="rotate(${ang.toFixed(1)} 50 58)"><line x1="50" y1="56" x2="50" y2="36" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></g>
-    <circle cx="50" cy="58" r="3" fill="#fff"/>
-    <text x="50" y="30" fill="#fff" font-size="14" font-weight="600" text-anchor="middle">${Math.round(v)}</text>
-    <text x="12" y="65" fill="rgba(255,255,255,.55)" font-size="7.5">${t('pressLow')}</text>
-    <text x="88" y="65" fill="rgba(255,255,255,.55)" font-size="7.5" text-anchor="end">${t('pressHigh')}</text>
-    </svg></div><p class="cnote">hPa</p>`);
+  const deg = -SWEEP + frac * SWEEP * 2;
+  const [mx1, my1] = onRing(deg, 41, 50, 50);
+  const [mx2, my2] = onRing(deg, 31, 50, 50);
+  return card(t('cPress'), `<div class="dial"><svg viewBox="0 0 100 100">
+    ${tickRing(-SWEEP, SWEEP, 5, 40, 3.5, 6, 6)}
+    <line x1="${mx1.toFixed(1)}" y1="${my1.toFixed(1)}" x2="${mx2.toFixed(1)}" y2="${my2.toFixed(1)}"
+      stroke="#fff" stroke-width="3.6" stroke-linecap="round"/>
+    <text x="50" y="52" fill="#fff" font-size="17" font-weight="600" text-anchor="middle">${Math.round(v)}</text>
+    <text x="50" y="63" fill="rgba(255,255,255,.7)" font-size="8" text-anchor="middle">hPa</text>
+    <text x="16" y="92" fill="rgba(255,255,255,.55)" font-size="8">${t('pressLow')}</text>
+    <text x="84" y="92" fill="rgba(255,255,255,.55)" font-size="8" text-anchor="end">${t('pressHigh')}</text>
+    </svg></div>`);
 }
 
 function sunCard(dd, m, today){
