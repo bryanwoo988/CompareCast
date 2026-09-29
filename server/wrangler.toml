@@ -1,0 +1,20 @@
+name = "comparecast-push"
+main = "src/index.js"
+compatibility_date = "2026-09-29"
+compatibility_flags = ["nodejs_compat"]
+
+# created with: npx wrangler kv namespace create comparecast
+[[kv_namespaces]]
+binding = "KV"
+id = "5bb11669556f4f9399cf8313db72e82d"
+
+# every quarter hour; a window is "due" if its notify time falls in the
+# 15 minutes that just passed
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+ORIGIN = "https://bryanwoo988.github.io"
+VAPID_SUBJECT = "mailto:hockhynnwoo@gmail.com"
+VAPID_PUBLIC_KEY = "BBjBjJlP2b9oTWJFPK1CvEXXrrafJC0xmhlbOurC6GssgQQegLTVxAtfSk-iFVYmFPtkZqGIVTJhX3uRHP9TO1M"
+# VAPID_PRIVATE_KEY is set with `wrangler secret put`, never in this file

@@ -92,6 +92,10 @@ zh:{
   ntNotYet:'设定会保存下来，但通知现在还不会送达——那需要一台推送服务器，还没有做。iPhone 另外必须把这个应用「加到主屏幕」，只在浏览器里开着收不到。',
   ntTest:'发一条测试通知', ntTestTitle:'天气预测', ntTestBody:'通知通路正常。真正的定时提醒还需要服务端。',
   ntTestFail:'这个浏览器发不出通知。',
+  ntSynced:'已登记，提醒会按上面的设定送达。',
+  ntSyncing:'正在登记…', ntSyncFail:'登记失败，稍后会自动重试。检查一下网络。',
+  ntNeedPerm:'打开主开关并允许通知后，提醒才会送达。',
+  ntIosHint:'iPhone 必须先把这个应用「加到主屏幕」，只在浏览器里开着收不到通知。',
   mapHint:'按 + 放置一个地点，或在上方搜索地名', mapAdd:'添加此处', locsUnit:n=>'个地点',
   railLocate:'定位到我', railAdd:'加一个地点', railLayer:'底图', mapSearchPh:'搜索地名',
   placeHint:'拖动地图，把目标对进准星', placeName:'名称（留空则用坐标）',
@@ -159,6 +163,10 @@ en:{
   ntNotYet:'Your settings are saved, but reminders will not arrive yet — that needs a push server, which does not exist yet. On iPhone the app must also be added to the Home Screen; notifications never arrive while it only runs in the browser.',
   ntTest:'Send a test notification', ntTestTitle:'Predict Weather', ntTestBody:'The notification path works. Scheduled reminders still need a server.',
   ntTestFail:'This browser cannot show notifications.',
+  ntSynced:'Registered — reminders will arrive as configured above.',
+  ntSyncing:'Registering…', ntSyncFail:'Registration failed; it will retry. Check your connection.',
+  ntNeedPerm:'Turn the switch on and allow notifications, then reminders will arrive.',
+  ntIosHint:'On iPhone the app must be added to the Home Screen first — notifications never arrive while it only runs in the browser.',
   mapHint:'Press + to place a location, or search for a place above', mapAdd:'Add this spot', locsUnit:n=>n === 1 ? 'location' : 'locations',
   railLocate:'Locate me', railAdd:'Add a location', railLayer:'Basemap', mapSearchPh:'Search for a place',
   placeHint:'Drag the map to line the spot up with the crosshair', placeName:'Name (blank uses the coordinates)',
@@ -226,6 +234,10 @@ ms:{
   ntNotYet:'Tetapan anda disimpan, tetapi peringatan belum akan sampai — ia memerlukan pelayan tolak yang belum wujud. Pada iPhone, aplikasi juga mesti ditambah ke Skrin Utama; pemberitahuan tidak akan sampai jika ia hanya dibuka dalam pelayar.',
   ntTest:'Hantar pemberitahuan ujian', ntTestTitle:'Ramalan Cuaca', ntTestBody:'Laluan pemberitahuan berfungsi. Peringatan berjadual masih perlukan pelayan.',
   ntTestFail:'Pelayar ini tidak boleh memaparkan pemberitahuan.',
+  ntSynced:'Didaftarkan — peringatan akan sampai mengikut tetapan di atas.',
+  ntSyncing:'Mendaftar…', ntSyncFail:'Pendaftaran gagal; ia akan cuba lagi. Semak sambungan anda.',
+  ntNeedPerm:'Hidupkan suis dan benarkan pemberitahuan, barulah peringatan akan sampai.',
+  ntIosHint:'Pada iPhone, aplikasi mesti ditambah ke Skrin Utama dahulu — pemberitahuan tidak sampai jika hanya dibuka dalam pelayar.',
   mapHint:'Tekan + untuk letak lokasi, atau cari nama tempat di atas', mapAdd:'Tambah tempat ini', locsUnit:n=>'lokasi',
   railLocate:'Cari saya', railAdd:'Tambah lokasi', railLayer:'Peta asas', mapSearchPh:'Cari nama tempat',
   placeHint:'Seret peta untuk selaraskan tempat dengan sasaran', placeName:'Nama (kosong guna koordinat)',
@@ -1495,7 +1507,7 @@ function paintDetail(){
   });
   $('#d-remove').addEventListener('click', () => {
     S.locations = S.locations.filter(x => x.id !== D.loc.id);
-    delete cache[D.loc.id]; save(); renderList(); refreshPins(); exitDetail(); toast(t('deleted'));
+    delete cache[D.loc.id]; save(); renderList(); refreshPins(); scheduleSync(); exitDetail(); toast(t('deleted'));
   });
 }
 
@@ -2011,8 +2023,13 @@ function renderPermission(){
     top = `<p class="nt-note" style="margin-bottom:12px">✓ ${t('ntPermOn')}</p>`;
   else if(supported && perm === 'denied')
     top = `<p class="nt-note" style="margin-bottom:12px">${t('ntPermDenied')}</p>`;
-  /* spec §4.5 / §9: this notice is a deliverable. Always expanded. */
-  const warn = `<p class="nt-warn">${t('ntNotYet')}</p>`;
+  /* the honest status, now that a server exists: the iPhone caveat is still
+     true and still always expanded */
+  let warn;
+  if(!S.notify.enabled || perm !== 'granted') warn = `<p class="nt-warn">${t('ntNeedPerm')}<br>${t('ntIosHint')}</p>`;
+  else if(syncState === 'syncing') warn = `<p class="nt-warn">${t('ntSyncing')}</p>`;
+  else if(syncState === 'failed')  warn = `<p class="nt-warn">${t('ntSyncFail')}</p>`;
+  else warn = `<p class="nt-ok">✓ ${t('ntSynced')}<br>${t('ntIosHint')}</p>`;
   const test = (supported && perm === 'granted')
     ? `<button class="cta ghost" id="nt-test">${t('ntTest')}</button>` : '';
   return top + warn + test;
@@ -2087,7 +2104,7 @@ function paintNotify(){
 }
 
 function bindNotify(){
-  const redraw = () => { save(); paintNotify(); };
+  const redraw = () => { save(); scheduleSync(); paintNotify(); };
   $('#nt-on').addEventListener('click', () => { S.notify.enabled = !S.notify.enabled; redraw(); });
 
   $$('#nt-body [data-wsw]').forEach(el2 => el2.addEventListener('click', () => {
@@ -2143,7 +2160,7 @@ function bindNotify(){
 
   const ask = $('#nt-ask');
   if(ask) ask.addEventListener('click', () => {
-    Notification.requestPermission().then(() => paintNotify()).catch(() => {});
+    Notification.requestPermission().then(() => { paintNotify(); scheduleSync(); }).catch(() => {});
   });
   const test = $('#nt-test');
   if(test) test.addEventListener('click', sendTestNotification);
@@ -2161,6 +2178,81 @@ function sendTestNotification(){
     return;
   }
   try{ new Notification(t('ntTestTitle'), body); }catch(e){ toast(t('ntTestFail')); }
+}
+
+/* ---------- 11c. Push registration ----------
+   The settings live on the phone; the worker needs its own copy to know who
+   to wake and when. Anything that changes the schedule re-syncs. */
+const PUSH_API = 'https://comparecast-push.hockhynnwoo.workers.dev';
+const VAPID_PUBLIC = 'BBjBjJlP2b9oTWJFPK1CvEXXrrafJC0xmhlbOurC6GssgQQegLTVxAtfSk-iFVYmFPtkZqGIVTJhX3uRHP9TO1M';
+let syncState = 'idle', syncTimer = null;
+
+function deviceId(){
+  if(!S.deviceId){
+    S.deviceId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random())
+      .replace(/-/g, '').slice(0, 32);
+    save();
+  }
+  return S.deviceId;
+}
+
+const b64ToBytes = b64 => {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(raw, c => c.charCodeAt(0));
+};
+const bytesToB64 = buf => btoa(String.fromCharCode.apply(null, new Uint8Array(buf)))
+  .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+/* debounced: changing four settings in a row is one registration, not four */
+function scheduleSync(){
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncPush, 3000);
+}
+
+async function syncPush(){
+  if(!('serviceWorker' in navigator) || typeof Notification === 'undefined') return;
+  const reg = await navigator.serviceWorker.getRegistration();
+  if(!reg || !reg.pushManager) return;
+
+  /* switched off, or permission gone: withdraw rather than leave the worker
+     pushing at a device that no longer wants it */
+  if(!S.notify.enabled || Notification.permission !== 'granted'){
+    try{
+      const old = await reg.pushManager.getSubscription();
+      if(old) await old.unsubscribe();
+      await fetch(PUSH_API + '/sub', {method:'DELETE', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id:deviceId()})});
+    }catch(e){}
+    syncState = 'idle';
+    if($('#notify').classList.contains('on')) paintNotify();
+    return;
+  }
+
+  syncState = 'syncing';
+  if($('#notify').classList.contains('on')) paintNotify();
+  try{
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub) sub = await reg.pushManager.subscribe(
+      {userVisibleOnly:true, applicationServerKey:b64ToBytes(VAPID_PUBLIC)});
+    const keys = sub.toJSON().keys || {};
+    const body = {
+      id:deviceId(),
+      tz:Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      lang:S.lang,
+      units:S.units,
+      sub:{endpoint:sub.endpoint, keys:{p256dh:keys.p256dh, auth:keys.auth}},
+      notify:{windows:S.notify.windows, rules:S.notify.rules},
+      blocks:S.locations.filter(l => (l.notify || []).length).map(l =>
+        ({id:l.id, name:l.name, lat:l.lat, lon:l.lon, windows:l.notify}))
+    };
+    const res = await fetch(PUSH_API + '/sub', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    syncState = res.ok ? 'synced' : 'failed';
+  }catch(e){
+    syncState = 'failed';
+  }
+  if($('#notify').classList.contains('on')) paintNotify();
 }
 
 /* ---------- 12. Model picker ---------- */

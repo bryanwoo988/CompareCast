@@ -56,3 +56,68 @@ test('breaches 缺失的统计值不算超标', () => {
   assert.deepStrictEqual(breaches({tMax:{on:true, v:35}}, {}), []);
   assert.deepStrictEqual(breaches({tMax:{on:true, v:35}}, {tMax:null}), []);
 });
+
+/* ---- dueWindows / spanDays / aggregate ---- */
+const {dueWindows, spanDays, aggregate} = require('../notifylogic.js');
+
+const W = (id, on, at, from, to) => ({id, on, at, from:from||'06:00', to:to||'12:00', mode:'digest'});
+
+test('提醒时间正好等于当前分钟时触发', () => {
+  assert.deepStrictEqual(dueWindows([W('a', true, '06:00')], 360, 15).map(w => w.id), ['a']);
+});
+test('提醒时间在窗口内触发', () => {
+  assert.deepStrictEqual(dueWindows([W('a', true, '06:50')], 420, 15).map(w => w.id), ['a']);
+});
+test('提醒时间正好等于窗口起点时不触发——那属于上一个窗口', () => {
+  assert.deepStrictEqual(dueWindows([W('a', true, '06:00')], 375, 15).map(w => w.id), []);
+});
+test('关闭的时段永不触发', () => {
+  assert.deepStrictEqual(dueWindows([W('a', false, '06:00')], 360, 15).map(w => w.id), []);
+});
+test('窗口跨越 0 点时能取到前一天深夜的提醒', () => {
+  assert.deepStrictEqual(dueWindows([W('a', true, '23:55')], 5, 15).map(w => w.id), ['a']);
+});
+test('跨 0 点的窗口不会误伤白天的时段', () => {
+  assert.deepStrictEqual(dueWindows([W('a', true, '12:00')], 5, 15).map(w => w.id), []);
+});
+
+test('不跨午夜的时段只覆盖一天', () => {
+  assert.deepStrictEqual(spanDays({from:'06:00', to:'12:00'}, '2026-09-29'), ['2026-09-29']);
+});
+test('跨午夜的时段覆盖两天', () => {
+  assert.deepStrictEqual(spanDays({from:'22:00', to:'02:00'}, '2026-09-29'), ['2026-09-29','2026-09-30']);
+});
+test('跨月底的时段日期进位正确', () => {
+  assert.deepStrictEqual(spanDays({from:'22:00', to:'02:00'}, '2026-09-30'), ['2026-09-30','2026-10-01']);
+});
+
+const HH = {
+  precipitation_probability:[10, 80, 30],
+  precipitation:[0, 2.5, 1.5],
+  temperature_2m:[24, 31, 28],
+  wind_speed_10m:[5, 18, 9],
+  wind_gusts_10m:[9, 30, 14]
+};
+test('聚合取最大、求和与极值', () => {
+  assert.deepStrictEqual(aggregate(HH, [0,1,2]),
+    {rainProb:80, rainSum:4, tMax:31, tMin:24, wind:18, gust:30});
+});
+test('只聚合给定的索引', () => {
+  const a = aggregate(HH, [0]);
+  assert.strictEqual(a.rainProb, 10);
+  assert.strictEqual(a.tMax, 24);
+});
+test('空索引集合每项为 null', () => {
+  assert.deepStrictEqual(aggregate(HH, []),
+    {rainProb:null, rainSum:null, tMax:null, tMin:null, wind:null, gust:null});
+});
+test('全 null 的序列返回 null 而不是 0 或 Infinity', () => {
+  const empty = {precipitation_probability:[null,null], precipitation:[null,null],
+                 temperature_2m:[null,null], wind_speed_10m:[null,null], wind_gusts_10m:[null,null]};
+  assert.deepStrictEqual(aggregate(empty, [0,1]),
+    {rainProb:null, rainSum:null, tMax:null, tMin:null, wind:null, gust:null});
+});
+test('缺失的字段不抛错', () => {
+  assert.strictEqual(aggregate({temperature_2m:[20,25]}, [0,1]).tMax, 25);
+  assert.strictEqual(aggregate({temperature_2m:[20,25]}, [0,1]).rainProb, null);
+});
