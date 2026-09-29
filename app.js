@@ -5,6 +5,11 @@
 'use strict';
 
 /* ---------- 1. Models (Open-Meteo model ids) ---------- */
+/* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
+   The old hardcoded "2.0" never moved, so the one place a user looks to check
+   whether an update landed was the one place that could not tell them. */
+const APP_VERSION = '3.6.1';
+
 const MODELS = [
   {id:'best_match', short:'Best Match', color:'#38bdf8',
    full:{zh:'综合最佳',en:'Best Match',ms:'Padanan Terbaik'},
@@ -128,7 +133,7 @@ zh:{
   unitSection:'单位', tempU:'温度', windU:'风速', rainU:'降雨',
   defModel:'新地点默认模式', defModelD:'加新地点时先用这个模式。之后每个地点都能单独改。',
   cmpSection:'对比哪些模式', cmpD:'勾选的模式会出现在每个地点的对比图和准度核对里。',
-  about:'关于', version:'版本 2.0', dataSrc:'数据来源', savedOk:'已保存', deleted:'已删除'
+  about:'关于', version:'版本', dataSrc:'数据来源', savedOk:'已保存', deleted:'已删除'
 },
 en:{
   app:'Predict Weather', subSaved:'My Locations', subMap:'Weather Map', tabSaved:'Saved', tabMap:'Map',
@@ -199,7 +204,7 @@ en:{
   unitSection:'Units', tempU:'Temperature', windU:'Wind', rainU:'Precipitation',
   defModel:'Default model for new locations', defModelD:'Used when you add a location. You can still change it per location.',
   cmpSection:'Models to compare', cmpD:'Ticked models appear in the compare chart and the accuracy check.',
-  about:'About', version:'Version 2.0', dataSrc:'Data sources', savedOk:'Saved', deleted:'Removed'
+  about:'About', version:'Version', dataSrc:'Data sources', savedOk:'Saved', deleted:'Removed'
 },
 ms:{
   app:'Ramalan Cuaca', subSaved:'Lokasi Saya', subMap:'Peta Cuaca', tabSaved:'Lokasi', tabMap:'Peta',
@@ -270,7 +275,7 @@ ms:{
   unitSection:'Unit', tempU:'Suhu', windU:'Angin', rainU:'Hujan',
   defModel:'Model asal untuk lokasi baharu', defModelD:'Digunakan bila anda tambah lokasi. Boleh tukar untuk setiap lokasi.',
   cmpSection:'Model untuk dibanding', cmpD:'Model bertanda muncul dalam carta banding dan semakan ketepatan.',
-  about:'Perihal', version:'Versi 2.0', dataSrc:'Sumber data', savedOk:'Disimpan', deleted:'Dibuang'
+  about:'Perihal', version:'Versi', dataSrc:'Sumber data', savedOk:'Disimpan', deleted:'Dibuang'
 }};
 
 /* ---------- 3. Weather codes + icons ---------- */
@@ -2460,7 +2465,7 @@ function drawInfo(){
       ${SOURCES.map(s => `<a class="src" href="${s.u}" target="_blank" rel="noopener">
         <span style="flex:1"><b>${s.n}</b><small>${s.d[S.lang]}</small></span><span class="go">↗</span></a>`).join('')}
     </div>
-    <div class="group"><h4>${t('about')}</h4><p style="margin-bottom:10px">${t('app')} · ${t('version')}</p></div>`;
+    <div class="group"><h4>${t('about')}</h4><p style="margin-bottom:10px">${t('app')} · ${t('version')} ${APP_VERSION}</p></div>`;
 }
 
 /* ---------- 15. Tabs, language, boot ---------- */
