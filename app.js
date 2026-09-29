@@ -297,6 +297,9 @@ zh:{
   ntFrom:'起', ntTo:'止', ntAt:'提醒时间', ntCross:'此时段跨天',
   ntTzNote:(z)=>`时间按地块所在时区计算（${z}）`,
   ntModelNote:'提醒里的温度、雨量和风，用的是每个地块自己选的模式；降雨机率来自 Best Match，跟详情页一样。',
+  updAt:(w)=>`更新于 ${w}`, updAgo:(h)=>`${h} 小时前`,
+  saveFail:'保存失败：手机储存空间可能已满，刚才的更改可能没有存下来。',
+  covNone:(s)=>`这天没有数据：${s}`, covPart:(s)=>`这天只有部分小时，不计入上面的差异：${s}`, covUntil:(d)=>`只到 ${d}`, covHours:(h)=>`${h} 小时`,
   ntDigest:'每天摘要', ntThreshold:'仅超阈值',
   rRainProb:'降雨概率', rRainSum:'降雨量', rTMax:'最高温', rTMin:'最低温', rWind:'风速', rGust:'阵风',
   ntNoLoc:'还没有地点。先加一个，才能设定要提醒哪一块。',
@@ -384,6 +387,9 @@ en:{
   ntFrom:'From', ntTo:'To', ntAt:'Notify at', ntCross:'This window crosses midnight',
   ntTzNote:(z)=>`Times are in each location's own time zone (${z})`,
   ntModelNote:'Reminder temperatures, rainfall and wind use each location\u2019s own model; chance of rain comes from Best Match, as on the detail page.',
+  updAt:(w)=>`Updated ${w}`, updAgo:(h)=>`${h} h ago`,
+  saveFail:'Could not save: the phone\u2019s storage may be full, so the last change may not have been kept.',
+  covNone:(s)=>`No data for this day: ${s}`, covPart:(s)=>`Only part of this day, left out of the spread above: ${s}`, covUntil:(d)=>`ends ${d}`, covHours:(h)=>`${h} h`,
   ntDigest:'Daily summary', ntThreshold:'Only when exceeded',
   rRainProb:'Rain chance', rRainSum:'Rainfall', rTMax:'High temp', rTMin:'Low temp', rWind:'Wind', rGust:'Gusts',
   ntNoLoc:'No locations yet. Add one first, then choose which ones to be reminded about.',
@@ -471,6 +477,9 @@ ms:{
   ntFrom:'Dari', ntTo:'Hingga', ntAt:'Beritahu pada', ntCross:'Tempoh ini melepasi tengah malam',
   ntTzNote:(z)=>`Masa mengikut zon waktu lokasi itu sendiri (${z})`,
   ntModelNote:'Suhu, hujan dan angin dalam peringatan menggunakan model setiap lokasi; kebarangkalian hujan dari Best Match, sama seperti halaman butiran.',
+  updAt:(w)=>`Dikemas kini ${w}`, updAgo:(h)=>`${h} jam lalu`,
+  saveFail:'Gagal simpan: storan telefon mungkin penuh, jadi perubahan terakhir mungkin tidak disimpan.',
+  covNone:(s)=>`Tiada data untuk hari ini: ${s}`, covPart:(s)=>`Hanya sebahagian hari ini, tidak dikira dalam perbezaan di atas: ${s}`, covUntil:(d)=>`hingga ${d}`, covHours:(h)=>`${h} jam`,
   ntDigest:'Ringkasan harian', ntThreshold:'Hanya bila melebihi',
   rRainProb:'Peluang hujan', rRainSum:'Jumlah hujan', rTMax:'Suhu tertinggi', rTMin:'Suhu terendah', rWind:'Angin', rGust:'Tiupan',
   ntNoLoc:'Belum ada lokasi. Tambah satu dahulu, kemudian pilih yang mana hendak diperingatkan.',
@@ -582,16 +591,13 @@ const iconFor = (code, isDay) => {
 const KEY = 'predictweather:v2';
 const store = {
   async get(k){
-    try{
-      if(window.storage){ const r = await window.storage.get(k, false); return r ? JSON.parse(r.value) : null; }
-      const v = localStorage.getItem(k); return v ? JSON.parse(v) : null;
-    }catch(e){ return null; }
+    try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }
+    catch(e){ return null; }
   },
+  /* true when it stuck; a full or blocked storage used to fail in silence */
   async set(k, v){
-    try{
-      if(window.storage) await window.storage.set(k, JSON.stringify(v), false);
-      else localStorage.setItem(k, JSON.stringify(v));
-    }catch(e){}
+    try{ localStorage.setItem(k, JSON.stringify(v)); return true; }
+    catch(e){ return false; }
   }
 };
 let S = {
@@ -603,7 +609,14 @@ let S = {
      section registry on every render, never frozen into a list (layout.js) */
   layout:null
 };
-const save = () => store.set(KEY, S);
+/* said once per session: a failed save means the change is gone on the next
+   launch, and the user would otherwise find out only then */
+let saveWarned = false;
+const save = () => store.set(KEY, S).then(ok => {
+  if(ok || saveWarned) return;
+  saveWarned = true;
+  toast(t('saveFail'));
+});
 const t = k => T[S.lang][k];
 
 /* ---------- 4b. Reminder settings ----------
@@ -713,7 +726,11 @@ async function jget(url, ms){
   try{
     const r = await fetch(url, {signal:ctrl.signal, cache:'no-store'});
     if(!r.ok) throw new Error('HTTP ' + r.status);
-    return await r.json();
+    const j = await r.json();
+    /* when it was fetched: nothing on screen used to say, so a day-old number
+       looked exactly like a new one (reqlogic.js) */
+    if(j && typeof j === 'object') j._at = Date.now();
+    return j;
   } finally { clearTimeout(timer); }
 }
 /* Open-Meteo answers 400 when a model cannot produce a requested variable.
@@ -740,31 +757,31 @@ const SAFE_DAILY   = 'weather_code,temperature_2m_max,temperature_2m_min,precipi
 const MIN_DAILY    = 'temperature_2m_max,temperature_2m_min,precipitation_sum';
 
 /* card summary: one model, small payload, with a reduced-variable retry */
-async function getSummary(loc){
+/* The full variable set, retried with the minimum on a 400 — a model that
+   cannot produce one of them. Offline or a timeout is not retried: it would
+   fail the same way. The payload is tagged with the model it came from, so
+   it can never be drawn under another model's badge. */
+async function fullOrLite(loc, days, full, lite, ms){
   const model = loc.model || S.defaultModel;
-  const base = {latitude:loc.lat, longitude:loc.lon, models:model, timezone:'auto', forecast_days:'2'};
-  const full = Object.assign({}, base, unitParams(),
-    {current:SAFE_CURRENT, daily:'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum'});
-  try{ return await jget(API + '?' + new URLSearchParams(full)); }
-  catch(e){
-    if(!isBadRequest(e)) throw e;   // offline or timeout: retrying is pointless
-    const lite = Object.assign({}, base, unitParams(), {current:MIN_CURRENT, daily:MIN_DAILY});
-    return jget(API + '?' + new URLSearchParams(lite));
-  }
+  const q = vars => API + '?' + new URLSearchParams(Object.assign(
+    {latitude:loc.lat, longitude:loc.lon, models:model, timezone:'auto', forecast_days:days}, unitParams(), vars));
+  let j;
+  try{ j = await jget(q(full), ms); }
+  catch(e){ if(!isBadRequest(e)) throw e; j = await jget(q(lite), ms); }
+  if(j && typeof j === 'object') j._model = model;
+  return j;
 }
-/* full detail for the main model, with a reduced-variable retry */
-async function getMain(loc){
-  const model = loc.model || S.defaultModel;
-  const base = {latitude:loc.lat, longitude:loc.lon, models:model, timezone:'auto', forecast_days:'10'};
-  const full = Object.assign({}, base, unitParams(),
-    {current:SAFE_CURRENT, hourly:SAFE_HOURLY, daily:SAFE_DAILY});
-  try{ return await jget(API + '?' + new URLSearchParams(full), 20000); }
-  catch(e){
-    if(!isBadRequest(e)) throw e;
-    const lite = Object.assign({}, base, unitParams(),
-      {current:MIN_CURRENT, hourly:MIN_HOURLY, daily:MIN_DAILY});
-    return jget(API + '?' + new URLSearchParams(lite), 20000);
-  }
+/* card summary: one model, small payload */
+function getSummary(loc){
+  return fullOrLite(loc, '2',
+    {current:SAFE_CURRENT, daily:'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum'},
+    {current:MIN_CURRENT, daily:MIN_DAILY});
+}
+/* full detail for the main model */
+function getMain(loc){
+  return fullOrLite(loc, '10',
+    {current:SAFE_CURRENT, hourly:SAFE_HOURLY, daily:SAFE_DAILY},
+    {current:MIN_CURRENT, hourly:MIN_HOURLY, daily:MIN_DAILY}, 20000);
 }
 /* precipitation probability and UV are produced by only some models, so they
    always come from Open-Meteo's blended best_match and are labelled as such */
@@ -795,6 +812,7 @@ function mergeModels(results, models){
     });
   });
   if(!ok) throw new Error('all models failed');
+  out._at = Date.now();
   return out;
 }
 /* light multi-model payload for the compare chart */
@@ -851,8 +869,23 @@ function toast(msg){
 const cache = {};
 
 /* ---------- 8. Saved list ---------- */
+/* "Updated 06:12", with the age once it is past three hours ago. The time is
+   the phone's own clock: it answers "how old is this", not "what time is it
+   at the plot". */
+function updLabel(at){
+  if(typeof at !== 'number') return '';
+  const f = freshness(at, Date.now()), d = new Date(at);
+  const hm = d.toLocaleTimeString(locale(), {hour:'2-digit', minute:'2-digit', hour12:false});
+  const when = f.otherDay ? d.toLocaleDateString(locale(), {month:'short', day:'numeric'}) + ' ' + hm : hm;
+  return t('updAt')(when) + (f.stale ? ' · ' + t('updAgo')(f.hours) : '');
+}
+const isStale = d => !!(d && freshness(d._at, Date.now()).stale);
+
 function cardHTML(l){
-  const d = cache[l.id], m = M(l.model || S.defaultModel);
+  let d = cache[l.id];
+  const m = M(l.model || S.defaultModel);
+  /* a payload fetched for another model is not this card's data */
+  if(d && d._model && d._model !== m.id) d = undefined;
   let cls = 'loc', ico = 'cloud', temp, meta;
   if(d && d.current){
     const c = d.current, code = pick(c,'weather_code',m.id,true), day = pick(c,'is_day',m.id,true);
@@ -864,6 +897,7 @@ function cardHTML(l){
     meta = `<span><i>${t('rainToday')}</i> ${ps && nz(ps[0]) ? fR(ps[0]) : '—'}</span>
             <span><i>${t('wind')}</i> ${fW(pick(c,'wind_speed_10m',m.id,true))}</span>
             <span><i>${t('humid')}</i> ${nz(rh) ? Math.round(rh) + '%' : '—'}</span>`;
+    if(isStale(d)) cls += ' stale';
   } else if(d === null){
     temp = `<b>—</b><span>${navigator.onLine ? t('failLoad') : t('noNet')}</span>`; meta = '';
   } else {
@@ -879,7 +913,7 @@ function cardHTML(l){
       <div class="loc-meta">${meta}</div>
       <div class="loc-foot">
         <span class="badge"><span class="dot" style="background:${m.color}"></span>${m.short}</span>
-        <span style="font-size:12.5px;opacity:.72">${coordText(l)}</span>
+        <span class="upd">${d && d._at ? esc(updLabel(d._at)) : coordText(l)}</span>
       </div></button>`;
 }
 function makeCard(l){
@@ -919,10 +953,21 @@ function flushDeferredCards(){
   deferredCards.clear();
   ids.forEach(updateCard);
 }
+/* A card reply is written only if it is still the latest request for that
+   card and the units and model it was asked in are still the ones in use.
+   Clearing the cache on a unit change did not stop an older Celsius reply
+   landing after the Fahrenheit one and leaving the card on "30°" (review
+   finding A03). A failure never replaces data that loaded. */
+const cardReq = makeLatest();
+const cardSig = l => [l.model || S.defaultModel, S.units.temp, S.units.wind, S.units.rain].join('|');
 async function loadCard(l){
-  try{ cache[l.id] = await getSummary(l); }
-  catch(e){ cache[l.id] = null; }
+  const fresh = cardReq.begin(l.id), sig = cardSig(l);
+  let r, ok = true;
+  try{ r = await getSummary(l); }catch(e){ ok = false; }
+  if(!fresh() || cardSig(l) !== sig) return;
   if(!S.locations.some(x => x.id === l.id)) return;   // deleted while loading
+  if(ok) cache[l.id] = r;
+  else if(!cache[l.id]) cache[l.id] = null;
   updateCard(l.id); updatePin(l.id);
 }
 function loadAll(){ S.locations.forEach(loadCard); }
@@ -1431,7 +1476,7 @@ function pinIcon(l){
   const d = cache[l.id], m = M(l.model || S.defaultModel);
   const temp = d && d.current ? fT(pick(d.current,'temperature_2m',m.id,true)) : '—';
   return L.divIcon({className:'', iconSize:[0,0],
-    html:`<div class="pin"><b style="background:${m.color}">${temp}</b><small>${esc(l.name)}</small></div>`});
+    html:`<div class="pin${isStale(d) ? ' stale' : ''}"><b style="background:${m.color}">${temp}</b><small>${esc(l.name)}</small></div>`});
 }
 function updatePin(id){
   const l = S.locations.find(x => x.id === id);
@@ -1617,42 +1662,51 @@ function paintHead(){
     $('#d-icon').innerHTML = icon('cloud', 110);
     $('#d-temp').textContent = '—'; $('#d-cond').textContent = t('loading');
   }
+  paintUpdated();
+}
+function paintUpdated(){
+  const sum = D.main || cache[D.loc && D.loc.id], el = $('#d-upd');
+  if(el) el.textContent = sum && sum._at ? updLabel(sum._at) : '';
+  $('#detail').classList.toggle('stale', isStale(sum));
 }
 
-async function loadDetail(){
-  /* a reload asked for while one is running (unit change, retry) must not be
-     swallowed — bump the sequence so the in-flight replies are discarded */
-  if(D.busy) D.seq = ++detailSeq;
+/* Every call starts a new sequence. It used to bump only while busy, and busy
+   went false before the extras and compare replies had landed, so a reload
+   could be overtaken by the replies of the load before it (finding B12).
+
+   `quiet` is the refresh on return to the app: what is on screen stays up,
+   greyed with its age, instead of dropping to a loading page, and a failure
+   keeps it rather than replacing it with an error. */
+async function loadDetail(opts){
+  const quiet = !!(opts && opts.quiet);
+  D.seq = ++detailSeq;
   D.busy = true;
-  /* every in-flight response is tagged, so a slow reply for a location the
-     user already left can never paint over the one now on screen */
   const seq = D.seq, loc = D.loc;
   const current = () => D.seq === seq;
-  $('#d-body').innerHTML = `<div class="big-msg"><p>${t('loading')}</p></div>`;
+  if(!quiet) $('#d-body').innerHTML = `<div class="big-msg"><p>${t('loading')}</p></div>`;
   try{
     const main = await getMain(loc);
-    if(!current()){ D.busy = false; return; }
+    if(!current()) return;
     D.main = main;
+    /* the page's reply is the newest data for the card too: supersede any
+       card request still in flight so it cannot write an older one back */
+    cardReq.begin(loc.id);
     cache[loc.id] = main;
     paintHead(); updateCard(loc.id); updatePin(loc.id);
     paintDetail();
     getExtras(loc).then(r => { if(!current()) return; D.ext = r; paintDetail(); })
-                  .catch(() => { if(current()){ D.ext = 'fail'; paintDetail(); } });
-    getCompare(loc, S.compare).then(r => {
-      if(!current()) return;
-      D.cmp = r;
-      /* the chip row can only offer models this payload actually holds —
-         offering more would mean a fetch on click, which spec §5 forbids */
-      D.cmpIds = S.compare.slice();
-      paintDetail();
-    }).catch(() => { if(!current()) return; D.cmp = 'fail'; paintDetail(); });
+                  .catch(() => { if(current() && !quiet){ D.ext = 'fail'; paintDetail(); } });
+    fetchCompare();
   }catch(e){
-    if(!current()){ D.busy = false; return; }
+    if(!current()) return;
+    if(cache[loc.id] === undefined){ cache[loc.id] = null; updateCard(loc.id); }
+    if(quiet){ paintHead(); return; }
     $('#d-body').innerHTML = `<div class="big-msg"><b>${t('failLoad')}</b>
       <p>${navigator.onLine ? '' : t('noNet')}</p><button class="retry" id="d-retry">${t('retry')}</button></div>`;
-    const r = $('#d-retry'); if(r) r.addEventListener('click', loadDetail);
+    const r = $('#d-retry'); if(r) r.addEventListener('click', () => loadDetail());
+  }finally{
+    if(current()) D.busy = false;
   }
-  D.busy = false;
 }
 
 /* ----- Day strip ----- */
@@ -2238,6 +2292,10 @@ const sectionById = id => SECTIONS.find(s => s.id === id);
 
 function paintDetail(){
   if(!D.main){ $('#d-body').innerHTML = `<div class="big-msg"><p>${t('loading')}</p></div>`; return; }
+  /* the extras and compare replies repaint the page after it has drawn, and
+     used to wipe a name being typed into the rename box */
+  const ri = $('#d-rename'), typing = !!ri && document.activeElement === ri;
+  const caret = typing ? [ri.selectionStart, ri.selectionEnd] : null;
   /* the day strip is fixed at the top: it and the ten-day list are the only
      two ways to change the selected day, and it is the one that cannot be
      hidden, so the page can never strand you on today */
@@ -2249,7 +2307,7 @@ function paintDetail(){
     <div class="glass" style="padding-bottom:10px">
       <h4>${t('editName')}</h4>
       <div class="field" style="margin-bottom:10px"><label>${t('rename')}</label>
-        <input id="d-rename" type="text" value="${esc(D.loc.name)}"></div>
+        <input id="d-rename" type="text" value="${esc(D.renameDraft !== undefined ? D.renameDraft : D.loc.name)}"></div>
       <button class="cta ghost" id="d-saveName" style="margin-bottom:12px">${t('saveLoc')}</button>
       <button class="dangerbtn" id="d-remove">${t('rmLoc')}</button>
     </div>`;
@@ -2264,8 +2322,12 @@ function paintDetail(){
   const hs = $('#d-body .hstrip'), nc = $('#d-body .hcol.nowcol');
   if(hs && nc) hs.scrollLeft = Math.max(0, nc.offsetLeft - (hs.clientWidth - nc.clientWidth) / 2);
   paintAccuracyCard();
+  const rn = $('#d-rename');
+  rn.addEventListener('input', () => { D.renameDraft = rn.value; });
+  if(typing){ rn.focus({preventScroll:true}); try{ rn.setSelectionRange(caret[0], caret[1]); }catch(e){} }
   $('#d-saveName').addEventListener('click', () => {
     const v = $('#d-rename').value.trim(); if(!v) return;
+    D.renameDraft = undefined;
     /* the worker uses this as the notification title */
     D.loc.name = v; save(); paintHead(); renderList(); refreshPins(); scheduleSync(); toast(t('savedOk'));
   });
@@ -2287,7 +2349,7 @@ function renderTempChart(){
     <div class="chartwrap" id="ch-temp"></div>
     ${renderModelChips()}
     <div class="mlist" id="ch-temp-list"></div>
-    ${spreadNote()}
+    ${spreadNote()}${coverageNote()}
   </div>`;
 }
 /* Rain probability. One source (best_match) and one line, so it always gets
@@ -2345,14 +2407,30 @@ function bindModelChips(){
 
 /* refetch the compare payload for the current selection; used when a model the
    page does not hold is ticked on */
+/* The only way a compare payload is fetched. It used to be written in three
+   places, and only one had the location guard (finding B12: "duplicated code
+   drifts apart"). A reply counts only if it is for the page still open and
+   is the latest compare request; the ids it records are the ones actually in
+   the payload, not the selection at the moment it landed — otherwise a model
+   dropped by a partial failure was marked as loaded and never refetched. */
+const cmpReq = makeLatest();
+function loadedIds(r, ids){
+  const hh = r && r.hourly, single = ids.length === 1;
+  if(!hh) return [];
+  return ids.filter(id => { const v = pick(hh, 'temperature_2m', id, single); return Array.isArray(v) && v.some(nz); });
+}
+function fetchCompare(){
+  const seq = D.seq, loc = D.loc, ids = S.compare.slice(), fresh = cmpReq.begin('cmp');
+  const ok = () => D.seq === seq && fresh();
+  getCompare(loc, ids).then(r => {
+    if(!ok()) return;
+    D.cmp = r; D.cmpIds = loadedIds(r, ids); paintDetail();
+  }).catch(() => { if(!ok()) return; D.cmp = 'fail'; paintDetail(); });
+}
 function reloadCompare(){
-  const seq = D.seq, loc = D.loc;
   D.cmp = null; D.cmpIds = null;
   paintDetail();
-  getCompare(loc, S.compare).then(r => {
-    if(D.seq !== seq) return;
-    D.cmp = r; D.cmpIds = S.compare.slice(); paintDetail();
-  }).catch(() => { if(D.seq !== seq) return; D.cmp = 'fail'; paintDetail(); });
+  fetchCompare();
 }
 
 /* 'temp' | 'rain' | 'wind' come from the multi-model compare payload;
@@ -2545,6 +2623,41 @@ function buildChart(host, opts){
 /* How far apart the models are on the selected day. Same idea as the old
    compare tab's spread card, but scoped to the day on screen and folded into
    the chart it describes rather than given a section of its own. */
+/* Hours of temperature each compared model has on the selected day, and the
+   last date it has any. Models reach different distances ahead: past the end
+   of its range a model used to vanish from the chart with its chip still on
+   and no word why, and on its last part-day its six hours were set against
+   another model's twenty-four in the spread (finding B4). */
+const FULL_DAY_H = 20;
+function coverage(){
+  const d = (D.cmp && D.cmp !== 'fail' && D.cmp.hourly) ? D.cmp : null;
+  const dd = D.main && D.main.daily;
+  if(!d || !dd || !dd.time || !dd.time[D.day]) return null;
+  const {start, n} = sliceDay(d.hourly.time, dd.time[D.day]);
+  if(start < 0) return null;
+  const single = S.compare.length === 1;
+  return S.compare.map(id => {
+    const v = pick(d.hourly, 'temperature_2m', id, single) || [];
+    let last = -1;
+    for(let i = v.length - 1; i >= 0; i--) if(nz(v[i])){ last = i; break; }
+    return {id, hours:v.slice(start, start + n).filter(nz).length,
+            lastDay:last >= 0 ? String(d.hourly.time[last]).slice(0, 10) : null};
+  });
+}
+function coverageNote(){
+  const cov = coverage();
+  if(!cov) return '';
+  const date = iso => new Date(iso + 'T12:00:00').toLocaleDateString(locale(), {month:'short', day:'numeric'});
+  const zh = S.lang === 'zh', paren = x => zh ? `（${x}）` : ` (${x})`, list = a => a.join(zh ? '、' : ', ');
+  const none = cov.filter(c => c.hours === 0)
+    .map(c => M(c.id).short + (c.lastDay ? paren(t('covUntil')(date(c.lastDay))) : ''));
+  const part = cov.filter(c => c.hours > 0 && c.hours < FULL_DAY_H)
+    .map(c => M(c.id).short + paren(t('covHours')(c.hours)));
+  let out = '';
+  if(none.length) out += `<p class="note" style="margin-bottom:0">${esc(t('covNone')(list(none)))}</p>`;
+  if(part.length) out += `<p class="note" style="margin-bottom:0">${esc(t('covPart')(list(part)))}</p>`;
+  return out;
+}
 function spreadNote(){
   const d = (D.cmp && D.cmp !== 'fail' && D.cmp.hourly) ? D.cmp : null;
   const dd = D.main && D.main.daily;
@@ -2552,8 +2665,11 @@ function spreadNote(){
   const {start, n} = sliceDay(d.hourly.time, dd.time[D.day]);
   if(start < 0) return '';
   const single = S.compare.length === 1;
+  /* only models with the whole day: a part-day max or sum is not comparable */
+  const full = new Set((coverage() || []).filter(c => c.hours >= FULL_DAY_H).map(c => c.id));
+  if(full.size < 2) return '';
   let tLo = Infinity, tHi = -Infinity, rLo = Infinity, rHi = -Infinity, any = false, rAny = false;
-  S.compare.forEach(id => {
+  S.compare.filter(id => full.has(id)).forEach(id => {
     const tv = pick(d.hourly,'temperature_2m',id,single), rv = pick(d.hourly,'precipitation',id,single);
     if(tv){
       const q = tv.slice(start, start + n).filter(nz);
@@ -3328,7 +3444,11 @@ function drawModelPicker(){
     const id = b.dataset.pick;
     if(D.loc){
       D.loc.model = id; save(); hide();
-      D.acc = null; D.ext = null; paintHead(); updateCard(D.loc.id); updatePin(D.loc.id);
+      /* the old model's payload goes with the old choice: repainting from it
+         put its numbers under the new model's badge, and kept them there if
+         the refetch then failed (finding B3) */
+      D.acc = null; D.ext = null; D.main = null; delete cache[D.loc.id];
+      paintHead(); updateCard(D.loc.id); updatePin(D.loc.id);
       loadDetail();
     } else {
       S.defaultModel = id; save(); hide(); drawSettings();
@@ -3406,13 +3526,10 @@ function drawSettings(){
     else S.compare = MODELS.map(m => m.id).filter(x => S.compare.includes(x) || x === id);
     save(); drawSettings();
     if(D.loc && $('#detail').classList.contains('on')){
-      D.cmp = null; D.acc = null;
       /* the accuracy table is derived from the same model list, so it has to be
          thrown away and rebuilt too, not just the compare chart */
-      D.cmpIds = null;
-      paintDetail();
-      getCompare(D.loc, S.compare).then(r => { D.cmp = r; D.cmpIds = S.compare.slice(); paintDetail(); })
-        .catch(() => { D.cmp = 'fail'; paintDetail(); });
+      D.acc = null;
+      reloadCompare();
     }
   }));
 }
@@ -3624,20 +3741,69 @@ if('serviceWorker' in navigator)
     if(e.data && e.data.type === 'open-loc') openFromNotice(String(e.data.loc || ''));
   });
 
-(async function boot(){
-  const saved = await store.get(KEY);
-  if(saved) S = Object.assign(S, saved);
-  if(!Array.isArray(S.locations)) S.locations = [];
-  if(!Array.isArray(S.compare) || !S.compare.length) S.compare = MODELS.map(m => m.id);
-  S.compare = S.compare.filter(id => MODELS.some(m => m.id === id));
+/* Whatever storage handed back, made safe to run on. Broken JSON was always
+   handled; valid JSON of the wrong shape — {locations:[null]}, {units:'x'} —
+   crashed startup before a single plot was drawn (finding B13). */
+function sanitizeState(){
+  S.locations = cleanLocations(S.locations);
+  S.locations.forEach(l => { if(l.model && !MODELS.some(m => m.id === l.model)) delete l.model; });
+  S.compare = (Array.isArray(S.compare) ? S.compare : []).filter(id => MODELS.some(m => m.id === id));
+  if(!S.compare.length) S.compare = MODELS.map(m => m.id);
   if(!MODELS.some(m => m.id === S.defaultModel)) S.defaultModel = 'best_match';
   const OK = {temp:['celsius','fahrenheit'], wind:['kmh','mph','kn','ms'], rain:['mm','inch']};
   const FB = {temp:'celsius', wind:'kmh', rain:'mm'};
-  S.units = S.units || {};
+  if(!S.units || typeof S.units !== 'object' || Array.isArray(S.units)) S.units = {};
   Object.keys(OK).forEach(k => { if(!OK[k].includes(S.units[k])) S.units[k] = FB[k]; });
   if(!T[S.lang]) S.lang = 'zh';
   if(!BASEMAPS[S.basemap]) S.basemap = 'sat';
   normalizeNotify();
+}
+
+/* Another tab of the app saved. Every save writes the whole state, so without
+   this the two tabs overwrote each other's plots; this one now adopts what
+   the other wrote instead. */
+window.addEventListener('storage', e => {
+  if(e.key !== KEY || !e.newValue) return;
+  let next;
+  try{ next = JSON.parse(e.newValue); }catch(err){ return; }
+  if(!next || typeof next !== 'object') return;
+  S = Object.assign(S, next);
+  sanitizeState();
+  applyLang(); renderList(); refreshPins();
+  if($('#detail').classList.contains('on')){
+    const still = D.loc && S.locations.find(l => l.id === D.loc.id);
+    if(!still) exitDetail();
+    else { D.loc = still; paintHead(); if(D.main) paintDetail(); }
+  }
+});
+
+/* Coming back to the app. A PWA can sit in memory for days, and nothing used
+   to reload it, so yesterday's "now" stayed on screen as today's (A06/B2).
+   Anything older than half an hour is fetched again; what is on screen stays
+   up meanwhile, greyed with its age once it is past three hours. */
+function refreshIfOld(){
+  if(document.visibilityState !== 'visible') return;
+  const now = Date.now();
+  if(navigator.onLine){
+    S.locations.forEach(l => {
+      const d = cache[l.id];
+      if(d === null || (d && freshness(d._at, now).refresh)) loadCard(l);
+    });
+    if($('#detail').classList.contains('on') && D.main && freshness(D.main._at, now).refresh)
+      loadDetail({quiet:true});
+  }
+  /* ages move on even when nothing was fetched */
+  S.locations.forEach(l => updateCard(l.id));
+  if($('#detail').classList.contains('on')) paintUpdated();
+}
+document.addEventListener('visibilitychange', refreshIfOld);
+window.addEventListener('pageshow', e => { if(e.persisted) refreshIfOld(); });
+setInterval(refreshIfOld, 10 * 60e3);
+
+(async function boot(){
+  const saved = await store.get(KEY);
+  if(saved && typeof saved === 'object') S = Object.assign(S, saved);
+  sanitizeState();
   applyLang();
   renderList();
   initReorder();

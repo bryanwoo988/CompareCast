@@ -81,3 +81,36 @@ test('位移随拉动单调递增', () => {
 test('小幅拉动时接近线性', () => {
   assert.ok(Math.abs(pullOffset(9, 90) - 9) < 1);
 });
+
+/* ---- cleanLocations ----
+   Broken JSON was handled; valid JSON of the wrong shape was not. One null
+   in the saved list crashed startup before anything drew, and the user saw
+   no plots at all — including the good ones still in storage. */
+const {cleanLocations} = require('../listlogic.js');
+test('null 和非对象被丢掉，好的保留', () => {
+  const out = cleanLocations([null, 7, 'x', {id:'a', name:'A', lat:3, lon:101}]);
+  assert.deepStrictEqual(out.map(l => l.id), ['a']);
+});
+test('坐标不合法的丢掉', () => {
+  const out = cleanLocations([
+    {id:'a', lat:null, lon:101}, {id:'b', lat:95, lon:0}, {id:'c', lat:3, lon:'x'}, {id:'d', lat:'3.5', lon:'101.2'}]);
+  assert.deepStrictEqual(out.map(l => [l.id, l.lat, l.lon]), [['d', 3.5, 101.2]]);
+});
+test('没有 id 或重复 id 的丢掉', () => {
+  const out = cleanLocations([{lat:1, lon:1}, {id:'a', lat:1, lon:1}, {id:'a', lat:2, lon:2}]);
+  assert.deepStrictEqual(out.map(l => l.lat), [1]);
+});
+test('名字和提醒勾选被整理成可用的形状', () => {
+  const [l] = cleanLocations([{id:'a', lat:3.1, lon:101.7, name:'', notify:['morning', 5, null]}]);
+  assert.strictEqual(l.name, '3.100, 101.700');
+  assert.deepStrictEqual(l.notify, ['morning']);
+  assert.strictEqual(l.region, '');
+});
+test('其他字段（模式等）原样保留', () => {
+  const [l] = cleanLocations([{id:'a', lat:1, lon:1, name:'A', model:'ecmwf_ifs025'}]);
+  assert.strictEqual(l.model, 'ecmwf_ifs025');
+});
+test('不是数组时得到空列表', () => {
+  assert.deepStrictEqual(cleanLocations({}), []);
+  assert.deepStrictEqual(cleanLocations(undefined), []);
+});
