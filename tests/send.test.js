@@ -1,6 +1,6 @@
 const {test} = require('node:test');
 const assert = require('node:assert');
-const {sentKey, sendOne} = require('../server/src/send.js');
+const {sentKey, sendOne, readLedger, writeLedger, DEDUPE_TTL} = require('../server/src/send.js');
 
 /* a KV stand-in that records what happened, plus a fetch stand-in whose
    status the test chooses — no network, no Cloudflare */
@@ -28,65 +28,72 @@ const VAPID_PUB = 'BGJeNBIeMsmfIK_tmAdS6ttS1scBmOTdVQxUg1zEqaK1pW1U9BKtkWNK4F3yT
 const VAPID_PRV = '8W_kk0VdwFXgM9ncShpoSBfBaPNG-2p-Zb3OLII6gA8';
 const DEV = {id:'dev123456', sub:{endpoint:'https://push.example/x', keys:{p256dh:P256DH, auth:AUTH}}};
 const PAYLOAD = {title:'Alpha', body:'早上 · 降雨 80%'};
-const KEY = () => sentKey('dev123456', 'l1', 'morning', '2026-09-29');
+const KEY = () => sentKey('dev123456', 'morning', '2026-09-29');
 
-test('sentKey 四个维度都参与，缺一不可', () => {
-  const a = sentKey('d', 'l1', 'morning', '2026-09-29');
-  assert.notStrictEqual(a, sentKey('d', 'l2', 'morning', '2026-09-29'));
-  assert.notStrictEqual(a, sentKey('d', 'l1', 'evening', '2026-09-29'));
-  assert.notStrictEqual(a, sentKey('d', 'l1', 'morning', '2026-09-30'));
-  assert.notStrictEqual(a, sentKey('e', 'l1', 'morning', '2026-09-29'));
+/* one reminder per device, window and local day — plots are listed inside the
+   entry rather than keyed separately, since they now travel in one message */
+test('sentKey 三个维度都参与', () => {
+  const a = sentKey('d', 'morning', '2026-09-29');
+  assert.notStrictEqual(a, sentKey('d', 'evening', '2026-09-29'));
+  assert.notStrictEqual(a, sentKey('d', 'morning', '2026-09-30'));
+  assert.notStrictEqual(a, sentKey('e', 'morning', '2026-09-29'));
 });
 
-test('成功发送返回 sent 并写下去重键', async () => {
-  const env = mkEnv(201), seen = new Set();
-  const r = await sendOne(env, DEV, PAYLOAD, KEY(), seen, async () => ({status:201}));
-  assert.strictEqual(r, 'sent');
-  assert.ok(env.puts.includes(KEY()));
-});
-
-/* Review Focus #3: KV is eventually consistent, so the in-memory set has to
-   catch the repeat inside a single cron run */
-test('同一次运行内重复调用被内存集合挡住，不依赖 KV 读到', async () => {
-  const env = mkEnv(201), seen = new Set();
-  await sendOne(env, DEV, PAYLOAD, KEY(), seen, async () => ({status:201}));
-  let calls = 0;
-  const r = await sendOne(env, DEV, PAYLOAD, KEY(), seen, async () => { calls++; return {status:201}; });
-  assert.strictEqual(r, 'skipped');
-  assert.strictEqual(calls, 0, '不该再发一次');
-});
-
-test('KV 里已有去重键时跳过', async () => {
+/* ---- sendOne: send and classify, nothing else ---- */
+test('成功发送返回 sent，本身不写任何键', async () => {
   const env = mkEnv(201);
-  await env.KV.put(KEY(), '1');
-  const r = await sendOne(env, DEV, PAYLOAD, KEY(), new Set(), async () => ({status:201}));
-  assert.strictEqual(r, 'skipped');
+  const r = await sendOne(env, DEV, PAYLOAD, async () => ({status:201}));
+  assert.strictEqual(r, 'sent');
+  assert.deepStrictEqual(env.puts, []);
 });
-
 test('404 视为订阅失效并删除该设备', async () => {
   const env = mkEnv(404);
-  const r = await sendOne(env, DEV, PAYLOAD, KEY(), new Set(), async () => ({status:404}));
+  const r = await sendOne(env, DEV, PAYLOAD, async () => ({status:404}));
   assert.strictEqual(r, 'expired');
   assert.ok(env.deleted.includes('dev:dev123456'));
 });
 test('410 同样视为失效', async () => {
   const env = mkEnv(410);
-  const r = await sendOne(env, DEV, PAYLOAD, KEY(), new Set(), async () => ({status:410}));
+  const r = await sendOne(env, DEV, PAYLOAD, async () => ({status:410}));
   assert.strictEqual(r, 'expired');
   assert.ok(env.deleted.includes('dev:dev123456'));
 });
-test('500 不删除、不重试', async () => {
+test('500 不删除，只发一次', async () => {
   const env = mkEnv(500);
   let calls = 0;
-  const r = await sendOne(env, DEV, PAYLOAD, KEY(), new Set(), async () => { calls++; return {status:500}; });
+  const r = await sendOne(env, DEV, PAYLOAD, async () => { calls++; return {status:500}; });
   assert.strictEqual(r, 'failed');
   assert.deepStrictEqual(env.deleted, []);
-  assert.strictEqual(calls, 1, '不该重试');
+  assert.strictEqual(calls, 1);
 });
-test('失败时不写去重键——否则这一天就再也发不出去了', async () => {
-  const env = mkEnv(500);
-  await sendOne(env, DEV, PAYLOAD, KEY(), new Set(), async () => ({status:500}));
-  assert.ok(!env.puts.includes(KEY()));
+test('网络异常算失败，不抛出', async () => {
+  const env = mkEnv(0);
+  const r = await sendOne(env, DEV, PAYLOAD, async () => { throw new Error('boom'); });
+  assert.strictEqual(r, 'failed');
+});
+
+/* ---- the ledger: which plots of a reminder are already handled ---- */
+test('台账读写往返', async () => {
+  const env = mkEnv(0);
+  await writeLedger(env, KEY(), ['l1', 'l2']);
+  assert.deepStrictEqual([...await readLedger(env, KEY())].sort(), ['l1', 'l2']);
+});
+test('没有台账时是空集', async () => {
+  assert.strictEqual((await readLedger(mkEnv(0), KEY())).size, 0);
+});
+test('台账内容损坏时当作空集，不抛出', async () => {
+  const env = mkEnv(0);
+  await env.KV.put(KEY(), '{not json');
+  assert.strictEqual((await readLedger(env, KEY())).size, 0);
+  await env.KV.put(KEY(), '"a string"');
+  assert.strictEqual((await readLedger(env, KEY())).size, 0);
+});
+test('台账带过期时间，不会无限堆积', async () => {
+  const env = mkEnv(0);
+  let opts = null;
+  env.KV.put = async (k, v, o) => { opts = o; };
+  await writeLedger(env, KEY(), ['l1']);
+  assert.strictEqual(opts.expirationTtl, DEDUPE_TTL);
 });
 
 /* Review Focus #4: encryption fails silently in production, so assert here
@@ -95,7 +102,7 @@ test('失败时不写去重键——否则这一天就再也发不出去了', as
 test('确实产出了 aes128gcm 密文与 VAPID 授权头', async () => {
   const env = mkEnv(201);
   let seenInit = null;
-  await sendOne(env, DEV, {title:'Alpha', body:'x'}, KEY(), new Set(),
+  await sendOne(env, DEV, {title:'Alpha', body:'x'},
     async (url, init) => { seenInit = init; return {status:201}; });
   assert.ok(seenInit, '没有发出请求');
   assert.strictEqual(seenInit.headers['content-encoding'], 'aes128gcm');

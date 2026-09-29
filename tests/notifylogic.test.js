@@ -121,3 +121,53 @@ test('缺失的字段不抛错', () => {
   assert.strictEqual(aggregate({temperature_2m:[20,25]}, [0,1]).tMax, 25);
   assert.strictEqual(aggregate({temperature_2m:[20,25]}, [0,1]).rainProb, null);
 });
+
+/* ---- addDays ---- */
+const {addDays, occurrence} = require('../notifylogic.js');
+test('addDays 跨月', () => { assert.strictEqual(addDays('2026-09-30', 1), '2026-10-01'); });
+test('addDays 往回跨年', () => { assert.strictEqual(addDays('2027-01-01', -1), '2026-12-31'); });
+test('addDays 闰年二月', () => { assert.strictEqual(addDays('2028-02-28', 1), '2028-02-29'); });
+
+/* ---- occurrence: which instance of a window a reminder describes ----
+   The bug this exists for: a 21:00 reminder for the 06:00-12:00 slot used to
+   summarise that morning — already over — instead of the next one. */
+const OW = (from, to, at) => ({id:'x', on:true, from, to, at, mode:'digest'});
+const D0 = '2026-09-30';
+
+test('提醒时间就是开始时间：今天这一段', () => {
+  assert.deepStrictEqual(occurrence(OW('06:00','12:00','06:00'), 360, D0),
+    {atDay:D0, day:D0, cutoff:D0 + 'T06:00'});
+});
+test('晚上提醒早上时段：说的是明天早上', () => {
+  const o = occurrence(OW('06:00','12:00','21:00'), 21 * 60, D0);
+  assert.strictEqual(o.day, '2026-10-01');
+  assert.strictEqual(o.atDay, D0);
+});
+test('时段刚好在提醒时间结束：也算明天的', () => {
+  assert.strictEqual(occurrence(OW('06:00','12:00','12:00'), 720, D0).day, '2026-10-01');
+});
+test('时段进行中提醒：今天的，已经过去的小时切掉', () => {
+  const o = occurrence(OW('06:00','12:00','09:30'), 9 * 60 + 30, D0);
+  assert.strictEqual(o.day, D0);
+  assert.strictEqual(o.cutoff, D0 + 'T09:00');   // the 09:00 hour is still partly ahead
+});
+test('午夜后补发前一天 23:50 的提醒：归属前一天', () => {
+  const o = occurrence(OW('18:00','23:59','23:50'), 5, '2026-10-01');
+  assert.strictEqual(o.atDay, D0);
+  assert.strictEqual(o.day, D0);
+});
+test('跨午夜的时段，开始前提醒：今晚这一段', () => {
+  assert.strictEqual(occurrence(OW('22:00','06:00','21:00'), 21 * 60, D0).day, D0);
+});
+test('跨午夜的时段，凌晨里提醒：昨晚开始、还在进行的那一段', () => {
+  const o = occurrence(OW('22:00','06:00','03:00'), 180, D0);
+  assert.strictEqual(o.day, '2026-09-29');
+  assert.strictEqual(o.cutoff, D0 + 'T03:00');
+});
+test('跨午夜的时段，白天提醒：今晚那一段', () => {
+  assert.strictEqual(occurrence(OW('22:00','06:00','07:00'), 7 * 60, D0).day, D0);
+});
+test('时间不合法时不给结果', () => {
+  assert.strictEqual(occurrence(OW('06:00','12:00',''), 360, D0), null);
+  assert.strictEqual(occurrence(OW('06:00','12:00','06:00'), 360, ''), null);
+});

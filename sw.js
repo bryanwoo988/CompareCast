@@ -1,7 +1,7 @@
 /* 天气预测 · service worker
    Shell is cached so the app opens offline.
    Weather data is NEVER cached — forecasts must always be fresh. */
-const VERSION = 'pw-v3.16.1';
+const VERSION = 'pw-v3.17.0';
 const SHELL = VERSION + '-shell';
 const SHELL_FILES = [
   './', './index.html', './swpolicy.js', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './summary.js', './layout.js', './app.js', './manifest.webmanifest',
@@ -22,11 +22,23 @@ const strategyFor = (typeof cacheStrategy === 'function') ? cacheStrategy : (() 
    leave the user staring at nothing. */
 const NET_TIMEOUT_MS = 2500;
 
+/* Our own files must all be cached or the install is abandoned. Tolerating a
+   failure here used to let a half-cached build activate on a weak signal and
+   delete the previous, complete cache — and the next launch without signal,
+   out in the field, found no app.js. Refusing the install keeps the old worker
+   and its whole cache serving until a later attempt gets everything.
+
+   'reload' skips the HTTP cache: GitHub Pages allows ten minutes of it, long
+   enough to install a new worker around the old build's files.
+
+   Third-party files stay best-effort — the map is the only thing that needs
+   them, and it can load them from the network later. */
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const c = await caches.open(SHELL);
-    // add one by one so a single CDN failure does not abort the install
-    await Promise.all(SHELL_FILES.map(u => c.add(u).catch(() => {})));
+    const remote = u => /^https?:/.test(u);
+    await c.addAll(SHELL_FILES.filter(u => !remote(u)).map(u => new Request(u, {cache:'reload'})));
+    await Promise.all(SHELL_FILES.filter(remote).map(u => c.add(u).catch(() => {})));
     self.skipWaiting();
   })());
 });
@@ -105,7 +117,10 @@ self.addEventListener('push', e => {
     body: d.body || '',
     icon: './icon-192.png',
     badge: './icon-192.png',
-    tag: d.tag || 'pw-reminder',
+    /* No shared fallback. Every reminder used to land on 'pw-reminder', so each
+       replaced the one before it without a sound and only the last survived.
+       The worker now tags each reminder itself; without one, stand alone. */
+    tag: d.tag || '',
     renotify: false,
     data: {url: './'}
   }));

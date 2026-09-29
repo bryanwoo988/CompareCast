@@ -1,12 +1,18 @@
 /* CompareCast push worker.
 
    Two jobs: hold each device's subscription and reminder settings, and every
-   quarter hour send the reminders that have come due. Request bodies carry the
-   user's plot coordinates, so nothing here logs them. */
+   quarter hour send the reminders that have come due (cron.js). Request bodies
+   carry the user's plot coordinates, so nothing here logs them. */
 import {validateSub} from './validate.js';
-import {dueWindows, spanDays, windowSlice, aggregate, breaches} from '../../notifylogic.js';
-import {messageFor} from './message.js';
-import {sentKey, sendOne} from './send.js';
+import {runDevice} from './cron.js';
+
+/* A real payload is a few kilobytes even at the 50-plot ceiling. */
+const MAX_BODY = 16 * 1024;
+/* A family app: without a ceiling, anyone who can reach this URL could keep
+   registering devices until the day's KV write quota ran out, and the cron —
+   which reads every device every quarter hour — would drain the read quota
+   behind it. Existing devices re-syncing are never counted against it. */
+const MAX_DEVICES = 50;
 
 const cors = env => ({
   'Access-Control-Allow-Origin': env.ORIGIN,
@@ -19,108 +25,54 @@ const reply = (env, status, body) =>
   new Response(body === undefined ? null : JSON.stringify(body),
     {status, headers:Object.assign({'Content-Type':'application/json'}, cors(env))});
 
-export default {
-  async fetch(request, env){
-    const origin = request.headers.get('Origin');
-    /* same-origin tools and curl send no Origin; a browser from anywhere else
-       is refused outright rather than relying on the browser to enforce it */
-    if(origin && origin !== env.ORIGIN) return new Response('forbidden', {status:403});
-
-    if(request.method === 'OPTIONS') return new Response(null, {status:204, headers:cors(env)});
-
-    const url = new URL(request.url);
-    if(url.pathname !== '/sub') return reply(env, 404, {error:'not found'});
-
-    let body;
-    try{ body = await request.json(); }
-    catch(e){ return reply(env, 400, {error:'json'}); }
-
-    if(request.method === 'DELETE'){
-      if(!body || typeof body.id !== 'string') return reply(env, 400, {error:'id'});
-      await env.KV.delete('dev:' + body.id);
-      return reply(env, 204);
-    }
-
-    if(request.method === 'POST'){
-      const r = validateSub(body);
-      /* the error names a field, never echoes its value */
-      if(!r.ok) return reply(env, 400, {error:r.error});
-      await env.KV.put('dev:' + r.value.id, JSON.stringify(r.value));
-      return reply(env, 204);
-    }
-
-    return reply(env, 405, {error:'method'});
-  },
-  scheduled(event, env, ctx){ return scheduled(event, env, ctx); }
-};
-
-const CRON_SPAN_MIN = 15;
-const API = 'https://api.open-meteo.com/v1/forecast';
-
-/* the device's own wall clock, from its IANA zone — never a hand-rolled
-   UTC offset, which would be wrong twice a year */
-function localNow(tz, now){
-  const p = new Intl.DateTimeFormat('en-CA', {
-    timeZone:tz, hour12:false,
-    year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'
-  }).formatToParts(now).reduce((o, x) => (o[x.type] = x.value, o), {});
-  const hour = p.hour === '24' ? '00' : p.hour;
-  return {day:`${p.year}-${p.month}-${p.day}`, min:(+hour) * 60 + (+p.minute)};
+async function readBody(request){
+  if(+(request.headers.get('Content-Length') || 0) > MAX_BODY) return {error:'size'};
+  let text;
+  try{ text = await request.text(); }catch(e){ return {error:'body'}; }
+  if(text.length > MAX_BODY) return {error:'size'};
+  try{ return {body:JSON.parse(text)}; }catch(e){ return {error:'json'}; }
 }
 
-/* one request per coordinate per run, however many devices or windows want it */
-async function forecast(cache, lat, lon, tz){
-  const key = `${lat.toFixed(4)},${lon.toFixed(4)}`;
-  if(cache.has(key)) return cache.get(key);
-  const q = new URLSearchParams({
-    latitude:String(lat), longitude:String(lon), timezone:tz, forecast_days:'3',
-    hourly:'temperature_2m,precipitation,precipitation_probability,wind_speed_10m,wind_gusts_10m'
-  });
-  const p = fetch(API + '?' + q).then(r => r.ok ? r.json() : null).catch(() => null);
-  cache.set(key, p);
-  return p;
-}
+async function handle(request, env){
+  const origin = request.headers.get('Origin');
+  /* same-origin tools and curl send no Origin; a browser from anywhere else
+     is refused outright rather than relying on the browser to enforce it */
+  if(origin && origin !== env.ORIGIN) return new Response('forbidden', {status:403});
 
-async function runDevice(env, dev, now, cache, seen){
-  /* Each plot is scheduled on its own clock, so "6am" means 6am at the field
-     rather than 6am wherever the phone happens to be. dev.tz is only the
-     fallback for a plot whose forecast had not loaded when it was synced. */
-  for(const b of dev.blocks){
-    const tz = b.tz || dev.tz;
-    const {day, min} = localNow(tz, now);
-    const due = dueWindows(dev.notify.windows, min, CRON_SPAN_MIN)
-      .filter(w => b.windows.includes(w.id));
-    for(const win of due){
-      const key = sentKey(dev.id, b.id, win.id, day);
-      if(seen.has(key) || await env.KV.get(key)) continue;
+  if(request.method === 'OPTIONS') return new Response(null, {status:204, headers:cors(env)});
 
-      const fc = await forecast(cache, b.lat, b.lon, tz);
-      if(!fc || !fc.hourly || !fc.hourly.time) continue;
+  const url = new URL(request.url);
+  if(url.pathname !== '/sub') return reply(env, 404, {error:'not found'});
+  if(request.method !== 'POST' && request.method !== 'DELETE') return reply(env, 405, {error:'method'});
 
-      /* a wrapping window runs into tomorrow, so both days are sliced and the
-         indices merged before anything is aggregated */
-      const idx = [];
-      for(const d of spanDays(win, day)){
-        const {start, n} = windowSlice(fc.hourly.time, d, win);
-        for(let i = 0; i < n; i++) idx.push(start + i);
-      }
-      if(!idx.length) continue;
+  const {body, error} = await readBody(request);
+  if(error) return reply(env, error === 'size' ? 413 : 400, {error});
 
-      const stats = aggregate(fc.hourly, idx);
-      const hits = win.mode === 'threshold' ? breaches(dev.notify.rules, stats) : [];
-      if(win.mode === 'threshold' && !hits.length) continue;
-
-      const msg = messageFor(dev.lang, win, stats, hits, dev.notify.rules, dev.units, b.name);
-      if(!msg) continue;
-      await sendOne(env, dev, msg, key, seen);
-    }
+  if(request.method === 'DELETE'){
+    if(!body || typeof body.id !== 'string' || body.id.length > 64) return reply(env, 400, {error:'id'});
+    await env.KV.delete('dev:' + body.id);
+    return reply(env, 204);
   }
+
+  const r = validateSub(body);
+  /* the error names a field, never echoes its value */
+  if(!r.ok) return reply(env, 400, {error:r.error});
+  const key = 'dev:' + r.value.id;
+  if(!(await env.KV.get(key))){
+    const page = await env.KV.list({prefix:'dev:', limit:MAX_DEVICES});
+    if(page.keys.length >= MAX_DEVICES) return reply(env, 429, {error:'full'});
+  }
+  await env.KV.put(key, JSON.stringify(r.value));
+  return reply(env, 204);
 }
 
-export const scheduled = async (event, env, ctx) => {
+export const scheduled = async (event, env) => {
   const now = new Date();
-  const cache = new Map(), seen = new Set();
-  let cursor, devices = 0;
+  const run = {
+    cache:new Map(), seen:new Set(),
+    fetchJson:url => fetch(url).then(r => (r.ok ? r.json() : null))
+  };
+  let cursor, devices = 0, sent = 0, failed = 0;
   do{
     const page = await env.KV.list({prefix:'dev:', cursor});
     for(const k of page.keys){
@@ -129,10 +81,21 @@ export const scheduled = async (event, env, ctx) => {
       let dev;
       try{ dev = JSON.parse(raw); }catch(e){ continue; }
       devices++;
-      try{ await runDevice(env, dev, now, cache, seen); }
-      catch(e){ console.log('device failed', e && e.name); }
+      try{
+        const rep = await runDevice(env, dev, now, run);
+        sent += rep.filter(x => x.result === 'sent').length;
+        failed += rep.filter(x => x.result === 'failed').length;
+      }catch(e){ console.log('device failed', e && e.name); }
     }
     cursor = page.list_complete ? null : page.cursor;
   } while(cursor);
-  console.log('cron done, devices', devices, 'sent', seen.size);
+  /* counts only: titles and bodies name the user's plots */
+  console.log('cron done, devices', devices, 'sent', sent, 'failed', failed);
 };
+
+export default {
+  fetch:handle,
+  scheduled(event, env, ctx){ return scheduled(event, env, ctx); }
+};
+
+export {handle, MAX_BODY, MAX_DEVICES};

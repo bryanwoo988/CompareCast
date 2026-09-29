@@ -5,22 +5,35 @@
    to point at — so this delegates to a library built on Web Crypto. */
 import {buildPushPayload} from '@block65/webcrypto-web-push';
 
-/* one reminder per device, block, window and local day */
-function sentKey(devId, blockId, winId, dayISO){
-  return `sent:${devId}:${blockId}:${winId}:${dayISO}`;
+/* One reminder per device, window and local day. The plots it covered are
+   the entry's value rather than part of the key: they travel in one message
+   now, and a retry has to know which of them are already done. */
+function sentKey(devId, winId, dayISO){
+  return `sent:${devId}:${winId}:${dayISO}`;
 }
 
 const DEDUPE_TTL = 60 * 60 * 36;
 
-/* `post` is injectable so the tests can drive every status path without a
-   network; production passes nothing and it falls through to fetch */
-async function sendOne(env, dev, payload, key, seen, post){
-  /* KV is eventually consistent: a key written moments ago may still read as
-     missing, so the run's own set is what stops a same-run repeat */
-  if(seen.has(key)) return 'skipped';
-  if(await env.KV.get(key)) return 'skipped';
-  seen.add(key);
+/* The plots of a reminder already decided — sent, or judged to have nothing
+   worth sending. Anything unreadable counts as nothing done: a repeat is a
+   smaller harm than a reminder that can never go out again. */
+async function readLedger(env, key){
+  try{
+    const v = JSON.parse(await env.KV.get(key) || '[]');
+    return new Set(Array.isArray(v) ? v.filter(x => typeof x === 'string') : []);
+  }catch(e){ return new Set(); }
+}
+async function writeLedger(env, key, ids){
+  await env.KV.put(key, JSON.stringify([...ids]), {expirationTtl:DEDUPE_TTL});
+}
 
+/* Send one push and say how it went: 'sent', 'expired' (the subscription is
+   gone and the device has been removed) or 'failed'. Nothing is recorded
+   here — whether a failure is retried is the caller's call, and it is.
+
+   `post` is injectable so the tests can drive every status path without a
+   network; production passes nothing and it falls through to fetch. */
+async function sendOne(env, dev, payload, post){
   const send = post || (async (url, init) => fetch(url, init));
   let res;
   try{
@@ -34,7 +47,6 @@ async function sendOne(env, dev, payload, key, seen, post){
   }catch(e){
     /* never log the payload or the endpoint — both identify the user's plots */
     console.log('push error', e && e.name);
-    seen.delete(key);
     return 'failed';
   }
 
@@ -42,15 +54,9 @@ async function sendOne(env, dev, payload, key, seen, post){
     await env.KV.delete('dev:' + dev.id);
     return 'expired';
   }
-  if(res.status >= 200 && res.status < 300){
-    await env.KV.put(key, '1', {expirationTtl:DEDUPE_TTL});
-    return 'sent';
-  }
-  /* no retry by design; not marking it sent leaves the day open in case a
-     later run happens to succeed */
+  if(res.status >= 200 && res.status < 300) return 'sent';
   console.log('push rejected', res.status);
-  seen.delete(key);
   return 'failed';
 }
 
-export {sentKey, sendOne, DEDUPE_TTL};
+export {sentKey, sendOne, readLedger, writeLedger, DEDUPE_TTL};

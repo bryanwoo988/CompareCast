@@ -80,3 +80,57 @@ test('地块时区非法时丢弃而不是让整条请求失败', () => {
   assert.strictEqual(r.ok, true);
   assert.strictEqual(r.value.blocks[0].tz, undefined);
 });
+
+/* ---- push endpoint: only real push services ----
+   The cron POSTs to whatever endpoint is stored, carrying a JWT signed with
+   the app's VAPID key, so an arbitrary https URL would make this worker a
+   relay to any host anyone cared to register. */
+const withEndpoint = e => ok({sub:{endpoint:e, keys:{p256dh:'p', auth:'a'}}});
+test('Apple / Google / Mozilla / Microsoft 的推送服务都接受', () => {
+  ['https://web.push.apple.com/QK4x',
+   'https://fcm.googleapis.com/fcm/send/abc',
+   'https://updates.push.services.mozilla.com/wpush/v2/x',
+   'https://wns2-par02p.notify.windows.com/w/?token=x'
+  ].forEach(e => assert.strictEqual(validateSub(withEndpoint(e)).ok, true, e));
+});
+test('其他主机一律拒绝', () => {
+  ['https://evil.example/x', 'https://fcm.googleapis.com.evil.example/x',
+   'https://notapple.push.apple.com.evil.example/x'
+  ].forEach(e => assert.strictEqual(validateSub(withEndpoint(e)).ok, false, e));
+});
+
+/* ---- nothing is stored verbatim ----
+   These three objects used to be written to KV exactly as sent, so one request
+   could park megabytes that the cron then parses for every device, every
+   quarter hour, on a 10 ms CPU budget shared by everyone. */
+test('单位只保留认识的键和值，其余回落默认', () => {
+  const r = validateSub(ok({units:{temp:'fahrenheit', wind:'lightyears', rain:'inch', junk:'x'.repeat(9999)}}));
+  assert.deepStrictEqual(r.value.units, {temp:'fahrenheit', wind:'kmh', rain:'inch'});
+});
+test('时段只保留认识的字段，时间不合法的整段丢掉', () => {
+  const r = validateSub(ok({notify:{rules:{}, windows:[
+    {id:'morning', on:true, from:'06:00', to:'12:00', at:'06:00', mode:'threshold', blob:'x'.repeat(9999)},
+    {id:'afternoon', on:true, from:'12:00', to:'25:00', at:'12:00', mode:'digest'},
+    {id:'ghost', on:true, from:'01:00', to:'02:00', at:'01:00', mode:'digest'}
+  ]}}));
+  assert.deepStrictEqual(r.value.notify.windows,
+    [{id:'morning', on:true, from:'06:00', to:'12:00', at:'06:00', mode:'threshold'}]);
+});
+test('规则只保留认识的键和数值', () => {
+  const r = validateSub(ok({notify:{windows:NOTIFY.windows, rules:{
+    rainProb:{on:true, v:60}, wind:{on:'yes', v:'20'}, evil:{on:true, v:1}}}}));
+  assert.deepStrictEqual(r.value.notify.rules, {rainProb:{on:true, v:60}});
+});
+
+/* ---- blocks ---- */
+test('地块的模式在清单内时保留', () => {
+  const r = validateSub(ok({blocks:[{id:'l1', name:'A', lat:1, lon:2, windows:['morning'], model:'ecmwf_ifs025'}]}));
+  assert.strictEqual(r.value.blocks[0].model, 'ecmwf_ifs025');
+});
+test('不认识的模式丢掉，按 Best Match 处理', () => {
+  const r = validateSub(ok({blocks:[{id:'l1', name:'A', lat:1, lon:2, windows:['morning'], model:'mystery'}]}));
+  assert.strictEqual(r.value.blocks[0].model, undefined);
+});
+test('地块 id 过长被拒', () => {
+  assert.strictEqual(validateSub(ok({blocks:[{id:'x'.repeat(65), name:'A', lat:1, lon:2, windows:['morning']}]})).ok, false);
+});
