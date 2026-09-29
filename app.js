@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.15.0';
+const APP_VERSION = '3.15.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.15.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.15.1',
+   zh:['十天卡片挪到实况卡片正下方，跟 iPhone 一样——小时和十天是同一个问题的两个尺度，本来就该连着看；数据格子和对比图往下挪'],
+   en:['The ten-day card now sits directly under the Conditions card, the way iPhone has it \u2014 hours and days are the same question at two scales, so they belong together; the data cards and comparison charts moved down'],
+   ms:['Kad sepuluh hari kini betul-betul di bawah kad Keadaan, sama seperti iPhone \u2014 jam dan hari ialah soalan sama pada dua skala; kad data dan graf perbandingan turun ke bawah']},
   {v:'3.15.0',
    zh:['切到水滴，小时条变成降雨强度柱：柱高就是雨量，全天同一把尺，底下是降雨机率',
        '切到风，小时条变成一条贯穿全天的风速曲线，现在之前虚线、现在一个圆点，浅色带是阵风',
@@ -2072,11 +2076,13 @@ function renderCells(){
    same weather lived in three places (spec §4.1). */
 function paintDetail(){
   if(!D.main){ $('#d-body').innerHTML = `<div class="big-msg"><p>${t('loading')}</p></div>`; return; }
-  /* Everyday use is "what are the next few hours"; the multi-model comparison
-     is what you open when you want to interrogate that. So the hours and the
-     week lead, and the charts sit below them rather than above. */
+  /* Everyday use is "what are the next few hours" and then "what about the
+     rest of the week": the hourly strip and the ten-day list answer the same
+     question at two scales, so they sit together at the top. The multi-model
+     comparison is what you open when you want to interrogate that, so it goes
+     below rather than above. */
   $('#d-body').innerHTML = renderDayStrip() + renderSummary() + renderHourStrip()
-    + renderCardGrid() + renderCells() + renderTenDay()
+    + renderTenDay() + renderCardGrid() + renderCells()
     + renderTempChart() + renderProbChart() + renderAccuracyCard() + `
     <div class="glass" style="padding-bottom:10px">
       <h4>${t('editName')}</h4>
