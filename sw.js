@@ -1,7 +1,7 @@
 /* 天气预测 · service worker
    Shell is cached so the app opens offline.
    Weather data is NEVER cached — forecasts must always be fresh. */
-const VERSION = 'pw-v3.5.0';
+const VERSION = 'pw-v3.6.0';
 const SHELL = VERSION + '-shell';
 const SHELL_FILES = [
   './', './index.html', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './app.js', './manifest.webmanifest',
@@ -60,5 +60,33 @@ self.addEventListener('fetch', e => {
       if(fallback) return fallback;
     }
     return new Response('Offline', {status:503, statusText:'Offline'});
+  })());
+});
+
+/* ---- push ----
+   The worker sends {title, body}; anything unparseable still shows something
+   rather than nothing, because a push event that resolves without showing a
+   notification makes the browser display its own "site updated in background"
+   message, which is worse than a vague one of ours. */
+self.addEventListener('push', e => {
+  let d = {};
+  try{ d = e.data ? e.data.json() : {}; }catch(err){ d = {}; }
+  const title = d.title || 'CompareCast';
+  e.waitUntil(self.registration.showNotification(title, {
+    body: d.body || '',
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    tag: d.tag || 'pw-reminder',
+    renotify: false,
+    data: {url: './'}
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil((async () => {
+    const all = await self.clients.matchAll({type:'window', includeUncontrolled:true});
+    for(const c of all){ if('focus' in c) return c.focus(); }
+    if(self.clients.openWindow) return self.clients.openWindow('./');
   })());
 });
