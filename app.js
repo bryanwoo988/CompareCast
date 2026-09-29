@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.16.0';
+const APP_VERSION = '3.16.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,25 @@ const APP_VERSION = '3.16.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.16.1',
+   zh:['修好设置页滑不顺：在弹层里往下滑会被误判成下拉刷新，刷新逻辑再把弹层自己的滚动挡掉。现在弹层和覆盖页一律不触发下拉刷新',
+       '全 App 的滚动更顺了：挡滚动的监听器以前一直挂着，现在只在真的在拖动或下拉时才挂',
+       '修好今天那句白话结论说错话：它只看当前时间之后，却写「全天无雨」——明明早上下过 1.1mm。现在写「接下来降雨机率低」',
+       '「无雨」改成「降雨机率低」：机率 49% 也会被判成这一类，说死了不负责任',
+       '降雨那一页加了一行说明：柱子是所选模式的雨量，百分比来自 Best Match',
+       '排版页拖动结束时不会再误触到那一行的开关'],
+   en:['Fixed the settings page scrolling badly: a downward swipe inside a sheet was read as a pull-to-refresh, and the refresh logic then blocked the sheet\u2019s own scroll. Sheets and overlay pages no longer arm the pull',
+       'Scrolling is smoother everywhere: the listener that blocks scrolling used to stay attached at all times, and is now attached only while a drag or pull is actually running',
+       'Fixed today\u2019s plain-language line contradicting the page: it only looks at the hours ahead but said \u201cno rain all day\u201d with 1.1 mm already fallen. It now says \u201clow chance from here on\u201d',
+       '\u201cNo rain\u201d became \u201clow chance of rain\u201d \u2014 a 49% hour landed in that branch, and stating it as a fact was not honest',
+       'The precipitation view now says where its two numbers come from: bars are the selected model\u2019s amounts, percentages are Best Match',
+       'Ending a drag in the layout editor no longer flips that row\u2019s switch'],
+   ms:['Membaiki halaman tetapan yang sukar diskrol: leretan ke bawah dalam helaian disalahanggap sebagai tarik-untuk-muat-semula, dan logik itu menyekat skrol helaian itu sendiri',
+       'Skrol lebih lancar di seluruh aplikasi: pendengar yang menyekat skrol kini dipasang hanya semasa seretan atau tarikan benar-benar berjalan',
+       'Membaiki ayat ringkas hari ini yang bercanggah: ia hanya melihat jam di hadapan tetapi menulis \u201ctiada hujan sepanjang hari\u201d sedangkan 1.1 mm sudah turun',
+       '\u201cTiada hujan\u201d ditukar kepada \u201ckebarangkalian hujan rendah\u201d',
+       'Paparan hujan kini menyatakan sumber kedua-dua nombornya',
+       'Menamatkan seretan dalam penyunting susunan tidak lagi menogol suis baris itu']},
   {v:'3.16.0',
    zh:['详情页现在可以自己排版：设置 → 详情页排版，长按一行拖动排序，右边的开关决定显示或隐藏',
        '喷药看风、收成看雨——把你最常看的那块拖到最上面就好，不用每次滑到下面去找',
@@ -215,7 +234,8 @@ zh:{
   bmSat:'卫星', bmStreet:'街道', bmDark:'暗色',
   dragHint:'长按地点可拖动排序，排在最前的会成为地图的默认视角',
   sumRain:(p,pk)=>`${p}有雨，最高 ${pk}%`, sumShowers:(p,pk)=>`${p}可能有零星阵雨，最高 ${pk}%`,
-  sumHot:(t)=>`全天无雨，最高 ${t}`, sumCalm:'全天无明显降雨', sumUnknown:'暂无足够数据',
+  sumHot:(t)=>`全天降雨机率低，最高 ${t}`, sumCalm:'全天降雨机率低', sumUnknown:'暂无足够数据',
+  sumHotRest:(t)=>`接下来降雨机率低，最高 ${t}`, sumCalmRest:'接下来降雨机率低',
   pNight:'凌晨', pMorning:'早上', pAfternoon:'下午', pEvening:'晚上',
   condT:'实况', vRain:'降雨', vWind:'风速', sInten:'强度', sChance:'降雨机率',
   lyEntry:'详情页排版', lyDesc:'长按一行拖动排序，右边的开关决定显示或隐藏。顶部的温度和日期条固定不动。',
@@ -225,6 +245,7 @@ zh:{
   lyReset:'恢复默认排版', lyHidden:'已隐藏', lyAllHidden:'中间的区块全部藏起来了，详情页只剩顶部和底部。',
   lyOn:'显示', lyOff:'隐藏',
   lyDefault:'默认', lyCustom:'已自定义', lyHiddenN:n => `已自定义 · 藏了 ${n} 项`,
+  srcRain:'雨量柱来自所选模式；降雨机率来自 Best Match，因为只有它每个地点都有这一项。',
   cWind:'风', cPress:'气压', cSun:'日出日落', cUV:'紫外线', cHumid:'湿度', cVis:'能见度', cRain:'降雨',
   dewPoint:(v)=>`露点 ${v}`, visClear:'视野通透', visOk:'一般', visPoor:'有雾或霾',
   uvLow:'低', uvMid:'中等', uvHigh:'高', uvVeryHigh:'很高', uvExtreme:'极高',
@@ -298,7 +319,8 @@ en:{
   bmSat:'Satellite', bmStreet:'Street', bmDark:'Dark',
   dragHint:'Hold a location to drag it into order — the first one becomes the map\u2019s default view',
   sumRain:(p,pk)=>`Rain ${p}, peaking at ${pk}%`, sumShowers:(p,pk)=>`Scattered showers possible ${p}, up to ${pk}%`,
-  sumHot:(t)=>`No rain, high of ${t}`, sumCalm:'No significant rain', sumUnknown:'Not enough data yet',
+  sumHot:(t)=>`Low chance of rain, high of ${t}`, sumCalm:'Low chance of rain all day', sumUnknown:'Not enough data yet',
+  sumHotRest:(t)=>`Low chance of rain from here on, high of ${t}`, sumCalmRest:'Low chance of rain from here on',
   pNight:'overnight', pMorning:'in the morning', pAfternoon:'in the afternoon', pEvening:'in the evening',
   condT:'Conditions', vRain:'Precipitation', vWind:'Wind', sInten:'Intensity', sChance:'Chance of rain',
   lyEntry:'Detail page layout', lyDesc:'Press and hold a row to drag it. The switch on the right shows or hides that section. The temperature header and the date strip stay at the top.',
@@ -308,6 +330,7 @@ en:{
   lyReset:'Restore the default order', lyHidden:'Hidden', lyAllHidden:'Every middle section is hidden; the detail page is just the header and the footer.',
   lyOn:'Shown', lyOff:'Hidden',
   lyDefault:'Default', lyCustom:'Customised', lyHiddenN:n => `Customised · ${n} hidden`,
+  srcRain:'The bars are the selected model\u2019s amounts; the percentages come from Best Match, the one source that always has them.',
   cWind:'Wind', cPress:'Pressure', cSun:'Sun', cUV:'UV index', cHumid:'Humidity', cVis:'Visibility', cRain:'Rain',
   dewPoint:(v)=>`Dew point ${v}`, visClear:'Clear view', visOk:'Moderate', visPoor:'Haze or fog',
   uvLow:'Low', uvMid:'Moderate', uvHigh:'High', uvVeryHigh:'Very high', uvExtreme:'Extreme',
@@ -381,7 +404,8 @@ ms:{
   bmSat:'Satelit', bmStreet:'Jalan', bmDark:'Gelap',
   dragHint:'Tekan dan tahan lokasi untuk menyusunnya — yang pertama menjadi paparan asal peta',
   sumRain:(p,pk)=>`Hujan ${p}, tertinggi ${pk}%`, sumShowers:(p,pk)=>`Mungkin hujan renyai ${p}, sehingga ${pk}%`,
-  sumHot:(t)=>`Tiada hujan, tertinggi ${t}`, sumCalm:'Tiada hujan ketara', sumUnknown:'Data belum cukup',
+  sumHot:(t)=>`Kebarangkalian hujan rendah, tertinggi ${t}`, sumCalm:'Kebarangkalian hujan rendah sepanjang hari', sumUnknown:'Data belum cukup',
+  sumHotRest:(t)=>`Kebarangkalian hujan rendah selepas ini, tertinggi ${t}`, sumCalmRest:'Kebarangkalian hujan rendah selepas ini',
   pNight:'dini hari', pMorning:'pagi', pAfternoon:'petang', pEvening:'malam',
   condT:'Keadaan', vRain:'Hujan', vWind:'Angin', sInten:'Keamatan', sChance:'Kebarangkalian hujan',
   lyEntry:'Susunan halaman butiran', lyDesc:'Tekan dan tahan satu baris untuk seretnya. Suis di sebelah kanan menunjuk atau menyembunyikan bahagian itu. Suhu di atas dan jalur tarikh kekal di tempatnya.',
@@ -391,6 +415,7 @@ ms:{
   lyReset:'Pulihkan susunan asal', lyHidden:'Disembunyikan', lyAllHidden:'Semua bahagian tengah disembunyikan; halaman butiran tinggal bahagian atas dan bawah.',
   lyOn:'Ditunjuk', lyOff:'Disembunyi',
   lyDefault:'Asal', lyCustom:'Diubah suai', lyHiddenN:n => `Diubah suai · ${n} disembunyikan`,
+  srcRain:'Bar ialah jumlah hujan model yang dipilih; peratusan datang dari Best Match, satu-satunya sumber yang sentiasa ada.',
   cWind:'Angin', cPress:'Tekanan', cSun:'Matahari', cUV:'Indeks UV', cHumid:'Kelembapan', cVis:'Penglihatan', cRain:'Hujan',
   dewPoint:(v)=>`Takat embun ${v}`, visClear:'Pandangan jelas', visOk:'Sederhana', visPoor:'Jerebu atau kabus',
   uvLow:'Rendah', uvMid:'Sederhana', uvHigh:'Tinggi', uvVeryHigh:'Sangat tinggi', uvExtreme:'Ekstrem',
@@ -866,6 +891,18 @@ function loadAll(){ S.locations.forEach(loadCard); }
 const HOLD_MS = 350, SLOP = 10, EDGE = 90;
 let drag = null, suppressClick = false;
 
+/* touch-action cannot be changed mid-gesture, so a running drag or pull has to
+   block scrolling with preventDefault — which needs a non-passive listener.
+   Left registered on document permanently it would cost every scroll in the
+   app its passive fast path, for gestures that are almost never running, so it
+   is attached for the length of the gesture and taken off again. */
+const blockScroll = e => e.preventDefault();
+let scrollBlocked = 0;
+function holdScroll(on){
+  if(on){ if(scrollBlocked++) return; document.addEventListener('touchmove', blockScroll, {passive:false}); }
+  else  { if(!scrollBlocked || --scrollBlocked) return; document.removeEventListener('touchmove', blockScroll, {passive:false}); }
+}
+
 function cardMetrics(){
   const cards = Array.from(document.querySelectorAll('#loc-list .loc'));
   const sy = window.scrollY;
@@ -890,6 +927,7 @@ function beginDrag(){
   drag.card.classList.add('dragging');
   drag.card.style.transform = 'translateY(0px) scale(1.03)';
   $('#loc-list').classList.add('reordering');
+  holdScroll(true);
   drag.autoTimer = setInterval(autoScroll, 16);
 }
 
@@ -925,6 +963,7 @@ function endDrag(){
   const d = drag;
   drag = null;
   if(!d.on) return;
+  holdScroll(false);
   $('#loc-list').classList.remove('reordering');
   d.metrics.forEach(x => { x.el.style.transform = ''; });
   d.card.classList.remove('dragging');
@@ -963,11 +1002,6 @@ function initReorder(){
   });
   ['pointerup','pointercancel'].forEach(ev => list.addEventListener(ev, endDrag));
   window.addEventListener('pointerup', endDrag);
-  /* touch-action cannot be changed mid-gesture, so scrolling is held off here
-     for as long as a drag is actually running */
-  document.addEventListener('touchmove', e => {
-    if(drag && drag.on) e.preventDefault();
-  }, {passive:false});
   list.addEventListener('click', e => {
     if(!suppressClick) return;
     e.stopPropagation(); e.preventDefault();
@@ -1041,7 +1075,15 @@ function checkForUpdate(){
 }
 
 function initPullRefresh(){
-  const armed = () => !document.querySelector('#detail').classList.contains('on')
+  /* Anything laid over the list scrolls itself, and the body behind it is
+     parked at the top — so `window.scrollY <= 0` alone read every downward
+     swipe inside a sheet as a pull, and the preventDefault below then ate
+     that sheet's own scroll. Overlays have to be excluded explicitly. */
+  const overlaid = () => !!openSheetId
+                      || $('#detail').classList.contains('on')
+                      || $('#notify').classList.contains('on')
+                      || $('#layout').classList.contains('on');
+  const armed = () => !overlaid()
                    && !document.body.classList.contains('map-mode')
                    && !(drag && drag.on)
                    && !refreshing
@@ -1053,8 +1095,11 @@ function initPullRefresh(){
   window.addEventListener('pointermove', e => {
     if(!pull) return;
     const dy = e.clientY - pull.startY;
-    if(dy <= 0 || !armed()){ if(pull.active) resetPull(); pull = null; return; }
+    if(dy <= 0 || !armed()){ if(pull.active){ holdScroll(false); resetPull(); } pull = null; return; }
     if(!pull.active && dy < 6) return;
+    /* the browser would otherwise rubber-band the page while we are drawing
+       our own indicator, which is the blank white area this replaces */
+    if(!pull.active) holdScroll(true);
     pull.active = true;
     pull.offset = pullOffset(dy, PULL_MAX);
     paintPull(pull.offset, pull.offset >= PULL_TRIGGER);
@@ -1062,16 +1107,12 @@ function initPullRefresh(){
   const release = () => {
     if(!pull) return;
     const go = pull.active && pull.offset >= PULL_TRIGGER;
+    if(pull.active) holdScroll(false);
     pull = null;
     if(go) runRefresh(); else resetPull();
   };
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);
-  /* the browser would otherwise rubber-band the page while we are drawing our
-     own indicator, which is the blank white area this replaces */
-  document.addEventListener('touchmove', e => {
-    if(pull && pull.active) e.preventDefault();
-  }, {passive:false});
 
   if('serviceWorker' in navigator){
     /* controllerchange also fires the first time a worker ever claims this
@@ -1602,7 +1643,10 @@ function bindDayStrip(){
    The judgement lives in summary.js so all three languages share it. */
 function renderSummary(){
   const d = D.main, dd = d && d.daily, ex = (D.ext && D.ext !== 'fail') ? D.ext : null;
-  if(!dd || !dd.time || !dd.time[D.day] || !ex || !ex.hourly) return '';
+  /* the field, not just the object: a response that carried no probabilities
+     used to reach .slice() and take the whole detail page down with it */
+  if(!dd || !dd.time || !dd.time[D.day] || !ex || !ex.hourly
+     || !Array.isArray(ex.hourly.time) || !Array.isArray(ex.hourly.precipitation_probability)) return '';
   const dayISO = dd.time[D.day];
   const {start, n} = sliceDay(ex.hourly.time, dayISO);
   if(start < 0) return '';
@@ -1617,8 +1661,10 @@ function renderSummary(){
   let txt;
   if(sum.kind === 'rain')          txt = t('sumRain')(t(PART[sum.part]), Math.round(sum.peak));
   else if(sum.kind === 'showers')  txt = t('sumShowers')(t(PART[sum.part]), Math.round(sum.peak));
-  else if(sum.kind === 'hot')      txt = t('sumHot')(fT(sum.tMax));
-  else if(sum.kind === 'calm')     txt = t('sumCalm');
+  /* "all day" is only honest when the whole day was examined; on today the
+     judgement starts at the current hour, so it says "from here on" instead */
+  else if(sum.kind === 'hot')      txt = t(sum.rest ? 'sumHotRest' : 'sumHot')(fT(sum.tMax));
+  else if(sum.kind === 'calm')     txt = t(sum.rest ? 'sumCalmRest' : 'sumCalm');
   else return '';
   return `<p class="d-sum">${esc(txt)}</p>`;
 }
@@ -1955,7 +2001,7 @@ function renderHourStrip(){
   const head = k => `<div class="hh">${hourAt(k)}</div>`;
   const cls = k => `hcol${k === nowAt ? ' nowcol' : ''}`;
 
-  let cols = '', over = '', sub;
+  let cols = '', over = '', foot = '', sub;
 
   if(v === 'rain'){
     /* bars are read against each other, so one scale for the whole day — with a
@@ -1972,6 +2018,10 @@ function renderHourStrip(){
         <div class="hp">${p === null ? '' : DROP + p + '%'}</div></div>`;
     }
     sub = `${t('sInten')} (${uR()}) · ${t('sChance')}`;
+    /* two quantities from two sources in one card: the bars are the selected
+       model's, the percentages cannot be, and saying so here means it does not
+       depend on the rain-chance chart further down being visible */
+    foot = `<p class="note" style="margin:9px 0 0">${t('srcRain')}</p>`;
 
   } else if(v === 'wind'){
     const sp = [], gu = [];
@@ -2013,7 +2063,7 @@ function renderHourStrip(){
         <p class="cond-sub">${esc(sub)}</p></div>
       <div class="hswrow">${sw2}</div>
     </div>
-    <div class="hstrip ${v}"><div class="hrow" style="width:${w}px">${cols}${over}</div></div></div>`;
+    <div class="hstrip ${v}"><div class="hrow" style="width:${w}px">${cols}${over}</div></div>${foot}</div>`;
 }
 
 /* One line across the whole day rather than a number per column: the shape is
@@ -2751,7 +2801,7 @@ function paintLayout(){
     </div>`;
 
   $$('#ly-body [data-lytoggle]').forEach(b => b.addEventListener('click', () => {
-    if(lyDrag && lyDrag.on) return;               // the press that ended a drag
+    if(lySuppressClick) return;                   // the press that ended a drag
     const id = b.dataset.lytoggle;
     const cur = layoutRows();
     commitLayout({
@@ -2767,7 +2817,7 @@ function paintLayout(){
 /* The locations list drags whole cards against the window scroll; this list
    drags uniform rows inside a page that scrolls itself. Same hold-then-move
    rule, same pure arithmetic from listlogic.js, different geometry. */
-let lyDrag = null;
+let lyDrag = null, lySuppressClick = false;
 function lyMetrics(){
   const rows = Array.from(document.querySelectorAll('#ly-list .ly-row'));
   const st = $('#layout').scrollTop;
@@ -2785,6 +2835,7 @@ function lyBegin(){
   lyDrag.slot = m[from].h;
   lyDrag.row.classList.add('dragging');
   $('#ly-list').classList.add('reordering');
+  holdScroll(true);
 }
 function lyPaint(){
   if(!lyDrag || !lyDrag.on) return;
@@ -2807,9 +2858,13 @@ function lyEnd(){
   const d = lyDrag;
   lyDrag = null;
   if(!d.on) return;
+  holdScroll(false);
   $('#ly-list').classList.remove('reordering');
   d.metrics.forEach(x => { x.el.style.transform = ''; });
   d.row.classList.remove('dragging');
+  /* a drag that ends over a row's switch must not also flip it */
+  lySuppressClick = true;
+  setTimeout(() => { lySuppressClick = false; }, 60);
   if(d.to === d.from) return;
   const cur = layoutRows();
   commitLayout({
@@ -2837,9 +2892,7 @@ function initLayoutReorder(){
     lyPaint();
   });
   ['pointerup','pointercancel'].forEach(ev => page.addEventListener(ev, lyEnd));
-  /* touch-action cannot change mid-gesture, so page scrolling is held off for
-     as long as a drag is actually running */
-  page.addEventListener('touchmove', e => { if(lyDrag && lyDrag.on) e.preventDefault(); }, {passive:false});
+  window.addEventListener('pointerup', lyEnd);
 }
 
 const sw = on => `<span class="sw${on ? ' on' : ''}"><i></i></span>`;
