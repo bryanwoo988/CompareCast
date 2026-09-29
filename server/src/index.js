@@ -55,6 +55,11 @@ async function handle(request, env){
   }
 
   const r = validateSub(body);
+  /* A payload whose plots have no switched-on window left is the device
+     saying "send me nothing". Rejecting it used to leave the previous record
+     — and its schedule — in place, still sending. */
+  if(!r.ok && r.error === 'noBlocks' && typeof body.id === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(body.id))
+    await env.KV.delete('dev:' + body.id);
   /* the error names a field, never echoes its value */
   if(!r.ok) return reply(env, 400, {error:r.error});
   const key = 'dev:' + r.value.id;
@@ -69,19 +74,21 @@ async function handle(request, env){
 export const scheduled = async (event, env) => {
   const now = new Date();
   const run = {
-    cache:new Map(), seen:new Set(),
-    fetchJson:url => fetch(url).then(r => (r.ok ? r.json() : null))
+    cache:new Map(), seen:new Set(), stats:{noForecast:0},
+    /* a hung Open-Meteo request would otherwise hold the whole run */
+    fetchJson:url => fetch(url, {signal:AbortSignal.timeout(10000)}).then(r => (r.ok ? r.json() : null))
   };
   let cursor, devices = 0, sent = 0, failed = 0;
   do{
     const page = await env.KV.list({prefix:'dev:', cursor});
     for(const k of page.keys){
-      const raw = await env.KV.get(k.name);
-      if(!raw) continue;
-      let dev;
-      try{ dev = JSON.parse(raw); }catch(e){ continue; }
-      devices++;
+      /* everything per device inside the try: one bad read used to end the
+         run, and the devices listed after it lost their reminders every time */
       try{
+        const raw = await env.KV.get(k.name);
+        if(!raw) continue;
+        const dev = JSON.parse(raw);
+        devices++;
         const rep = await runDevice(env, dev, now, run);
         sent += rep.filter(x => x.result === 'sent').length;
         failed += rep.filter(x => x.result === 'failed').length;
@@ -90,7 +97,7 @@ export const scheduled = async (event, env) => {
     cursor = page.list_complete ? null : page.cursor;
   } while(cursor);
   /* counts only: titles and bodies name the user's plots */
-  console.log('cron done, devices', devices, 'sent', sent, 'failed', failed);
+  console.log('cron done, devices', devices, 'sent', sent, 'failed', failed, 'no forecast', run.stats.noForecast);
 };
 
 export default {

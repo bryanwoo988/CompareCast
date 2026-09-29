@@ -8,3 +8,4 @@ server/.wrangler/
 .claude-flow/
 .swarm/
 ruvector.db
+.claude/

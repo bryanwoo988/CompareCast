@@ -43,7 +43,9 @@ async function sendOne(env, dev, payload, post){
       sub,
       {subject:env.VAPID_SUBJECT, publicKey:env.VAPID_PUBLIC_KEY, privateKey:env.VAPID_PRIVATE_KEY}
     );
-    res = await send(dev.sub.endpoint, {method:built.method, headers:built.headers, body:built.body});
+    /* never followed: the request carries a JWT signed with this app's key,
+       and a push service has no business sending it on somewhere else */
+    res = await send(dev.sub.endpoint, {method:built.method, headers:built.headers, body:built.body, redirect:'manual'});
   }catch(e){
     /* never log the payload or the endpoint — both identify the user's plots */
     console.log('push error', e && e.name);

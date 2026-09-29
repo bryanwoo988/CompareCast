@@ -8,17 +8,17 @@ const L = {
   zh:{
     morning:'早上', afternoon:'下午', evening:'晚上', night:'凌晨',
     rainProb:'降雨概率', rainSum:'降雨', tMax:'最高', tMin:'最低', wind:'风', gust:'阵风',
-    sep:' · ', colon:'：', many:(w, n) => `${w} · ${n} 个地块`
+    noData:'暂时查不到预报', sep:' · ', colon:'：', many:(w, n) => `${w} · ${n} 个地块`
   },
   en:{
     morning:'Morning', afternoon:'Afternoon', evening:'Evening', night:'Overnight',
     rainProb:'Rain', rainSum:'Rainfall', tMax:'High', tMin:'Low', wind:'Wind', gust:'Gusts',
-    sep:' · ', colon:': ', many:(w, n) => `${w} · ${n} locations`
+    noData:'forecast unavailable right now', sep:' · ', colon:': ', many:(w, n) => `${w} · ${n} locations`
   },
   ms:{
     morning:'Pagi', afternoon:'Petang', evening:'Malam', night:'Dini hari',
     rainProb:'Hujan', rainSum:'Jumlah hujan', tMax:'Tertinggi', tMin:'Terendah', wind:'Angin', gust:'Tiupan',
-    sep:' · ', colon:': ', many:(w, n) => `${w} · ${n} lokasi`
+    noData:'ramalan tidak dapat diperoleh buat masa ini', sep:' · ', colon:': ', many:(w, n) => `${w} · ${n} lokasi`
   }
 };
 
@@ -40,9 +40,15 @@ function fmt(key, v, units){
   return round(v * (WIND_PER_KMH[u] || 1), 0) + ' ' + WIND_LBL[u];
 }
 
+/* A plot whose forecast could not be fetched on any attempt within the
+   grace hour. Said out loud, because in threshold mode silence would read
+   as "nothing to worry about". */
+const NO_DATA = Object.freeze({});
+
 /* The figures for one plot in one window, or null when there is nothing
    worth saying — the caller sends nothing rather than a line of blanks. */
 function partsFor(d, win, stats, hits, rules, u){
+  if(stats === NO_DATA) return d.noData;
   const parts = [];
   if(win.mode === 'threshold'){
     (hits || []).forEach(k => {
@@ -77,12 +83,16 @@ function messageForWindow(lang, win, entries, rules, units){
   const d = L[lang] || L.en;
   const u = units || {};
   const lines = (entries || [])
-    .map(e => ({name:e.name, text:partsFor(d, win, e.stats || {}, e.hits, rules, u)}))
+    .map(e => ({id:e.id, name:e.name,
+                text:partsFor(d, win, e.noData ? NO_DATA : (e.stats || {}), e.hits, rules, u)}))
     .filter(x => x.text);
   if(!lines.length) return null;
   const label = d[win.id] || win.id;
-  if(lines.length === 1) return {title:lines[0].name, body:label + d.sep + lines[0].text};
-  return {title:d.many(label, lines.length), body:lines.map(x => x.name + d.colon + x.text).join('\n')};
+  /* ids of the plots actually mentioned, so a one-plot reminder can open
+     that plot when tapped */
+  const ids = lines.map(x => x.id).filter(Boolean);
+  if(lines.length === 1) return {title:lines[0].name, body:label + d.sep + lines[0].text, ids};
+  return {title:d.many(label, lines.length), body:lines.map(x => x.name + d.colon + x.text).join('\n'), ids};
 }
 
 /* the single-plot form, kept for the tests that pin the wording */

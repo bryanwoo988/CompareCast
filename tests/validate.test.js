@@ -1,5 +1,8 @@
 const {test} = require('node:test');
 const assert = require('node:assert');
+/* test-only key material in the real encoded shapes */
+const K_P = 'BIJ7_6fCuHIGqiaM98xjRy_s5QgJ3ea8xuf5Fngx1iJo5O8_DuaKulY-oFHX-fdRezaLS0t6hrvFS6hoROxcaso';
+const K_A = 'azNDjVHPx0DLt25K4u5NMg';
 const {validateSub} = require('../server/src/validate.js');
 
 const NOTIFY = {
@@ -13,7 +16,7 @@ const NOTIFY = {
 };
 const ok = over => Object.assign({
   id:'abcdefgh1234', tz:'Asia/Kuala_Lumpur', lang:'zh',
-  sub:{endpoint:'https://fcm.googleapis.com/fcm/send/xyz', keys:{p256dh:'p', auth:'a'}},
+  sub:{endpoint:'https://fcm.googleapis.com/fcm/send/xyz', keys:{p256dh:K_P, auth:K_A}},
   notify:NOTIFY,
   blocks:[{id:'l1', name:'Alpha', lat:3.139, lon:101.687, windows:['morning']}]
 }, over || {});
@@ -33,7 +36,7 @@ test('时区非法被拒', () => {
   assert.strictEqual(validateSub(ok({tz:'Not/AZone'})).ok, false);
 });
 test('endpoint 非 https 被拒', () => {
-  assert.strictEqual(validateSub(ok({sub:{endpoint:'http://x/y', keys:{p256dh:'p', auth:'a'}}})).ok, false);
+  assert.strictEqual(validateSub(ok({sub:{endpoint:'http://x/y', keys:{p256dh:K_P, auth:K_A}}})).ok, false);
 });
 test('缺少推送密钥被拒', () => {
   assert.strictEqual(validateSub(ok({sub:{endpoint:'https://x/y', keys:{}}})).ok, false);
@@ -85,7 +88,7 @@ test('地块时区非法时丢弃而不是让整条请求失败', () => {
    The cron POSTs to whatever endpoint is stored, carrying a JWT signed with
    the app's VAPID key, so an arbitrary https URL would make this worker a
    relay to any host anyone cared to register. */
-const withEndpoint = e => ok({sub:{endpoint:e, keys:{p256dh:'p', auth:'a'}}});
+const withEndpoint = e => ok({sub:{endpoint:e, keys:{p256dh:K_P, auth:K_A}}});
 test('Apple / Google / Mozilla / Microsoft 的推送服务都接受', () => {
   ['https://web.push.apple.com/QK4x',
    'https://fcm.googleapis.com/fcm/send/abc',
@@ -133,4 +136,15 @@ test('不认识的模式丢掉，按 Best Match 处理', () => {
 });
 test('地块 id 过长被拒', () => {
   assert.strictEqual(validateSub(ok({blocks:[{id:'x'.repeat(65), name:'A', lat:1, lon:2, windows:['morning']}]})).ok, false);
+});
+
+/* keys used to be checked only for being non-empty strings; the cron would
+   then fail to encrypt for them on every run */
+test('推送密钥必须是真正的格式', () => {
+  const withKeys = (p, a) => ok({sub:{endpoint:'https://fcm.googleapis.com/fcm/send/x', keys:{p256dh:p, auth:a}}});
+  assert.strictEqual(validateSub(withKeys(K_P, K_A)).ok, true);
+  assert.strictEqual(validateSub(withKeys('p', K_A)).ok, false, 'p256dh 太短');
+  assert.strictEqual(validateSub(withKeys(K_P, 'a')).ok, false, 'auth 太短');
+  assert.strictEqual(validateSub(withKeys(K_P.replace('B', 'A'), K_A)).ok, false, '不是未压缩的 P-256 点');
+  assert.strictEqual(validateSub(withKeys(K_P + '!!', K_A)).ok, false, '不是 base64url');
 });
