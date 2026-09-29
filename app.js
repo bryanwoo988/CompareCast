@@ -87,7 +87,7 @@ zh:{
   tForecast:'预报', tCompare:'对比', tAccuracy:'准度',
   pickModel:'预报模式', pickModelD:'选择由哪个模式驱动这个地点。',
   unavail:'这个地点没有该模式数据', avail:'可用',
-  now:'当前实况', feels:'体感', humid:'湿度', wind:'风速', gust:'阵风', press:'气压',
+  now:'当前实况', humid:'湿度', wind:'风速', gust:'阵风', press:'气压',
   rainToday:'今日降雨', rainChance:'降雨概率', uv:'紫外线', dir:'风向', sunrise:'日出', sunset:'日落',
   probSrc:'降雨概率与紫外线来自 Best Match 混合模式，因为有几个模式不输出这两项。',
   next24:'未来 24 小时', days10:'未来 10 天', today:'今天', now2:'现在',
@@ -142,7 +142,7 @@ en:{
   tForecast:'Forecast', tCompare:'Compare', tAccuracy:'Accuracy',
   pickModel:'Forecast model', pickModelD:'Choose which model powers this location.',
   unavail:'No data for this location', avail:'Available',
-  now:'Right now', feels:'Feels like', humid:'Humidity', wind:'Wind', gust:'Gusts', press:'Pressure',
+  now:'Right now', humid:'Humidity', wind:'Wind', gust:'Gusts', press:'Pressure',
   rainToday:'Rain today', rainChance:'Rain chance', uv:'UV index', dir:'Direction', sunrise:'Sunrise', sunset:'Sunset',
   probSrc:'Rain chance and UV come from the blended Best Match model, because several models do not produce them.',
   next24:'Next 24 hours', days10:'Next 10 days', today:'Today', now2:'Now',
@@ -197,7 +197,7 @@ ms:{
   tForecast:'Ramalan', tCompare:'Banding', tAccuracy:'Ketepatan',
   pickModel:'Model ramalan', pickModelD:'Pilih model yang menjana lokasi ini.',
   unavail:'Tiada data untuk lokasi ini', avail:'Ada',
-  now:'Sekarang', feels:'Terasa', humid:'Kelembapan', wind:'Angin', gust:'Tiupan', press:'Tekanan',
+  now:'Sekarang', humid:'Kelembapan', wind:'Angin', gust:'Tiupan', press:'Tekanan',
   rainToday:'Hujan hari ini', rainChance:'Peluang hujan', uv:'Indeks UV', dir:'Arah', sunrise:'Matahari naik', sunset:'Matahari turun',
   probSrc:'Peluang hujan dan UV datang dari model gabungan Best Match, kerana beberapa model tidak mengeluarkannya.',
   next24:'24 jam akan datang', days10:'10 hari akan datang', today:'Hari ini', now2:'Sekarang',
@@ -357,7 +357,7 @@ const unitParams = () => ({
 /* Variables every model in the list supports. Open-Meteo returns HTTP 400 —
    not nulls — when a model cannot produce a requested variable, so anything
    model-specific (precipitation_probability, uv_index) is fetched separately. */
-const SAFE_CURRENT = 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,surface_pressure,precipitation,is_day';
+const SAFE_CURRENT = 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,surface_pressure,precipitation,is_day';
 const MIN_CURRENT  = 'temperature_2m,wind_speed_10m,is_day';
 const SAFE_HOURLY  = 'temperature_2m,precipitation,weather_code,wind_speed_10m,is_day';
 const MIN_HOURLY   = 'temperature_2m,precipitation';
@@ -1198,7 +1198,7 @@ function paintHead(){
     const w = wmo(code);
     $('#d-icon').innerHTML = icon(iconFor(code, day), 110);
     $('#d-temp').innerHTML = `${Math.round(pick(c,'temperature_2m',m.id,true))}<span style="font-size:30px;letter-spacing:-1px">${uT()}</span>`;
-    $('#d-cond').textContent = `${w[S.lang]} · ${t('feels')} ${fT(pick(c,'apparent_temperature',m.id,true))}`;
+    $('#d-cond').textContent = w[S.lang];
     if(day === 0) page.classList.add('night');
     else if(w.s === 'rain') page.classList.add('rain');
     else if(w.s === 'cloud') page.classList.add('cloud');
@@ -1331,7 +1331,6 @@ function renderCells(){
   if(today){
     const c = d.current;
     const dir = g(c,'wind_direction_10m');
-    rows.push([t('feels'), nz(g(c,'apparent_temperature')) ? fT(g(c,'apparent_temperature')) : null]);
     rows.push([t('humid'), nz(g(c,'relative_humidity_2m')) ? Math.round(g(c,'relative_humidity_2m')) + '%' : null]);
     rows.push([nz(dir) ? `${t('wind')} · ${t('dir')} ${compass(dir)}` : t('wind'),
                nz(g(c,'wind_speed_10m')) ? fW(g(c,'wind_speed_10m')) : null]);
