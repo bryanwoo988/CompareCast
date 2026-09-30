@@ -10,6 +10,21 @@
 <meta name="apple-mobile-web-app-title" content="天气预测">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
+<!-- iPhone launch images: the same navy and centred icon as the in-page splash,
+     so the phone's own first frame hands over to it without a jump -->
+<link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/apple-splash-1320x2868.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/apple-splash-1206x2622.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/apple-splash-1260x2736.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/apple-splash-1290x2796.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/apple-splash-1179x2556.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/apple-splash-1284x2778.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/apple-splash-1170x2532.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/apple-splash-1125x2436.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/apple-splash-1242x2688.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/apple-splash-828x1792.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/apple-splash-1242x2208.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/apple-splash-750x1334.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/apple-splash-640x1136.png">
 <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
 <link rel="icon" href="icon-512.png" sizes="512x512" type="image/png">
 <title>天气预测 · Predict Weather · Ramalan Cuaca</title>
@@ -22,6 +37,19 @@
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* Splash. The icon sits dead centre, like the iPhone launch image and the
+   Android one drawn from the manifest, so the hand-over does not jump; it
+   fades once the plot list has drawn. If the app never boots, the animation
+   still takes it away after six seconds rather than leaving a stuck screen. */
+#splash{position:fixed;inset:0;z-index:3000;background:#0e1430;pointer-events:none;
+  transition:opacity .35s ease,visibility .35s;animation:sp-away 0s linear 6s forwards}
+#splash img{position:absolute;left:50%;top:50%;width:112px;height:112px;margin:-56px 0 0 -56px;animation:sp-in .6s cubic-bezier(.2,.8,.3,1) both}
+#splash .sp-name{position:absolute;left:0;right:0;top:calc(50% + 78px);text-align:center;color:#fff;
+  font:600 22px/1.3 -apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif;letter-spacing:.5px;animation:sp-up .6s .12s cubic-bezier(.2,.8,.3,1) both}
+html.booted #splash{opacity:0;visibility:hidden}
+@keyframes sp-in{from{transform:scale(.92)}to{transform:none}}
+@keyframes sp-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes sp-away{to{opacity:0;visibility:hidden}}
 html,body{height:100%;margin:0}
 /* pinch-zoom is allowed again for anyone who needs the text larger; this only
    stops a quick double tap on a button from zooming the page instead */
@@ -151,6 +179,20 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
 .nrow .go{color:var(--dim);font-size:20px}
 .nrow[disabled]{opacity:.5}
 .nbody{white-space:pre-line;font-size:15px;line-height:1.6;margin:0 2px 12px}
+.upd-bar{position:fixed;left:12px;right:12px;bottom:calc(14px + var(--safe-b));z-index:960;display:flex;align-items:center;gap:10px;
+  padding:10px 10px 10px 16px;border-radius:18px;background:#f4f6ff;color:#141b3d;font-size:14.5px;font-weight:600;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);transform:translateY(160%);transition:transform .35s cubic-bezier(.2,.8,.3,1)}
+.upd-bar.on{transform:none}
+.upd-bar span{flex:1;min-width:0}
+.upd-go{min-height:40px;padding:0 16px;border-radius:13px;background:#141b3d;color:#fff;font-weight:600;font-size:14px}
+.upd-x{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:none}
+.upd-x svg{width:18px;height:18px;fill:none;stroke:#141b3d;stroke-width:2.2;stroke-linecap:round}
+.credit{margin:0 0 16px;font-size:15px;font-weight:600;letter-spacing:.3px}
+.share-card{padding:20px 16px 16px;border-radius:20px;background:rgba(255,255,255,.06);text-align:center;margin-bottom:10px}
+/* white all round the code: scanners need the quiet zone, and dark mode must not invert it */
+.qr{display:block;width:200px;height:200px;margin:0 auto 14px;padding:10px;border-radius:16px;background:#fff}
+.share-cap{margin:0 0 4px;font-size:14.5px;line-height:1.5}
+.share-url{margin:0 0 14px;font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums;word-break:break-all}
 .map-load{position:absolute;inset:0;display:none;place-items:center;text-align:center;padding:24px;color:rgba(255,255,255,.85);font-size:15px;z-index:5}
 .map-load.on{display:grid}
 .leaflet-container{background:#0d1330;font-family:inherit}
@@ -676,6 +718,20 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true">
+  <img src="icon-512.png" alt="">
+  <div class="sp-name" id="sp-name">天气预测</div>
+</div>
+<script>
+/* before anything else paints: the splash speaks the language already chosen
+   (or the phone's, on a first launch) */
+(function(){
+  var N = {zh:'天气预测', en:'Predict Weather', ms:'Ramalan Cuaca'}, lang = '';
+  try{ lang = (JSON.parse(localStorage.getItem('predictweather:v2') || '{}') || {}).lang || ''; }catch(e){}
+  if(!N[lang]){ var p = String(navigator.language || '').toLowerCase(); lang = p.indexOf('zh') === 0 ? 'zh' : p.indexOf('ms') === 0 ? 'ms' : p.indexOf('en') === 0 ? 'en' : 'zh'; }
+  document.getElementById('sp-name').textContent = N[lang];
+})();
+</script>
 
 <header class="hdr">
   <div class="hdr-row">
@@ -760,6 +816,13 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
   </div>
   <div class="d-body" id="nt-body"></div>
 </section>
+
+<!-- a newer build is live while the app is in use: offered, never forced -->
+<div class="upd-bar" id="upd-bar" role="status" aria-live="polite">
+  <span id="upd-text"></span>
+  <button class="upd-go" id="upd-go"></button>
+  <button class="upd-x" id="upd-later" aria-label="Later"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</div>
 
 <div class="ptr" id="ptr"><div class="ptr-ring" id="ptr-ring">
   <svg viewBox="0 0 24 24"><path d="M3.6 12a8.4 8.4 0 1 1 2.6 6.1"/><path d="M3.2 6.4v5.2h5.2"/></svg>
@@ -860,6 +923,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 <script src="summary.js"></script>
 <script src="layout.js"></script>
 <script src="reqlogic.js"></script>
+<script src="updatelogic.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
