@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.20.0';
+const APP_VERSION = '3.21.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,16 @@ const APP_VERSION = '3.20.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.21.0',
+   zh:['以后更新不用清缓存、也不用关掉重开：刚打开或回到 App 时自动换成新版本，并回到你原来那一页；正在操作时只在底部提示，不会打断你',
+       '打开 App 时有启动画面',
+       '「关于」里加了 Created by Bryan Woo 和二维码：别人扫一下就能用手机浏览器直接打开这个 App，也可以直接分享链接'],
+   en:['Updates no longer need a cleared cache or a close-and-reopen: the app switches to the new version when it is opened or brought back, and returns you to the page you were on; while you are busy it only offers the update at the bottom, without interrupting',
+       'A splash screen when the app opens',
+       'About now shows Created by Bryan Woo and a QR code: anyone can scan it to open the app straight in a phone browser, or you can share the link'],
+   ms:['Kemas kini tidak lagi perlu cache dikosongkan atau aplikasi ditutup dan dibuka semula: aplikasi bertukar ke versi baharu apabila dibuka atau dikembalikan, dan membawa anda kembali ke halaman tadi; semasa anda sibuk ia hanya menawarkan kemas kini di bawah tanpa mengganggu',
+       'Skrin pembuka apabila aplikasi dibuka',
+       'Perihal kini memaparkan Created by Bryan Woo dan kod QR: sesiapa boleh mengimbasnya untuk membuka aplikasi terus dalam pelayar telefon, atau anda boleh berkongsi pautan']},
   {v:'3.20.0',
    zh:['地块多的时候，提醒改成紧凑排版：按条件分组、一行放好几个地块、最严重的排最前面，弹出来就能看到最要紧的',
        '「每天摘要」的提醒把降雨机率最高的地块排最前面，标题直接写出最高值',
@@ -332,6 +342,8 @@ zh:{
   ntFrom:'起', ntTo:'止', ntAt:'提醒时间', ntCross:'此时段跨天',
   ntTzNote:(z)=>`时间按地块所在时区计算（${z}）`,
   ntModelNote:'提醒里的温度、雨量和风，用的是每个地块自己选的模式；降雨机率来自 Best Match，跟详情页一样。',
+  qrCap:'扫描二维码，就能用手机浏览器直接打开这个 App', qrAlt:'打开这个 App 的二维码', shareApp:'分享 App 链接', shareText:'多模式天气对比，按地块发提醒', linkCopied:'链接已复制',
+  updReady:(v)=>`新版本 ${v} 已准备好`, updNow:'立即更新', updLater:'稍后',
   noticeAt:(w)=>`提醒送达于 ${w}`, noticeMore:(n)=>`还有 ${n} 个地块放不进这条通知，请到地块列表查看。`, noticeGone:'这个地块已经删除',
   mapLoading:'正在载入地图…', mapFail:'地图没载入成功。',
   updAt:(w)=>`更新于 ${w}`, updAgo:(h)=>`${h} 小时前`,
@@ -425,6 +437,8 @@ en:{
   ntFrom:'From', ntTo:'To', ntAt:'Notify at', ntCross:'This window crosses midnight',
   ntTzNote:(z)=>`Times are in each location's own time zone (${z})`,
   ntModelNote:'Reminder temperatures, rainfall and wind use each location\u2019s own model; chance of rain comes from Best Match, as on the detail page.',
+  qrCap:'Scan to open this app straight in a phone browser', qrAlt:'QR code that opens this app', shareApp:'Share the app link', shareText:'Multi-model weather comparison with per-plot reminders', linkCopied:'Link copied',
+  updReady:(v)=>`Version ${v} is ready`, updNow:'Update now', updLater:'Later',
   noticeAt:(w)=>`Delivered ${w}`, noticeMore:(n)=>`${n} more locations did not fit in this notification; see them in the location list.`, noticeGone:'This location has been deleted',
   mapLoading:'Loading the map\u2026', mapFail:'The map did not load.',
   updAt:(w)=>`Updated ${w}`, updAgo:(h)=>`${h} h ago`,
@@ -518,6 +532,8 @@ ms:{
   ntFrom:'Dari', ntTo:'Hingga', ntAt:'Beritahu pada', ntCross:'Tempoh ini melepasi tengah malam',
   ntTzNote:(z)=>`Masa mengikut zon waktu lokasi itu sendiri (${z})`,
   ntModelNote:'Suhu, hujan dan angin dalam peringatan menggunakan model setiap lokasi; kebarangkalian hujan dari Best Match, sama seperti halaman butiran.',
+  qrCap:'Imbas untuk membuka aplikasi ini terus dalam pelayar telefon', qrAlt:'Kod QR untuk membuka aplikasi ini', shareApp:'Kongsi pautan aplikasi', shareText:'Perbandingan cuaca pelbagai model dengan peringatan setiap petak', linkCopied:'Pautan disalin',
+  updReady:(v)=>`Versi ${v} sudah sedia`, updNow:'Kemas kini', updLater:'Nanti',
   noticeAt:(w)=>`Dihantar ${w}`, noticeMore:(n)=>`${n} lagi lokasi tidak muat dalam pemberitahuan ini; lihat dalam senarai lokasi.`, noticeGone:'Lokasi ini telah dipadam',
   mapLoading:'Memuatkan peta\u2026', mapFail:'Peta gagal dimuatkan.',
   updAt:(w)=>`Dikemas kini ${w}`, updAgo:(h)=>`${h} jam lalu`,
@@ -1162,7 +1178,7 @@ function initReorder(){
    shell is fetched network-first on each launch, but a page already open
    keeps running the code it started with until something makes it look. */
 const PULL_MAX = 90, PULL_TRIGGER = 52, UPDATE_WAIT_MS = 4000;
-let pull = null, refreshing = false, reloadArmed = false;
+let pull = null, refreshing = false;
 
 function pullEls(){ return {box:$('#ptr'), ring:$('#ptr-ring')}; }
 
@@ -1198,29 +1214,97 @@ async function runRefresh(){
     box.style.transform = `translate(-50%, ${PULL_TRIGGER}px)`;
     box.style.opacity = '1';
   }
-  /* the reload, if a new build lands, is driven by the controllerchange
-     handler installed at boot */
-  reloadArmed = true;
-  const checked = checkForUpdate();
+  /* the user asked for fresh data, so a newer build — if there is one — is
+     applied straight away rather than offered */
+  const checked = checkForUpdate({asked:true});
   Object.keys(cache).forEach(k => delete cache[k]);
   renderList();
   loadAll();
   if(D.loc && $('#detail').classList.contains('on')){ D.acc = null; D.ext = null; loadDetail(); }
   await Promise.race([checked, new Promise(r => setTimeout(r, UPDATE_WAIT_MS))]);
   await new Promise(r => setTimeout(r, 400));
-  reloadArmed = false;
   refreshing = false;
   resetPull();
 }
 
-/* force a check against the server; resolves when the check is done, not when
-   a new worker takes over — that arrives as controllerchange */
-function checkForUpdate(){
-  if(!('serviceWorker' in navigator)) return Promise.resolve();
-  return navigator.serviceWorker.getRegistration()
-    .then(reg => reg ? reg.update() : null)
-    .catch(() => null);
+/* ---------- 8d. Updates ----------
+   A new build used to reach an open app only through pull-to-refresh or a
+   close-and-reopen, and an iPhone resumes a home-screen app far more often
+   than it relaunches one — so people cleared their cache to get it. Now the
+   page asks the server which build is live when it opens, whenever it comes
+   back to the screen, and every quarter hour in use; updatelogic.js decides
+   whether to apply it at once or offer it. The service worker revalidates
+   every file with the server, so a reload always brings the new build. */
+let visibleSince = Date.now(), updateReady = null, lastUpdateCheck = 0;
+async function liveVersion(){
+  try{
+    const r = await fetch('./sw.js', {cache:'no-cache'});
+    return r.ok ? parseSwVersion(await r.text()) : null;
+  }catch(e){ return null; }
 }
+async function checkForUpdate(opts){
+  const asked = !!(opts && opts.asked);
+  if(!navigator.onLine) return false;
+  if(!asked && Date.now() - lastUpdateCheck < 60e3) return !!updateReady;
+  lastUpdateCheck = Date.now();
+  /* the worker too, so it is ready with the new files by the time we reload */
+  try{
+    const reg = 'serviceWorker' in navigator && await navigator.serviceWorker.getRegistration();
+    if(reg) reg.update().catch(() => {});
+  }catch(e){}
+  const v = await liveVersion();
+  if(!v || v === APP_VERSION) return false;
+  updateReady = v;
+  actOnUpdate(asked);
+  return true;
+}
+/* someone in the middle of something: a sheet or page open, a field being
+   typed in, a drag, a pull, or a pin being placed on the map */
+function appBusy(){
+  const a = document.activeElement;
+  return !!openSheetId || $('#notify').classList.contains('on') || $('#layout').classList.contains('on')
+    || !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))
+    || !!(drag && drag.on) || !!(lyDrag && lyDrag.on) || !!pull || !!(P && P.on);
+}
+function actOnUpdate(asked){
+  if(!updateReady) return;
+  const what = updateAction({hidden:document.visibilityState !== 'visible',
+                             sinceVisibleMs:Date.now() - visibleSince, busy:appBusy(), asked:!!asked});
+  if(what === 'apply') applyUpdate(false);
+  else if(what === 'banner') showUpdateBar(updateReady);
+}
+/* reload into the new build, back on the same page. An automatic one is
+   tried once per version per ten minutes (updatelogic.js: no reload loops);
+   the user's own tap always goes through. */
+function applyUpdate(byUser){
+  let tried = null;
+  try{ tried = JSON.parse(sessionStorage.getItem('pw:tried') || 'null'); }catch(e){}
+  if(byUser !== true && !mayAutoReload(tried, updateReady, Date.now())){ showUpdateBar(updateReady); return; }
+  try{ sessionStorage.setItem('pw:tried', JSON.stringify({v:updateReady, at:Date.now()})); }catch(e){}
+  try{
+    sessionStorage.setItem('pw:resume', JSON.stringify({
+      loc:$('#detail').classList.contains('on') && D.loc ? D.loc.id : null,
+      day:D.day || 0, map:document.body.classList.contains('map-mode')}));
+  }catch(e){}
+  location.reload();
+}
+function showUpdateBar(v){
+  const bar = $('#upd-bar');
+  if(!bar || bar.classList.contains('on')) return;
+  $('#upd-text').textContent = t('updReady')(v);
+  $('#upd-go').textContent = t('updNow');
+  bar.classList.add('on');
+}
+$('#upd-go').addEventListener('click', () => applyUpdate(true));
+/* "later" only hides the bar: the update still lands the next time the app
+   comes back to the screen */
+$('#upd-later').addEventListener('click', () => $('#upd-bar').classList.remove('on'));
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState !== 'visible') return;
+  visibleSince = Date.now();
+  if(updateReady) actOnUpdate(); else checkForUpdate();
+});
+setInterval(() => { if(document.visibilityState === 'visible') checkForUpdate(); }, 15 * 60e3);
 
 function initPullRefresh(){
   /* Anything laid over the list scrolls itself, and the body behind it is
@@ -1262,17 +1346,6 @@ function initPullRefresh(){
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);
 
-  if('serviceWorker' in navigator){
-    /* controllerchange also fires the first time a worker ever claims this
-       page; only a swap while already controlled means a new build */
-    const hadController = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if(!hadController || !reloadArmed) return;
-      reloadArmed = false;
-      try{ sessionStorage.setItem('pw:updated', '1'); }catch(err){}
-      location.reload();
-    });
-  }
 }
 
 /* ---------- 9. Map ---------- */
@@ -3739,7 +3812,31 @@ function drawInfo(){
       ${SOURCES.map(s => `<a class="src" href="${s.u}" target="_blank" rel="noopener">
         <span style="flex:1"><b>${s.n}</b><small>${s.d[S.lang]}</small></span><span class="go">↗</span></a>`).join('')}
     </div>
-    <div class="group"><h4>${t('about')}</h4><p style="margin-bottom:10px">${t('app')} · ${t('version')} ${APP_VERSION}</p></div>`;
+    <div class="group"><h4>${t('about')}</h4>
+      <p style="margin-bottom:4px">${t('app')} · ${t('version')} ${APP_VERSION}</p>
+      <p class="credit">Created by Bryan Woo</p>
+      <div class="share-card">
+        <img class="qr" src="qr.svg" alt="${esc(t('qrAlt'))}" width="200" height="200">
+        <p class="share-cap">${t('qrCap')}</p>
+        <p class="share-url">${esc(APP_URL.replace(/^https:\/\//, '').replace(/\/$/, ''))}</p>
+        <button class="cta ghost" id="share-app">${t('shareApp')}</button>
+      </div>
+    </div>`;
+  $('#share-app').addEventListener('click', shareApp);
+}
+
+/* Where the app lives. qr.svg encodes exactly this address — regenerate it
+   (README) if the address ever changes. */
+const APP_URL = 'https://bryanwoo988.github.io/CompareCast/';
+/* for someone who is not standing next to you: the phone's own share sheet,
+   or the link copied where there is none */
+async function shareApp(){
+  if(navigator.share){
+    try{ await navigator.share({title:t('app'), text:t('shareText'), url:APP_URL}); }catch(e){}
+    return;
+  }
+  try{ await navigator.clipboard.writeText(APP_URL); toast(t('linkCopied')); }
+  catch(e){ toast(APP_URL); }
 }
 
 /* ---------- 14b. Release notes ----------
@@ -3834,6 +3931,17 @@ window.addEventListener('popstate', () => {
 /* A reminder about a single plot opens that plot when tapped: the service
    worker either opens the app with ?loc= or, if it is already open, sends a
    message. Anything else on screen is closed first so the plot is what shows. */
+/* An update reloads the page; this puts the user back where they were. */
+function resumeAfterUpdate(){
+  let r = null;
+  try{ r = JSON.parse(sessionStorage.getItem('pw:resume') || 'null'); sessionStorage.removeItem('pw:resume'); }catch(e){}
+  if(!r) return;
+  if(r.map) setTab('map');
+  if(r.loc && S.locations.some(l => l.id === r.loc)){
+    openDetail(r.loc);
+    if(r.day > 0) D.day = r.day;
+  }
+}
 function openFromNotice(id){
   if(!id) return;
   try{ history.replaceState(history.state, '', location.pathname); }catch(e){}
@@ -3984,6 +4092,18 @@ function askFirstLanguage(){
   setTimeout(() => show('#sheet-firstlang'), 300);
 }
 
+/* The splash goes once the plot list has drawn — held for a moment at least,
+   so a fast start does not flash it, and removed after its fade. */
+const SPLASH_MIN_MS = 700;
+function hideSplash(){
+  const el = document.getElementById('splash');
+  if(!el) return;
+  setTimeout(() => {
+    document.documentElement.classList.add('booted');
+    setTimeout(() => el.remove(), 450);
+  }, Math.max(0, SPLASH_MIN_MS - performance.now()));
+}
+
 (async function boot(){
   const saved = await store.get(KEY);
   const firstLaunch = !saved;
@@ -3997,14 +4117,20 @@ function askFirstLanguage(){
   loadAll();
   /* a subscription that failed in an earlier session repairs itself here */
   if(S.notify && S.notify.enabled) scheduleSync(4000);
+  hideSplash();
   if(firstLaunch) askFirstLanguage();
   else maybeShowReleaseNotes();
+  /* a page served from the offline copy may be older than the live build */
+  setTimeout(checkForUpdate, 1500);
+  resumeAfterUpdate();
   openFromNotice(new URLSearchParams(location.search).get('loc'));
   if(new URLSearchParams(location.search).get('notice')) openParkedNotice();
   /* the release-notes sheet says this and more, so no toast on top of it */
   try{ sessionStorage.removeItem('pw:updated'); }catch(e){}
   if('serviceWorker' in navigator && location.protocol !== 'file:'){
-    const reg = () => navigator.serviceWorker.register('sw.js').catch(() => {});
+    /* updateViaCache 'none': the browser's own update checks go to the server
+       for sw.js and what it imports, never to its HTTP cache */
+    const reg = () => navigator.serviceWorker.register('sw.js', {updateViaCache:'none'}).catch(() => {});
     if(document.readyState === 'complete') reg();
     else window.addEventListener('load', reg);
   }

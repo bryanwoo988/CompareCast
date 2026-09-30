@@ -1,11 +1,11 @@
 /* 天气预测 · service worker
    Shell is cached so the app opens offline.
    Weather data is NEVER cached — forecasts must always be fresh. */
-const VERSION = 'pw-v3.20.0';
+const VERSION = 'pw-v3.21.0';
 const SHELL = VERSION + '-shell';
 const SHELL_FILES = [
-  './', './index.html', './swpolicy.js', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './summary.js', './layout.js', './reqlogic.js', './app.js', './manifest.webmanifest',
-  './icon-192.png', './icon-512.png', './icon-maskable-512.png',
+  './', './index.html', './swpolicy.js', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './summary.js', './layout.js', './reqlogic.js', './updatelogic.js', './app.js', './manifest.webmanifest',
+  './icon-192.png', './icon-512.png', './icon-maskable-512.png', './qr.svg',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
 ];
@@ -91,7 +91,14 @@ self.addEventListener('fetch', e => {
     const cached = await caches.match(req);
     let timer;
     const timeout = new Promise(r => { timer = setTimeout(() => r(null), NET_TIMEOUT_MS); });
-    const net = fetch(req).then(res => {
+    /* 'no-cache' asks the server every time (a 304 when nothing changed, so it
+       stays cheap). GitHub Pages marks every file max-age=600, and a plain
+       fetch was allowed to answer from the browser's HTTP cache for those ten
+       minutes — "network first" that still served the old build. A navigation
+       request cannot be re-made with options, so it is fetched by URL. */
+    const net = (req.mode === 'navigate'
+        ? fetch(req.url, {cache:'no-cache', credentials:'same-origin'})
+        : fetch(req, {cache:'no-cache'})).then(res => {
       if(res && res.ok) caches.open(SHELL).then(c => c.put(req, res.clone())).catch(() => {});
       return res && res.ok ? res : null;
     }).catch(() => null);

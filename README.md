@@ -63,6 +63,8 @@ node --test tests/*.test.js
 2. 在 `app.js` 的 `RELEASES` 最前面加一条，三种语言都要（`tests/releases.test.js` 检查）。用户下次打开会看到这一条。
 3. 推到 `main`，GitHub Pages 自动部署。改了 `server/` 的话另外 `cd server && npx wrangler deploy`。
 
+**用户不用清缓存、也不用关掉重开**：App 打开时、回到前台时、使用中每 15 分钟，会向服务器确认线上是哪一版（读 `sw.js` 里的版本号，所以每次发版一定要改版本号）。刚打开或刚回到 App 就直接更新，而且回到原来那一页；正在操作时只在底部提示「新版本已准备好」，不打断，下次回到 App 自动更新。更新后会弹出这一版的更新说明。Service Worker 每次都向服务器确认文件（GitHub Pages 的 `max-age=600` 不会再让人拿到旧文件）。
+
 ## 数据来源
 
 | 用途 | 接口 | 说明 |
@@ -115,3 +117,13 @@ node --test tests/*.test.js
 以前的做法（用预报接口的 `past_days`）量到的是各模式的起始分析，不是预报能力：同一段时间在吉隆坡，旧方法把 ECMWF 排第一，真正的提前 1 天预报是 GFS 第一、ECMWF 第三。
 
 限制：ERA5 是再分析，不是园区实测，也由 ECMWF 制作、可能对 ECMWF 略有利；样本只有一周多，是参考不是排名。数据读不到时会改成「与多模式共识的偏离」，界面上写明那是一致度不是准确度。
+
+## 启动画面与二维码
+
+- **启动画面**：`index.html` 最前面的 `#splash`（深蓝底、图标置中、下面是 App 名字），列表画好后淡出。iPhone 另外用 `splash/` 里 13 张启动图（同样的深蓝底和置中图标，每种 iPhone 屏幕一张），让手机自己的第一帧和网页接得上。Android 用 manifest 的 `background_color` 和图标自己生成。
+- **二维码**：`qr.svg` 编码的是 `app.js` 里的 `APP_URL`。网址改了要重新生成：
+
+  ```bash
+  npx qrcode -t svg -e M -q 2 -o qr.svg "https://<用户名>.github.io/<仓库名>/"
+  ```
+
