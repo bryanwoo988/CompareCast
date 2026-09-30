@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.19.0';
+const APP_VERSION = '3.20.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,16 @@ const APP_VERSION = '3.19.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.20.0',
+   zh:['地块多的时候，提醒改成紧凑排版：按条件分组、一行放好几个地块、最严重的排最前面，弹出来就能看到最要紧的',
+       '「每天摘要」的提醒把降雨机率最高的地块排最前面，标题直接写出最高值',
+       '点开提醒会进到 App 里的一页，列出这条提醒涵盖的每个地块和完整数字，点任何一个地块就能进去看'],
+   en:['With many locations, reminders are now compact: grouped by limit, several locations to a line, worst first, so the banner shows what matters most',
+       'Daily summary reminders put the wettest location first and show the peak in the title',
+       'Tapping a reminder opens a page in the app listing every location it covers with the full figures; tap any one to open it'],
+   ms:['Dengan banyak lokasi, peringatan kini padat: dikumpul mengikut had, beberapa lokasi sebaris, paling teruk dahulu, jadi sepanduk menunjukkan yang paling penting',
+       'Peringatan ringkasan harian meletakkan lokasi paling basah di hadapan dan menunjukkan nilai tertinggi dalam tajuk',
+       'Mengetik peringatan membuka halaman dalam aplikasi yang menyenaraikan setiap lokasi berserta angka penuh; ketik mana-mana untuk membukanya']},
   {v:'3.19.0',
    zh:['「模式准度」改成真正的预报准度：比较各模式提前 1 天、提前 3 天的预报。以前量到的是起始分析，会把排名排错——在吉隆坡，旧方法排第一的 ECMWF，真正的提前 1 天预报只排第三',
        '每张卡和详情页都写着「更新于几点」；超过三小时的数据会变灰并写明多久以前。App 回到前台时，超过半小时的数据会自动重新读取',
@@ -322,6 +332,7 @@ zh:{
   ntFrom:'起', ntTo:'止', ntAt:'提醒时间', ntCross:'此时段跨天',
   ntTzNote:(z)=>`时间按地块所在时区计算（${z}）`,
   ntModelNote:'提醒里的温度、雨量和风，用的是每个地块自己选的模式；降雨机率来自 Best Match，跟详情页一样。',
+  noticeAt:(w)=>`提醒送达于 ${w}`, noticeMore:(n)=>`还有 ${n} 个地块放不进这条通知，请到地块列表查看。`, noticeGone:'这个地块已经删除',
   mapLoading:'正在载入地图…', mapFail:'地图没载入成功。',
   updAt:(w)=>`更新于 ${w}`, updAgo:(h)=>`${h} 小时前`,
   saveFail:'保存失败：手机储存空间可能已满，刚才的更改可能没有存下来。',
@@ -414,6 +425,7 @@ en:{
   ntFrom:'From', ntTo:'To', ntAt:'Notify at', ntCross:'This window crosses midnight',
   ntTzNote:(z)=>`Times are in each location's own time zone (${z})`,
   ntModelNote:'Reminder temperatures, rainfall and wind use each location\u2019s own model; chance of rain comes from Best Match, as on the detail page.',
+  noticeAt:(w)=>`Delivered ${w}`, noticeMore:(n)=>`${n} more locations did not fit in this notification; see them in the location list.`, noticeGone:'This location has been deleted',
   mapLoading:'Loading the map\u2026', mapFail:'The map did not load.',
   updAt:(w)=>`Updated ${w}`, updAgo:(h)=>`${h} h ago`,
   saveFail:'Could not save: the phone\u2019s storage may be full, so the last change may not have been kept.',
@@ -506,6 +518,7 @@ ms:{
   ntFrom:'Dari', ntTo:'Hingga', ntAt:'Beritahu pada', ntCross:'Tempoh ini melepasi tengah malam',
   ntTzNote:(z)=>`Masa mengikut zon waktu lokasi itu sendiri (${z})`,
   ntModelNote:'Suhu, hujan dan angin dalam peringatan menggunakan model setiap lokasi; kebarangkalian hujan dari Best Match, sama seperti halaman butiran.',
+  noticeAt:(w)=>`Dihantar ${w}`, noticeMore:(n)=>`${n} lagi lokasi tidak muat dalam pemberitahuan ini; lihat dalam senarai lokasi.`, noticeGone:'Lokasi ini telah dipadam',
   mapLoading:'Memuatkan peta\u2026', mapFail:'Peta gagal dimuatkan.',
   updAt:(w)=>`Dikemas kini ${w}`, updAgo:(h)=>`${h} jam lalu`,
   saveFail:'Gagal simpan: storan telefon mungkin penuh, jadi perubahan terakhir mungkin tidak disimpan.',
@@ -3830,9 +3843,58 @@ function openFromNotice(id){
   if($('#layout').classList.contains('on')) closeLayout();
   openDetail(id);
 }
+/* A reminder about several plots, shown in full. The banner only ever shows
+   its first few lines, whatever the phone; this page lists every plot the
+   reminder covered with its complete figures, worst first, each one a way
+   into that plot. */
+function showNotice(n){
+  if(!n || typeof n !== 'object') return;
+  if(openSheetId) closeSheetNow();
+  if($('#notify').classList.contains('on')) closeNotify();
+  if($('#layout').classList.contains('on')) closeLayout();
+  $('#notice-title').textContent = String(n.title || '');
+  const when = typeof n.at === 'number'
+    ? new Date(n.at).toLocaleString(locale(), {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false}) : '';
+  let html = when ? `<p class="nt-when">${esc(t('noticeAt')(when))}</p>` : '';
+  const rows = Array.isArray(n.detail) ? n.detail.filter(x => x && typeof x === 'object') : [];
+  if(rows.length){
+    html += rows.map(x => {
+      const here = S.locations.some(l => l.id === x.id);
+      return `<button class="nrow" data-notice-loc="${esc(String(x.id || ''))}"${here ? '' : ' disabled'}>
+        <span class="nt"><b>${esc(String(x.name || ''))}</b><small>${esc(here ? String(x.text || '') : t('noticeGone'))}</small></span>
+        ${here ? '<span class="go">›</span>' : ''}</button>`;
+    }).join('');
+  } else {
+    /* sent before reminders carried the full detail: the text is all there is */
+    html += `<p class="nbody">${esc(String(n.body || ''))}</p>`;
+  }
+  if(n.more > 0) html += `<p class="nt-note">${esc(t('noticeMore')(n.more))}</p>`;
+  $('#notice-body').innerHTML = html;
+  $$('#notice-body [data-notice-loc]').forEach(b => b.addEventListener('click', () => {
+    const id = b.dataset.noticeLoc;
+    closeSheetNow();
+    if(S.locations.some(l => l.id === id)) openDetail(id);
+  }));
+  show('#sheet-notice');
+}
+$('#notice-done').addEventListener('click', hide);
+/* opened by tapping a reminder while the app was closed: the service worker
+   parked it, because it is too long for a URL */
+async function openParkedNotice(){
+  try{ history.replaceState(history.state, '', location.pathname); }catch(e){}
+  try{
+    const c = await caches.open('pw-notice'), r = await c.match('./__notice');
+    if(!r) return;
+    const n = await r.json();
+    await c.delete('./__notice');
+    showNotice(n);
+  }catch(e){}
+}
 if('serviceWorker' in navigator)
   navigator.serviceWorker.addEventListener('message', e => {
-    if(e.data && e.data.type === 'open-loc') openFromNotice(String(e.data.loc || ''));
+    if(!e.data) return;
+    if(e.data.type === 'open-loc') openFromNotice(String(e.data.loc || ''));
+    if(e.data.type === 'open-notice') showNotice(e.data.notice);
   });
 
 /* Whatever storage handed back, made safe to run on. Broken JSON was always
@@ -3938,6 +4000,7 @@ function askFirstLanguage(){
   if(firstLaunch) askFirstLanguage();
   else maybeShowReleaseNotes();
   openFromNotice(new URLSearchParams(location.search).get('loc'));
+  if(new URLSearchParams(location.search).get('notice')) openParkedNotice();
   /* the release-notes sheet says this and more, so no toast on top of it */
   try{ sessionStorage.removeItem('pw:updated'); }catch(e){}
   if('serviceWorker' in navigator && location.protocol !== 'file:'){
