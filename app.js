@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.21.0';
+const APP_VERSION = '3.21.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.21.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.21.1',
+   zh:['拿掉了下雨、太阳、云和星星的背景动画，比较省电；每种天气的背景颜色照旧，启动画面也保留'],
+   en:['Removed the rain, sun, cloud and star background animations to save battery; each weather keeps its background colour, and the splash screen stays'],
+   ms:['Animasi latar hujan, matahari, awan dan bintang dibuang untuk menjimatkan bateri; warna latar setiap cuaca kekal, dan skrin pembuka dikekalkan']},
   {v:'3.21.0',
    zh:['以后更新不用清缓存、也不用关掉重开：刚打开或回到 App 时自动换成新版本，并回到你原来那一页；正在操作时只在底部提示，不会打断你',
        '打开 App 时有启动画面',
