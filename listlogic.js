@@ -35,4 +35,29 @@ function pullOffset(dy, max){
   return max * dy / (dy + max);
 }
 
-if(typeof module !== 'undefined') module.exports = {moveItem, targetIndex, pullOffset};
+/* The saved plot list, made safe to draw. Storage is read back as whatever
+   JSON it holds, and valid JSON of the wrong shape — one null in the list —
+   used to crash startup before anything drew, hiding the good plots too.
+   Entries without a usable id or coordinates are dropped; the rest keep every
+   field they had, with name, region and reminder ticks put in usable shape. */
+function cleanLocations(arr){
+  if(!Array.isArray(arr)) return [];
+  const num = v => typeof v === 'number' ? v : (typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN);
+  const seen = new Set(), out = [];
+  arr.forEach(l => {
+    if(!l || typeof l !== 'object' || Array.isArray(l)) return;
+    if(typeof l.id !== 'string' || !l.id || seen.has(l.id)) return;
+    const lat = num(l.lat), lon = num(l.lon);
+    if(!isFinite(lat) || !isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return;
+    seen.add(l.id);
+    out.push(Object.assign({}, l, {
+      lat, lon,
+      name:typeof l.name === 'string' && l.name.trim() ? l.name : `${lat.toFixed(3)}, ${lon.toFixed(3)}`,
+      region:typeof l.region === 'string' ? l.region : '',
+      notify:Array.isArray(l.notify) ? l.notify.filter(x => typeof x === 'string') : []
+    }));
+  });
+  return out;
+}
+
+if(typeof module !== 'undefined') module.exports = {moveItem, targetIndex, pullOffset, cleanLocations};
