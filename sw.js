@@ -1,7 +1,7 @@
 /* 天气预测 · service worker
    Shell is cached so the app opens offline.
    Weather data is NEVER cached — forecasts must always be fresh. */
-const VERSION = 'pw-v3.18.0';
+const VERSION = 'pw-v3.19.0';
 const SHELL = VERSION + '-shell';
 const SHELL_FILES = [
   './', './index.html', './swpolicy.js', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './summary.js', './layout.js', './reqlogic.js', './app.js', './manifest.webmanifest',
@@ -61,8 +61,13 @@ self.addEventListener('fetch', e => {
     /* version-pinned third party: cache wins, refreshed quietly behind it */
     e.respondWith((async () => {
       const cached = await caches.match(req);
+      /* only a response whose status can be read and is a success replaces
+         the cached copy. Opaque ones used to be stored too — and an opaque
+         CDN error cannot be told from a good file, so one bad reply could
+         overwrite a working Leaflet. The page asks with crossorigin, so the
+         real status is always there to check. */
       const net = fetch(req).then(res => {
-        if(res && (res.ok || res.type === 'opaque'))
+        if(res && res.ok)
           caches.open(SHELL).then(c => c.put(req, res.clone())).catch(() => {});
         return res;
       }).catch(() => null);

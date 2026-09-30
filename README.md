@@ -1,28 +1,67 @@
 # 天气预测 · Predict Weather · Ramalan Cuaca
 
-多模式天气对比 PWA。同一个位置，把 ECMWF、GFS、ICON、GEM、ARPEGE、JMA、UKMO 的预报画在一张图上比较。
+多模式天气对比 PWA。同一个位置，把 ECMWF、GFS、ICON、GEM、ARPEGE、JMA、UKMO 的预报画在一张图上比较，并按地块发定时提醒。
 
-## 上传 GitHub Pages
+两部分：
 
-1. 建一个新 repo（例如 `predict-weather`）。
-2. 把这个文件夹里**全部 7 个文件**放进 repo 根目录：
+- **App**（仓库根目录）：纯静态网页，放在 GitHub Pages 上。
+- **提醒服务器**（`server/`）：Cloudflare Worker，存每台手机的提醒设定，每 15 分钟检查一次并发推送。
 
-   ```
-   index.html
-   app.js
-   sw.js
-   manifest.webmanifest
-   icon-192.png
-   icon-512.png
-   icon-maskable-512.png
-   ```
+## 部署 App（GitHub Pages）
 
-3. Settings → Pages → Source 选 `Deploy from a branch`，Branch 选 `main` / `/ (root)`，Save。
-4. 等一两分钟，打开 `https://<你的用户名>.github.io/predict-weather/`。
+1. 把**整个仓库**推到 GitHub，Settings → Pages → Source 选 `Deploy from a branch`，Branch 选 `main` / `/ (root)`。
+2. 等一两分钟，打开 `https://<用户名>.github.io/<仓库名>/`。
 
-必须用 **https**。GPS 定位和 Service Worker 在 http 或用双击打开的本地文件下都不会运作——App 会直接提示你换 https。
+App 运行需要这 15 个文件（都在根目录）。`sw.js` 里的 `SHELL_FILES` 就是这份清单；`tests/shell.test.js` 会检查清单里的文件都存在、`index.html` 加载的每个脚本都在清单里，所以清单不会和代码走样：
 
-装到手机主画面：iPhone Safari 分享 →「加入主画面」；Android Chrome 右上角选单 →「安装应用程序」。
+```
+index.html  app.js  sw.js  manifest.webmanifest
+swpolicy.js  daylogic.js  maplogic.js  listlogic.js  notifylogic.js  summary.js  layout.js  reqlogic.js
+icon-192.png  icon-512.png  icon-maskable-512.png
+```
+
+`server/`、`tests/`、`docs/` 不影响网页，放着也无妨。
+
+必须用 **https**。GPS 定位、Service Worker 和推送在 http 或双击打开的本地文件下都不会运作。
+
+装到手机主画面：iPhone Safari 分享 →「加入主画面」（iPhone 只有从主画面打开才收得到通知）；Android Chrome 右上角选单 →「安装应用程序」。
+
+## 部署提醒服务器（Cloudflare Workers）
+
+需要 Node.js 22 以上和一个 Cloudflare 账号（免费版即可，见下面的限制）。
+
+```bash
+cd server
+npm ci
+npx wrangler login
+```
+
+1. **KV 存储**：`npx wrangler kv namespace create comparecast`，把输出的 `id` 填进 `server/wrangler.toml` 的 `[[kv_namespaces]]`。
+2. **VAPID 密钥**：`npx web-push generate-vapid-keys`。
+   - 公钥填进 `server/wrangler.toml` 的 `VAPID_PUBLIC_KEY`，也填进 `app.js` 的 `VAPID_PUBLIC`（两边必须一样）。
+   - 私钥**绝不写进文件**：`npx wrangler secret put VAPID_PRIVATE_KEY`，按提示贴上。
+3. **其他设定**（`server/wrangler.toml` 的 `[vars]`）：
+   - `ORIGIN`：App 的网址来源，例如 `https://<用户名>.github.io`。别的网站来的请求会被拒绝。
+   - `VAPID_SUBJECT`：联系方式，`mailto:` 开头。推送服务在出问题时会用它联络你。
+4. **部署**：`npx wrangler deploy`。定时任务（`*/15 * * * *`）写在 `wrangler.toml` 里，会一起生效。
+5. 把 Worker 的网址填进 `app.js` 的 `PUSH_API`。
+
+**免费版的限制**：每次定时运行最多 50 个外部请求、10 毫秒 CPU；KV 每天 10 万次读取、1000 次写入。服务器已经为此设计：同一时段的提醒合成一条通知，同一坐标同一模式只取一次预报，设备数量上限 50。家庭规模用免费版足够。
+
+## 测试
+
+```bash
+cd server && npm ci && cd ..
+node --test tests/*.test.js
+```
+
+要先在 `server/` 装好依赖，推送加密的测试才跑得起来。Node 22 上请用 `tests/*.test.js`，`node --test tests/` 会把目录当成模块而失败。
+
+## 发新版
+
+1. `app.js` 的 `APP_VERSION` 和 `sw.js` 的 `VERSION` 一起改（`tests/version.test.js` 检查两边一致）。
+2. 在 `app.js` 的 `RELEASES` 最前面加一条，三种语言都要（`tests/releases.test.js` 检查）。用户下次打开会看到这一条。
+3. 推到 `main`，GitHub Pages 自动部署。改了 `server/` 的话另外 `cd server && npx wrangler deploy`。
 
 ## 数据来源
 
@@ -30,14 +69,14 @@
 |---|---|---|
 | 预报（8 个模式） | `api.open-meteo.com/v1/forecast` | 免费，无需 API key |
 | 城市搜索 | `geocoding-api.open-meteo.com/v1/search` | 同上 |
-| 准度核对基准 | `archive-api.open-meteo.com/v1/archive` | ECMWF ERA5 再分析 |
-| 地图底图 · 卫星 | `server.arcgisonline.com` | Esri World Imagery，免 key |
-| 地图底图 · 街道/暗色 | `basemaps.cartocdn.com` | OpenStreetMap / CARTO |
-| Leaflet | `cdnjs.cloudflare.com` | 地图函式库 |
+| 准度：各模式过去的预报 | `previous-runs-api.open-meteo.com/v1/forecast` | 提前 1 天 / 3 天 |
+| 准度：对照基准 | `archive-api.open-meteo.com/v1/archive`（`models=era5`） | ECMWF ERA5 再分析 |
+| 地图底图（三种） | `server.arcgisonline.com` | Esri，免 key |
+| Leaflet 1.9.4 | `cdnjs.cloudflare.com` | 打开地图时才载入，带完整性校验（SRI） |
 
-三个 Open-Meteo 端点都开放跨域（CORS），浏览器可以直接调用。
+降雨机率和紫外线只有部分模式输出，所以统一来自 Best Match，界面上都有注明。
 
-**为什么没有机场观测站图层**：NOAA aviationweather.gov 的 Data API 文件明写目前不允许跨域访问，从静态网页抓一定被浏览器挡掉。要做这个功能得自己架一个中转代理（Cloudflare Worker 之类）。
+**为什么没有机场观测站图层**：NOAA aviationweather.gov 的 Data API 不允许跨域访问，从静态网页抓一定被浏览器挡掉。要做这个功能得另外架中转代理。
 
 ## 模式代号
 
@@ -52,23 +91,27 @@
 | JMA | `jma_seamless` | 日本气象厅 |
 | UKMO | `ukmo_seamless` | 英国气象局 |
 
+`server/src/models.js` 有同一份清单，`tests/models.test.js` 检查两边一致。
+
 ## Service Worker 的缓存策略
 
-- **缓存**：index.html、app.js、图标、Leaflet 函式库 → 离线也能打开界面。
-- **绝不缓存**：所有天气数据、地理编码、ERA5、地图瓦片 → 预报永远是新的，不会给你看到昨天的数据。
+- **自己的文件**（上面 15 个）：先走网络，拿不到才用缓存。所以每次打开都拿到最新版，没网络也能打开界面。新版安装时这 15 个文件必须全部缓存成功，否则放弃安装、继续用旧版——弱信号下更新到一半，不会把离线版本弄坏。
+- **Leaflet**：固定版本，缓存优先，只有成功的回应才会覆盖缓存。
+- **绝不缓存**：所有天气数据、地理编码、ERA5、地图瓦片。
+- **离线时**：App 开着的时候断网，会继续显示已读到的内容，并写明是几点更新的；没网络时重新打开，就没有预报可看。App 回到前台时，超过半小时的数据会自动重新读取；超过三小时的会变灰并写明多久以前。
 
 ## 地图底图
 
-地图页右上角可切换三种底图，选择会记住：
+地图页右上角可切换三种底图，选择会记住。全部来自 Esri：
 
-- **卫星**（预设）：Esri World Imagery，能看到园区地块、路和河，最适合定位地块。
-- **街道**：CARTO Voyager，路名地名清楚。
-- **暗色**：CARTO Dark，配 App 深色界面，但地形几乎看不见，只适合纯看地点标记。
-
-改了程式后要让旧用户拿到新版：改 `sw.js` 第 4 行的 `VERSION`（例如 `pw-v2.0.1`），旧缓存会自动清掉。
+- **卫星**（预设）：World Imagery，加上 World Boundaries and Places 的地名层。能看到园区地块、路和河，最适合定位地块。
+- **街道**：World Street Map，路名地名清楚。
+- **暗色**：World Dark Gray Canvas，配 App 深色界面，只适合看地点标记。
 
 ## 准度那一页的方法
 
-取过去第 7 天到第 4 天，各模式的逐小时气温，跟 ECMWF ERA5 再分析同一时刻的气温比，算平均绝对误差（MAE）。ERA5 同化了全球地面站、探空和卫星观测，是气象界通用的对照基准。
+对核对区间里的每个整点，取各模式**提前 1 天**和**提前 3 天**对这一刻做的预报（Previous Runs API），跟 ECMWF ERA5 再分析同一时刻的气温比，算平均绝对误差（MAE）。所有模式用同一组整点，按提前 1 天的误差排序。ERA5 大约晚一周发布，所以区间是两周前到六天前，页面上的日期是实际拿到数据的那几天。
 
-限制：ERA5 本身也是模式产品，不是你园区的实测值；样本只有几十小时，是参考不是排名。ERA5 读不到时会自动改成「与多模式共识的偏离」，界面上会写明那是一致度不是准确度。
+以前的做法（用预报接口的 `past_days`）量到的是各模式的起始分析，不是预报能力：同一段时间在吉隆坡，旧方法把 ECMWF 排第一，真正的提前 1 天预报是 GFS 第一、ECMWF 第三。
+
+限制：ERA5 是再分析，不是园区实测，也由 ECMWF 制作、可能对 ECMWF 略有利；样本只有一周多，是参考不是排名。数据读不到时会改成「与多模式共识的偏离」，界面上写明那是一致度不是准确度。

@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.18.0';
+const APP_VERSION = '3.19.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,31 @@ const APP_VERSION = '3.18.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.19.0',
+   zh:['「模式准度」改成真正的预报准度：比较各模式提前 1 天、提前 3 天的预报。以前量到的是起始分析，会把排名排错——在吉隆坡，旧方法排第一的 ECMWF，真正的提前 1 天预报只排第三',
+       '每张卡和详情页都写着「更新于几点」；超过三小时的数据会变灰并写明多久以前。App 回到前台时，超过半小时的数据会自动重新读取',
+       '切换单位或模式时，慢回来的旧数据不会再盖掉新数据（例如卡片卡在 30° 而不是 86°F）',
+       '某个模式在这天没有数据、或只有部分小时时，图表下面会写明；模式之间的差异只用完整一天来比',
+       '存储的资料有一笔坏掉时，App 照样能打开，好的地块都还在',
+       '地图函式库改成打开地图时才载入，列表更快出来；载入失败会提示并可重试',
+       '第一次打开时先选语言；可以放大缩小画面；灰色小字更清楚；按钮更好按',
+       '改名时打的字不会被刷新吃掉；两个分页同时开着不会互相覆盖；存储失败会提示'],
+   en:['\u201cModel accuracy\u201d now measures real forecasts, made 1 and 3 days ahead. It used to measure starting analyses and could rank models wrongly \u2014 in Kuala Lumpur the old method put ECMWF first, while in real 1-day forecasts it came third',
+       'Every card and the detail page say when they were updated; data older than three hours is greyed and says how old. Coming back to the app re-reads anything older than half an hour',
+       'Changing units or model can no longer leave an older reply on screen (e.g. a card stuck on 30\u00b0 instead of 86\u00b0F)',
+       'The chart says when a model has no data, or only part of the day; the spread between models uses full days only',
+       'A damaged entry in saved data no longer stops the app from opening, and the good locations are all still there',
+       'The map library loads when the map is opened, so the list appears sooner; if it fails to load you are told and can retry',
+       'Choose your language on first launch; pinch-zoom works; dim text is easier to read; buttons are easier to tap',
+       'Typing in the rename box is no longer wiped by a refresh; two open tabs no longer overwrite each other; a failed save is reported'],
+   ms:['\u201cKetepatan model\u201d kini mengukur ramalan sebenar, dibuat 1 dan 3 hari lebih awal. Dahulu ia mengukur analisis permulaan dan boleh menyusun model dengan salah \u2014 di Kuala Lumpur kaedah lama meletakkan ECMWF di tempat pertama, sedangkan dalam ramalan 1 hari sebenar ia ketiga',
+       'Setiap kad dan halaman butiran menyatakan masa kemas kini; data lebih tiga jam dikelabukan dan dinyatakan umurnya. Kembali ke aplikasi membaca semula data lebih setengah jam',
+       'Menukar unit atau model tidak lagi meninggalkan jawapan lama di skrin (cth. kad tersekat pada 30\u00b0 bukannya 86\u00b0F)',
+       'Carta menyatakan apabila sesuatu model tiada data atau hanya sebahagian hari; perbezaan antara model menggunakan hari penuh sahaja',
+       'Satu entri rosak dalam data tersimpan tidak lagi menghalang aplikasi dibuka, dan lokasi yang baik masih ada',
+       'Pustaka peta dimuatkan apabila peta dibuka, jadi senarai muncul lebih cepat; jika gagal, anda diberitahu dan boleh cuba lagi',
+       'Pilih bahasa semasa pelancaran pertama; zum cubit berfungsi; teks malap lebih jelas; butang lebih mudah ditekan',
+       'Teks dalam kotak nama tidak lagi hilang semasa segar semula; dua tab tidak lagi menulis ganti satu sama lain; kegagalan simpan dimaklumkan']},
   {v:'3.18.0',
    zh:['跨午夜的提醒时段（例如 22:00–02:00）现在读的是当晚到次日凌晨那几个小时。以前会读错小时',
        '把某个地块用到的时段全部关掉后，服务器上的旧提醒会一并撤掉。以前旧排程会留着继续发',
@@ -297,6 +322,7 @@ zh:{
   ntFrom:'起', ntTo:'止', ntAt:'提醒时间', ntCross:'此时段跨天',
   ntTzNote:(z)=>`时间按地块所在时区计算（${z}）`,
   ntModelNote:'提醒里的温度、雨量和风，用的是每个地块自己选的模式；降雨机率来自 Best Match，跟详情页一样。',
+  mapLoading:'正在载入地图…', mapFail:'地图没载入成功。',
   updAt:(w)=>`更新于 ${w}`, updAgo:(h)=>`${h} 小时前`,
   saveFail:'保存失败：手机储存空间可能已满，刚才的更改可能没有存下来。',
   covNone:(s)=>`这天没有数据：${s}`, covPart:(s)=>`这天只有部分小时，不计入上面的差异：${s}`, covUntil:(d)=>`只到 ${d}`, covHours:(h)=>`${h} 小时`,
@@ -388,6 +414,7 @@ en:{
   ntFrom:'From', ntTo:'To', ntAt:'Notify at', ntCross:'This window crosses midnight',
   ntTzNote:(z)=>`Times are in each location's own time zone (${z})`,
   ntModelNote:'Reminder temperatures, rainfall and wind use each location\u2019s own model; chance of rain comes from Best Match, as on the detail page.',
+  mapLoading:'Loading the map\u2026', mapFail:'The map did not load.',
   updAt:(w)=>`Updated ${w}`, updAgo:(h)=>`${h} h ago`,
   saveFail:'Could not save: the phone\u2019s storage may be full, so the last change may not have been kept.',
   covNone:(s)=>`No data for this day: ${s}`, covPart:(s)=>`Only part of this day, left out of the spread above: ${s}`, covUntil:(d)=>`ends ${d}`, covHours:(h)=>`${h} h`,
@@ -479,6 +506,7 @@ ms:{
   ntFrom:'Dari', ntTo:'Hingga', ntAt:'Beritahu pada', ntCross:'Tempoh ini melepasi tengah malam',
   ntTzNote:(z)=>`Masa mengikut zon waktu lokasi itu sendiri (${z})`,
   ntModelNote:'Suhu, hujan dan angin dalam peringatan menggunakan model setiap lokasi; kebarangkalian hujan dari Best Match, sama seperti halaman butiran.',
+  mapLoading:'Memuatkan peta\u2026', mapFail:'Peta gagal dimuatkan.',
   updAt:(w)=>`Dikemas kini ${w}`, updAgo:(h)=>`${h} jam lalu`,
   saveFail:'Gagal simpan: storan telefon mungkin penuh, jadi perubahan terakhir mungkin tidak disimpan.',
   covNone:(s)=>`Tiada data untuk hari ini: ${s}`, covPart:(s)=>`Hanya sebahagian hari ini, tidak dikira dalam perbezaan di atas: ${s}`, covUntil:(d)=>`hingga ${d}`, covHours:(h)=>`${h} jam`,
@@ -1118,8 +1146,8 @@ function initReorder(){
 /* ---------- 8c. Pull to refresh ----------
    Two jobs on one gesture: re-read the weather, and ask GitHub whether a newer
    build of the app itself exists. The second is the reason this exists — the
-   shell is served cache-first, so an already-open page keeps running the code
-   it started with until something makes it look. */
+   shell is fetched network-first on each launch, but a page already open
+   keeps running the code it started with until something makes it look. */
 const PULL_MAX = 90, PULL_TRIGGER = 52, UPDATE_WAIT_MS = 4000;
 let pull = null, refreshing = false, reloadArmed = false;
 
@@ -1236,6 +1264,50 @@ function initPullRefresh(){
 
 /* ---------- 9. Map ---------- */
 let map, myLayer, mapCentred = false;
+/* Leaflet loads when the map is first opened, not before the app can draw.
+   As a blocking <script> ahead of app.js, a slow CDN held the plot list back
+   by the same delay though the list never uses the map, and a CDN that never
+   answered left `L is not defined` and a blank map (finding B14).
+
+   Integrity-checked: a tampered or truncated copy is refused rather than run,
+   and the crossorigin request it needs is also what lets the service worker
+   see the real status instead of an opaque one. */
+const LEAFLET = {
+  js:{src:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
+      sri:'sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g=='},
+  css:{href:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
+       sri:'sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw=='}
+};
+let leafletLoad = null;
+function loadLeaflet(){
+  if(window.L) return Promise.resolve();
+  if(leafletLoad) return leafletLoad;
+  leafletLoad = new Promise((ok, fail) => {
+    if(!document.querySelector('link[data-leaflet]')){
+      const css = document.createElement('link');
+      css.rel = 'stylesheet'; css.href = LEAFLET.css.href; css.integrity = LEAFLET.css.sri;
+      css.crossOrigin = 'anonymous'; css.dataset.leaflet = '1';
+      document.head.appendChild(css);
+    }
+    const js = document.createElement('script');
+    js.src = LEAFLET.js.src; js.integrity = LEAFLET.js.sri; js.crossOrigin = 'anonymous';
+    js.onload = () => (window.L ? ok() : fail(new Error('leaflet')));
+    js.onerror = () => { js.remove(); fail(new Error('leaflet')); };
+    document.head.appendChild(js);
+  }).catch(e => { leafletLoad = null; throw e; });    // a later tap tries again
+  return leafletLoad;
+}
+function openMap(){
+  if(map){ initMap(); return; }
+  const note = $('#map-load');
+  note.textContent = t('mapLoading'); note.classList.add('on');
+  loadLeaflet().then(() => { note.classList.remove('on'); initMap(); })
+    .catch(() => {
+      note.innerHTML = `${esc(navigator.onLine ? t('mapFail') : t('noNet'))} <button class="retry" id="map-retry">${t('retry')}</button>`;
+      const r = $('#map-retry'); if(r) r.addEventListener('click', openMap);
+    });
+}
+
 function initMap(){
   if(map){ setTimeout(() => map.invalidateSize(), 80); return; }
   const c = S.locations.length ? [S.locations[0].lat, S.locations[0].lon] : [4.2105, 101.9758];
@@ -1348,10 +1420,31 @@ function jumpTo(lat, lon, minZoom){
   map.setView([lat, lon], Math.max(map.getZoom(), minZoom), {animate:false});
 }
 
-/* Same contract as the search sheet's #q: two characters minimum, 350ms debounce,
-   a rising sequence number so a slow reply for an abandoned query cannot paint over
-   a newer one. Deliberately the same rules rather than a second set. */
-let mqTimer, mqSeq = 0;
+/* Place search, shared by the add-location sheet and the map's search bar.
+   They were near-copies (finding: copies drift, so a fix has to reach every
+   one). 350 ms debounce, and the latest query wins: a slow reply for an
+   abandoned query cannot paint over a newer one — nor, now, over an input
+   that was cleared while it was in flight, which both copies allowed. The
+   caller renders; every name it is handed is still untrusted text. */
+const placeReq = makeLatest(), placeTimers = {};
+function cancelPlaceSearch(key){ clearTimeout(placeTimers[key]); placeReq.begin(key); }
+function placeSearch(key, q, on){
+  clearTimeout(placeTimers[key]);
+  const fresh = placeReq.begin(key);
+  placeTimers[key] = setTimeout(async () => {
+    try{
+      const j = await geoSearch(q), rs = (j && j.results) || [];
+      if(!fresh()) return;
+      if(!rs.length) return on.empty();
+      on.results(rs.map(r => ({r, region:[r.admin1, r.country].filter(Boolean).join(', '),
+        at:`${(+r.latitude).toFixed(3)}°, ${(+r.longitude).toFixed(3)}°`})));
+    }catch(e){
+      if(!fresh()) return;
+      on.fail(navigator.onLine ? t('failLoad') : t('noNet'));
+    }
+  }, 350);
+}
+
 function bindMapSearch(){
   const inp = $('#map-q'), out = $('#map-q-out');
   if(!inp || !out || inp.dataset.bound) return;
@@ -1361,22 +1454,18 @@ function bindMapSearch(){
   const msg = txt => { out.className = 'ms-out on'; out.innerHTML = `<p>${txt}</p>`; };
 
   inp.addEventListener('input', e => {
-    clearTimeout(mqTimer);
     const q = e.target.value.trim();
-    if(q.length < 2){ clear(); return; }
+    if(q.length < 2){ cancelPlaceSearch('map'); clear(); return; }
     msg(t('searching'));
-    const mySeq = ++mqSeq;
-    mqTimer = setTimeout(async () => {
-      try{
-        const j = await geoSearch(q), rs = j.results || [];
-        if(mySeq !== mqSeq) return;
-        if(!rs.length){ msg(t('noResult')); return; }
+    placeSearch('map', q, {
+      empty:() => msg(t('noResult')),
+      fail:msg,
+      results:list => {
         out.className = 'ms-out on';
         out.innerHTML = '';
-        rs.slice(0, 6).forEach(r => {
-          const region = [r.admin1, r.country].filter(Boolean).join(', ');
+        list.slice(0, 6).forEach(({r, region, at}) => {
           const b = el(`<button class="ms-row"><span style="flex:1;min-width:0"><b>${esc(r.name)}</b>
-            <small>${esc(region)} · ${r.latitude.toFixed(3)}°, ${r.longitude.toFixed(3)}°</small></span><span class="go">›</span></button>`);
+            <small>${esc(region)} · ${at}</small></span><span class="go">›</span></button>`);
           b.addEventListener('click', () => {
             inp.value = ''; inp.blur(); clear();
             jumpTo(+r.latitude, +r.longitude, 12);
@@ -1384,11 +1473,8 @@ function bindMapSearch(){
           });
           out.appendChild(b);
         });
-      }catch(err){
-        if(mySeq !== mqSeq) return;
-        msg(navigator.onLine ? t('failLoad') : t('noNet'));
       }
-    }, 350);
+    });
   });
 }
 
@@ -1564,32 +1650,25 @@ $('#btn-gps').addEventListener('click', () => {
   }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
 });
 
-let qTimer, qSeq = 0;
 $('#q').addEventListener('input', e => {
-  clearTimeout(qTimer);
   const q = e.target.value.trim(), out = $('#q-out');
-  if(q.length < 2){ out.innerHTML = `<p class="searching">${t('searchEmpty')}</p>`; return; }
-  out.innerHTML = `<p class="searching">${t('searching')}</p>`;
-  const mySeq = ++qSeq;
-  qTimer = setTimeout(async () => {
-    try{
-      const j = await geoSearch(q), rs = j.results || [];
-      if(mySeq !== qSeq) return;
-      if(!rs.length){ out.innerHTML = `<p class="searching">${t('noResult')}</p>`; return; }
+  const note = txt => { out.innerHTML = `<p class="searching">${txt}</p>`; };
+  if(q.length < 2){ cancelPlaceSearch('sheet'); note(t('searchEmpty')); return; }
+  note(t('searching'));
+  placeSearch('sheet', q, {
+    empty:() => note(t('noResult')),
+    fail:note,
+    results:list => {
       out.innerHTML = '';
-      rs.forEach(r => {
-        const region = [r.admin1, r.country].filter(Boolean).join(', ');
+      list.forEach(({r, region, at}) => {
         const b = el(`<button class="result"><span style="flex:1"><b>${esc(r.name)}</b>
-          <small>${esc(region)} · ${r.latitude.toFixed(3)}°, ${r.longitude.toFixed(3)}°</small></span><span class="go">›</span></button>`);
+          <small>${esc(region)} · ${at}</small></span><span class="go">›</span></button>`);
         b.addEventListener('click', () => addLocation({
-          name:r.name, region, lat:+r.latitude.toFixed(5), lon:+r.longitude.toFixed(5)}));
+          name:r.name, region, lat:+(+r.latitude).toFixed(5), lon:+(+r.longitude).toFixed(5)}));
         out.appendChild(b);
       });
-    }catch(e){
-      if(mySeq !== qSeq) return;
-      out.innerHTML = `<p class="searching">${navigator.onLine ? t('failLoad') : t('noNet')}</p>`;
     }
-  }, 350);
+  });
 });
 
 $('#btn-manual').addEventListener('click', () => {
@@ -3564,18 +3643,18 @@ zh:`<h4 class="info-h">这个 App 做什么</h4>
 <ul class="info-l">
 <li><b>预报</b>：主模式的实况、未来 24 小时、10 天。</li>
 <li><b>对比</b>：所有勾选模式画在一张图上。按住图表左右拖，可以读出每个时刻各家的数值。</li>
-<li><b>准度</b>：拿各模式前几天的逐小时气温，跟 ECMWF ERA5 再分析同一时刻的气温相比，算平均绝对误差（MAE）。数值小的那家，那几天在这个位置贴得比较近。</li>
+<li><b>准度</b>：取各模式「提前 1 天」和「提前 3 天」对过去某段时间做的预报，跟 ECMWF ERA5 再分析同一时刻的气温相比，算平均绝对误差（MAE）。所有模式用同一组整点，数字小的那家，在这个位置预报得比较准。</li>
 </ul>
 <h4 class="info-h">准度那一页要怎么看</h4>
-<p class="info-p">对照基准是 ECMWF 的 ERA5 再分析：把全球地面站、探空气球和卫星观测同化进模式后重算出来的历史场，气象界拿它当标准参照。ERA5 有几天滞后，所以核对区间落在 7 天前到 4 天前。</p>
-<p class="info-p">要留意三点。一、这是对<b>过去</b>的核对，不是对未来的保证。二、ERA5 本身也是模式产品，不是你园区里的实测值，它不能代替雨量筒和温度计。三、样本只有几十个小时，只能当参考，不能当模式排名。ERA5 读不到时，这页会自动改成「与共识的偏离」并写明——那是一致度，不是准确度。</p>
+<p class="info-p">对照基准是 ECMWF 的 ERA5 再分析：把全球地面站、探空气球和卫星观测同化进模式后重算出来的历史场，气象界拿它当标准参照。ERA5 大约晚一周才发布，所以核对的是两周前到六天前这一段，页面上写的日期就是实际拿到数据的那几天。</p>
+<p class="info-p">要留意三点。一、这是对<b>过去</b>的核对，不是对未来的保证。二、ERA5 本身也是模式产品，不是你园区里的实测值，不能代替雨量筒和温度计；它由 ECMWF 制作，对 ECMWF 可能略有利。三、样本只有一周多，只能当参考。读不到数据时，这页会自动改成「与共识的偏离」并写明——那是一致度，不是准确度。</p>
 <h4 class="info-h">要注意的限制</h4>
 <ul class="info-l">
 <li>全球模式的格点在 9–25 公里之间，一个格点代表一大片区域，不等于你园区里的实测值。</li>
 <li>热带的对流性阵雨尺度小、变化快，任何模式的降雨量都只能当参考。</li>
 <li>降雨概率只有部分模式输出，所以对比图用的是降雨量，各家都有。</li>
 <li>预报不是观测。要核对实际下了多少雨，还是得看园区的雨量筒。</li>
-<li>App 不缓存天气数据，每次打开都重新读取。离线时只显示上一次读到的内容。</li>
+<li>App 不缓存天气数据。App 开着的时候断网，会继续显示已经读到的内容，并写明是几点更新的；没有网络时重新打开，就没有预报可看。</li>
 </ul>`,
 en:`<h4 class="info-h">What this app does</h4>
 <p class="info-p">For the same spot, different national weather services produce different forecasts. This app draws them on one chart so you can see the disagreement instead of trusting a single source. When models agree, confidence is higher. When they spread apart, leave yourself more margin.</p>
@@ -3590,18 +3669,18 @@ en:`<h4 class="info-h">What this app does</h4>
 <ul class="info-l">
 <li><b>Forecast</b>: current conditions, next 24 hours and 10 days from the main model.</li>
 <li><b>Compare</b>: every ticked model on one chart. Drag across the chart to read each model's value at that time.</li>
-<li><b>Accuracy</b>: each model's hourly temperature over recent past days against ECMWF ERA5 reanalysis at the same hour, scored as mean absolute error.</li>
+<li><b>Accuracy</b>: the forecasts each model made 1 day and 3 days ahead for a recent past stretch, compared with ECMWF ERA5 reanalysis at the same hour and scored as mean absolute error. Every model is scored on the same hours; the smaller figure forecast better at this location.</li>
 </ul>
 <h4 class="info-h">How to read the accuracy tab</h4>
-<p class="info-p">The reference is ECMWF ERA5 reanalysis: a recomputed history of the atmosphere after assimilating surface stations, radiosondes and satellites worldwide. It is the standard reference in meteorology. ERA5 lags by a few days, so the window sits between 7 and 4 days back.</p>
-<p class="info-p">Three things to keep in mind. It checks the <b>past</b> and promises nothing about the future. ERA5 is itself a model product, not a measurement at your plot, so it does not replace your rain gauge and thermometer. And a sample of a few dozen hours is indicative, not a ranking. If ERA5 cannot be read, the tab falls back to distance from the multi-model consensus and says so — that is agreement, not accuracy.</p>
+<p class="info-p">The reference is ECMWF ERA5 reanalysis: a recomputed history of the atmosphere after assimilating surface stations, radiosondes and satellites worldwide. It is the standard reference in meteorology. ERA5 is published about a week late, so the check covers roughly two weeks back to six days back, and the dates shown are the ones that actually came back.</p>
+<p class="info-p">Three things to keep in mind. It checks the <b>past</b> and promises nothing about the future. ERA5 is itself a model product, not a measurement at your plot, so it does not replace your rain gauge and thermometer; it is made by ECMWF and may slightly favour ECMWF. And little more than a week of data is indicative, not a ranking. If the data cannot be read, the tab falls back to distance from the multi-model consensus and says so — that is agreement, not accuracy.</p>
 <h4 class="info-h">Limits worth knowing</h4>
 <ul class="info-l">
 <li>Global models run on 9–25 km grid cells. One cell covers a wide area and is not a measurement at your plot.</li>
 <li>Tropical convective showers are small and fast. Rainfall totals from any model are indicative only.</li>
 <li>Rain probability is produced by only some models, so the compare chart uses rainfall, which all models report.</li>
 <li>A forecast is not an observation. To know what actually fell, read your rain gauge.</li>
-<li>The app never caches weather data. Each open re-reads it. Offline, you see the last data that loaded.</li>
+<li>The app never caches weather data. If the connection drops while it is open, it keeps showing what it already loaded, with the time it was updated; opened with no connection, it has no forecast to show.</li>
 </ul>`,
 ms:`<h4 class="info-h">Apa aplikasi ini buat</h4>
 <p class="info-p">Untuk tempat yang sama, agensi cuaca berbeza memberi ramalan berbeza. Aplikasi ini melukis semuanya dalam satu carta supaya anda nampak jurangnya, bukan hanya percaya satu sumber. Bila model sepakat, keyakinan lebih tinggi. Bila jurang lebar, beri lebih ruang dalam perancangan.</p>
@@ -3616,18 +3695,18 @@ ms:`<h4 class="info-h">Apa aplikasi ini buat</h4>
 <ul class="info-l">
 <li><b>Ramalan</b>: keadaan semasa, 24 jam dan 10 hari akan datang daripada model utama.</li>
 <li><b>Banding</b>: semua model bertanda dalam satu carta. Seret pada carta untuk baca nilai setiap model.</li>
-<li><b>Ketepatan</b>: suhu setiap jam bagi setiap model untuk beberapa hari lepas berbanding analisis semula ERA5 ECMWF pada jam yang sama, dikira sebagai ralat mutlak purata.</li>
+<li><b>Ketepatan</b>: ramalan yang dibuat setiap model 1 hari dan 3 hari lebih awal bagi satu tempoh lepas, dibandingkan dengan analisis semula ERA5 ECMWF pada jam yang sama dan dikira sebagai ralat mutlak purata. Semua model dinilai pada jam yang sama; angka lebih kecil meramal lebih tepat di lokasi ini.</li>
 </ul>
 <h4 class="info-h">Cara baca tab ketepatan</h4>
-<p class="info-p">Rujukannya ialah analisis semula ERA5 ECMWF: sejarah atmosfera yang dikira semula selepas mengasimilasi stesen permukaan, belon radiosonde dan satelit seluruh dunia. Ia rujukan piawai dalam meteorologi. ERA5 lewat beberapa hari, jadi tempoh semakan berada antara 7 hingga 4 hari lepas.</p>
-<p class="info-p">Tiga perkara. Ia menyemak masa <b>lepas</b>, bukan jaminan masa depan. ERA5 sendiri produk model, bukan ukuran di petak anda, jadi ia tidak ganti tolok hujan dan termometer. Sampel beberapa puluh jam hanya panduan, bukan kedudukan rasmi. Jika ERA5 tidak dapat dibaca, tab ini beralih kepada jarak dari konsensus dan menyatakannya — itu persetujuan, bukan ketepatan.</p>
+<p class="info-p">Rujukannya ialah analisis semula ERA5 ECMWF: sejarah atmosfera yang dikira semula selepas mengasimilasi stesen permukaan, belon radiosonde dan satelit seluruh dunia. Ia rujukan piawai dalam meteorologi. ERA5 diterbitkan kira-kira seminggu lewat, jadi semakan meliputi lebih kurang dua minggu hingga enam hari lepas, dan tarikh yang dipaparkan ialah tarikh data yang benar-benar diterima.</p>
+<p class="info-p">Tiga perkara. Ia menyemak masa <b>lepas</b>, bukan jaminan masa depan. ERA5 sendiri produk model, bukan ukuran di petak anda, jadi ia tidak ganti tolok hujan dan termometer; ia dihasilkan oleh ECMWF dan mungkin sedikit memihak kepada ECMWF. Data lebih sedikit daripada dua minggu hanya panduan, bukan kedudukan rasmi. Jika data tidak dapat dibaca, tab ini beralih kepada jarak dari konsensus dan menyatakannya — itu persetujuan, bukan ketepatan.</p>
 <h4 class="info-h">Had yang perlu diingat</h4>
 <ul class="info-l">
 <li>Model global guna sel grid 9–25 km. Satu sel meliputi kawasan luas, bukan ukuran di petak anda.</li>
 <li>Hujan perolakan tropika kecil dan cepat berubah. Jumlah hujan hanya panduan.</li>
 <li>Peluang hujan hanya dikeluarkan sebahagian model, jadi carta banding guna jumlah hujan.</li>
 <li>Ramalan bukan cerapan. Untuk tahu jumlah sebenar, baca tolok hujan anda.</li>
-<li>Aplikasi tidak menyimpan cache data cuaca. Setiap kali dibuka ia baca semula.</li>
+<li>Aplikasi tidak menyimpan cache data cuaca. Jika sambungan terputus semasa ia dibuka, ia terus memaparkan data yang sudah dimuatkan berserta masa kemas kini; jika dibuka tanpa sambungan, tiada ramalan untuk dipaparkan.</li>
 </ul>`};
 const SOURCES = [
   {n:'Open-Meteo', d:{zh:'预报 API · 8 个模式 · 城市地理编码',en:'Forecast API · 8 models · geocoding',ms:'API ramalan · 8 model · geokod'}, u:'https://open-meteo.com/'},
@@ -3639,7 +3718,7 @@ const SOURCES = [
   {n:'Météo-France ARPEGE', d:{zh:'法国气象局',en:'Météo-France',ms:'Météo-France'}, u:'https://meteofrance.com/'},
   {n:'JMA', d:{zh:'日本气象厅',en:'Japan Meteorological Agency',ms:'Agensi Meteorologi Jepun'}, u:'https://www.jma.go.jp/'},
   {n:'UKMO', d:{zh:'英国气象局',en:'UK Met Office',ms:'Met Office UK'}, u:'https://www.metoffice.gov.uk/'},
-  {n:'OpenStreetMap · CARTO', d:{zh:'地图底图 · ODbL',en:'Map tiles · ODbL',ms:'Jubin peta · ODbL'}, u:'https://www.openstreetmap.org/copyright'}
+  {n:'Esri', d:{zh:'地图底图：World Imagery、World Street Map、Dark Gray Canvas、边界与地名 · Esri、Maxar、Earthstar Geographics 及 GIS 用户社群',en:'Basemaps: World Imagery, World Street Map, Dark Gray Canvas, Boundaries & Places · Esri, Maxar, Earthstar Geographics and the GIS user community',ms:'Peta asas: World Imagery, World Street Map, Dark Gray Canvas, Sempadan & Tempat · Esri, Maxar, Earthstar Geographics dan komuniti pengguna GIS'}, u:'https://www.esri.com/'}
 ];
 function drawInfo(){
   $('#info-body').innerHTML = INFO[S.lang] + `
@@ -3686,7 +3765,7 @@ function setTab(which){
   updateSub();
   document.body.classList.toggle('map-mode', !s);
   if(s && P.on) exitPlace();
-  if(!s) initMap();
+  if(!s) openMap();
 }
 $('#tab-saved').addEventListener('click', () => setTab('saved'));
 $('#tab-map').addEventListener('click', () => setTab('map'));
@@ -3815,8 +3894,37 @@ document.addEventListener('visibilitychange', refreshIfOld);
 window.addEventListener('pageshow', e => { if(e.persisted) refreshIfOld(); });
 setInterval(refreshIfOld, 10 * 60e3);
 
+/* The phone's own language, as a starting point for the first-launch picker. */
+function guessLang(){
+  const prefs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''])
+    .map(x => String(x).toLowerCase());
+  for(const p of prefs){
+    if(p.startsWith('zh')) return 'zh';
+    if(p.startsWith('ms')) return 'ms';
+    if(p.startsWith('en')) return 'en';
+  }
+  return 'zh';
+}
+/* Asked once, on a first launch — with nothing saved at all, so nobody who
+   already uses the app is asked. Closing it without choosing keeps the
+   phone's language, and the choice is saved either way. */
+function askFirstLanguage(){
+  /* a new install has no release notes to catch up on, but the next update
+     must know where to start from, or it would list every release there is */
+  S.seenVersion = APP_VERSION;
+  S.lang = guessLang(); applyLang(); save();
+  const mark = () => $$('#sheet-firstlang [data-firstlang]').forEach(b => b.classList.toggle('on', b.dataset.firstlang === S.lang));
+  mark();
+  $$('#sheet-firstlang [data-firstlang]').forEach(b => b.addEventListener('click', () => {
+    S.lang = b.dataset.firstlang; save(); applyLang(); renderList(); mark();
+    hide();
+  }));
+  setTimeout(() => show('#sheet-firstlang'), 300);
+}
+
 (async function boot(){
   const saved = await store.get(KEY);
+  const firstLaunch = !saved;
   if(saved && typeof saved === 'object') S = Object.assign(S, saved);
   sanitizeState();
   applyLang();
@@ -3827,7 +3935,8 @@ setInterval(refreshIfOld, 10 * 60e3);
   loadAll();
   /* a subscription that failed in an earlier session repairs itself here */
   if(S.notify && S.notify.enabled) scheduleSync(4000);
-  maybeShowReleaseNotes();
+  if(firstLaunch) askFirstLanguage();
+  else maybeShowReleaseNotes();
   openFromNotice(new URLSearchParams(location.search).get('loc'));
   /* the release-notes sheet says this and more, so no toast on top of it */
   try{ sessionStorage.removeItem('pw:updated'); }catch(e){}

@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101736">
 <meta name="description" content="Compare ECMWF, GFS, ICON, GEM, ARPEGE, JMA and UKMO forecasts side by side for any field or plantation block.">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,17 +13,19 @@
 <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
 <link rel="icon" href="icon-512.png" sizes="512x512" type="image/png">
 <title>天气预测 · Predict Weather · Ramalan Cuaca</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{
   --bg-top:#0e1430; --bg-bot:#232f66; --header:#141b3d;
   --track:#1c2348; --card:#232a4d; --line:rgba(255,255,255,.09);
-  --txt:#fff; --dim:#9aa4c8; --dim2:#6f7aa3;
+  --txt:#fff; --dim:#b3bcda; --dim2:#9aa4c8;
   --accent:#6fc2ff;
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
+/* pinch-zoom is allowed again for anyone who needs the text larger; this only
+   stops a quick double tap on a button from zooming the page instead */
+html{touch-action:manipulation}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","PingFang SC","Noto Sans SC",Roboto,sans-serif;
   color:var(--txt);background:linear-gradient(180deg,var(--bg-top) 0%,#161f47 45%,var(--bg-bot) 100%);
@@ -42,7 +44,7 @@ input{font-family:inherit}
 .brand h1{margin:0;font-size:23px;font-weight:700;letter-spacing:-.4px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand p{margin:2px 0 0;font-size:13.5px;color:var(--dim)}
 .hdr-btns{display:flex;gap:8px}
-.round{width:40px;height:40px;border-radius:50%;background:#2b3260;display:grid;place-items:center;
+.round{width:44px;height:44px;border-radius:50%;background:#2b3260;display:grid;place-items:center;
   font-size:13px;font-weight:600;transition:transform .12s,background .15s}
 .round:active{transform:scale(.92);background:#353d70}
 .round svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -138,6 +140,11 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
 /* ---------------- map ---------------- */
 .map-wrap{position:relative;height:calc(100dvh - 182px - var(--safe-t))}
 #map{width:100%;height:100%;background:#0d1330;overflow:hidden;overscroll-behavior:contain}
+.fl-opt{display:block;width:100%;min-height:54px;margin:0 0 10px;border-radius:16px;background:rgba(255,255,255,.08);font-size:18px;font-weight:600;color:#fff}
+.fl-opt.on{background:#fff;color:#141b3d}
+.fl-note{margin:6px 2px 4px;font-size:13px;line-height:1.6;color:var(--dim);text-align:center}
+.map-load{position:absolute;inset:0;display:none;place-items:center;text-align:center;padding:24px;color:rgba(255,255,255,.85);font-size:15px;z-index:5}
+.map-load.on{display:grid}
 .leaflet-container{background:#0d1330;font-family:inherit}
 .bm-dark .leaflet-tile-pane{filter:saturate(1.15) brightness(1.15) contrast(1.05)}
 .bm-sat .leaflet-tile-pane{filter:saturate(1.05)}
@@ -352,7 +359,7 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
 .mchips{display:flex;gap:7px;overflow-x:auto;margin:12px -4px 0;padding:0 4px 4px;scrollbar-width:none}
 .mchips::-webkit-scrollbar{display:none}
 .mchips.dead{opacity:.45;pointer-events:none}
-.mchip{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:17px;
+.mchip{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:22px;min-height:44px;
   font-size:13.5px;font-weight:600;color:rgba(255,255,255,.82);background:rgba(255,255,255,.08);transition:.16s}
 .mchip.on{background:#fff;color:#141b3d}
 /* ticked but its data is still in flight */
@@ -695,6 +702,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
   <section class="pane" id="pane-map">
     <div class="map-wrap">
       <div id="map"></div>
+      <div class="map-load" id="map-load" role="status"></div>
       <div class="map-search">
         <div class="ms-bar">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.6"/><path d="m16 16 4.4 4.4"/></svg>
@@ -748,6 +756,18 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 <div class="ptr" id="ptr"><div class="ptr-ring" id="ptr-ring">
   <svg viewBox="0 0 24 24"><path d="M3.6 12a8.4 8.4 0 1 1 2.6 6.1"/><path d="M3.2 6.4v5.2h5.2"/></svg>
 </div></div>
+
+<!-- first launch only: the app used to start in Chinese without asking -->
+<div class="sheet" id="sheet-firstlang">
+  <div class="grab"></div>
+  <div class="sheet-hdr"><div class="sp"></div><h3>语言 · Language · Bahasa</h3><div class="sp"></div></div>
+  <div class="sheet-body">
+    <button class="fl-opt" data-firstlang="zh">中文</button>
+    <button class="fl-opt" data-firstlang="en">English</button>
+    <button class="fl-opt" data-firstlang="ms">Bahasa Melayu</button>
+    <p class="fl-note">之后可在右上角更改 · Change it later from the top bar · Boleh ditukar kemudian di bahagian atas</p>
+  </div>
+</div>
 
 <div class="sheet" id="sheet-rel">
   <div class="grab"></div>
@@ -817,7 +837,6 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="daylogic.js"></script>
 <script src="maplogic.js"></script>
 <script src="listlogic.js"></script>
