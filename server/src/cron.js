@@ -15,6 +15,23 @@ const API = 'https://api.open-meteo.com/v1/forecast';
    reminder that day. Four runs of grace, with the ledger stopping repeats. */
 const DUE_GRACE_MIN = 60, CRON_SPAN_MIN = 15;
 
+/* An encrypted push record tops out near 4 KB. The full per-plot detail is
+   trimmed from the least severe end until the payload fits, and the count of
+   what did not fit travels instead, so the app's reminder page can say so
+   rather than quietly showing fewer plots. A body that still does not fit
+   (fifty long names crossing six limits) is cut with an ellipsis. */
+const PAYLOAD_BUDGET = 3000;
+const byteSize = m => new TextEncoder().encode(JSON.stringify(m)).length;
+function fitPayload(msg){
+  let more = 0;
+  while(Array.isArray(msg.detail) && msg.detail.length && byteSize(msg) > PAYLOAD_BUDGET){ msg.detail.pop(); more++; }
+  if(Array.isArray(msg.detail) && !msg.detail.length) delete msg.detail;
+  if(more) msg.more = more;
+  let cut = msg.body.length;
+  while(byteSize(msg) > PAYLOAD_BUDGET && cut > 40){ cut -= 20; msg.body = msg.body.slice(0, cut) + '…'; }
+  return msg;
+}
+
 /* the device's own wall clock, from its IANA zone — never a hand-rolled
    UTC offset, which would be wrong twice a year */
 function localNow(tz, now){
@@ -114,9 +131,12 @@ async function runDevice(env, dev, now, run){
       /* a reminder about one plot opens that plot when tapped */
       if(msg.ids.length === 1) loc = msg.loc = msg.ids[0];
       delete msg.ids;
+      fitPayload(msg);
       result = await sendOne(env, dev, msg, run.post);
     }
-    report.push({key:g.key, result, title:msg && msg.title, body:msg && msg.body, tag:msg && msg.tag, loc, ids:decided});
+    report.push({key:g.key, result, title:msg && msg.title, body:msg && msg.body, tag:msg && msg.tag, loc, ids:decided,
+                 detail:msg && msg.detail ? msg.detail.length : 0, more:(msg && msg.more) || 0,
+                 bytes:msg ? byteSize(msg) : 0});
     if(result === 'expired') break;                // the device is gone
     if(result === 'failed') continue;              // undecided: the next run tries again
     await writeLedger(env, g.key, [...done, ...decided]);

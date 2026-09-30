@@ -80,7 +80,7 @@ test('两个地块同一时段只发一条通知，两个都列出', async () =>
   const env = mkEnv(), run = mkRun({1:WET, 2:WET});
   const rep = await runDevice(env, mkDev([A, B]), at(12), run);
   assert.strictEqual(run.posts, 1);
-  assert.strictEqual(rep[0].title, '下午 · 2 个地块');
+  assert.strictEqual(rep[0].title, '下午 · 2 个地块超过门槛');
   assert.match(rep[0].body, /Alpha/);
   assert.match(rep[0].body, /Beta/);
 });
@@ -208,8 +208,8 @@ test('一小时内都取不到预报：最后一次机会时发一条告知，�
 
 test('取不到的地块和有数据的地块在同一条通知里', async () => {
   const rep = await runDevice(mkEnv(), mkDev([A, B]), at(12, 45), mkRun({1:WET, 2:null}));
-  assert.match(rep[0].body, /Alpha：降雨概率 90%/);
-  assert.match(rep[0].body, /Beta：暂时查不到预报/);
+  assert.match(rep[0].body, /降雨概率 ≥60%：Alpha 90%/);
+  assert.match(rep[0].body, /暂时查不到预报：Beta/);
 });
 
 test('只讲一个地块的通知带上地块 id，点开能直达；多个地块的不带', async () => {
@@ -217,4 +217,23 @@ test('只讲一个地块的通知带上地块 id，点开能直达；多个地�
   assert.strictEqual(one[0].loc, 'A');
   const two = await runDevice(mkEnv(), mkDev([A, B]), at(12), mkRun({1:WET, 2:WET}));
   assert.strictEqual(two[0].loc, undefined);
+});
+
+/* ---- the full detail rides along, within the push size limit ----
+   An encrypted push tops out near 4 KB. With many long-named plots the full
+   lines cannot all fit: the payload stays under budget, and the page the app
+   opens says how many were left out instead of silently showing fewer. */
+test('几个地块时，每个地块的完整内容都带在推送里', async () => {
+  const rep = await runDevice(mkEnv(), mkDev([A, B]), at(12), mkRun({1:WET, 2:WET}));
+  assert.strictEqual(rep[0].detail, 2);
+  assert.strictEqual(rep[0].more, 0);
+});
+test('地块很多时，推送控制在上限内，放不下的记下数量', async () => {
+  const many = Array.from({length:50}, (_, i) =>
+    ({id:'P' + i, name:'很长很长的油棕园区地块名字第' + i + '号东边那一片', lat:1, lon:101, windows:['afternoon']}));
+  const rep = await runDevice(mkEnv(), mkDev(many), at(12), mkRun({1:WET}));
+  assert.ok(rep[0].bytes <= 3000, '推送太大：' + rep[0].bytes);
+  assert.ok(rep[0].more > 0);
+  assert.strictEqual(rep[0].detail + rep[0].more, 50);
+  assert.strictEqual(rep[0].result, 'sent');
 });

@@ -1,7 +1,7 @@
 /* 天气预测 · service worker
    Shell is cached so the app opens offline.
    Weather data is NEVER cached — forecasts must always be fresh. */
-const VERSION = 'pw-v3.19.0';
+const VERSION = 'pw-v3.20.0';
 const SHELL = VERSION + '-shell';
 const SHELL_FILES = [
   './', './index.html', './swpolicy.js', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './summary.js', './layout.js', './reqlogic.js', './app.js', './manifest.webmanifest',
@@ -33,6 +33,9 @@ const NET_TIMEOUT_MS = 2500;
 
    Third-party files stay best-effort — the map is the only thing that needs
    them, and it can load them from the network later. */
+/* where a tapped reminder waits for the window the tap is opening */
+const NOTICE_CACHE = 'pw-notice', NOTICE_KEY = './__notice';
+
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const c = await caches.open(SHELL);
@@ -46,7 +49,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => !k.startsWith(VERSION)).map(k => caches.delete(k)));
+    await Promise.all(keys.filter(k => !k.startsWith(VERSION) && k !== NOTICE_CACHE).map(k => caches.delete(k)));
     await self.clients.claim();
   })());
 });
@@ -127,22 +130,38 @@ self.addEventListener('push', e => {
        The worker now tags each reminder itself; without one, stand alone. */
     tag: d.tag || '',
     renotify: false,
-    /* a reminder about one plot carries its id, so tapping it opens that plot */
-    data: {loc: typeof d.loc === 'string' ? d.loc : ''}
+    /* a reminder about one plot carries its id, so tapping it opens that plot;
+       one about several carries every plot's full line for the app to show */
+    data: {loc: typeof d.loc === 'string' ? d.loc : '',
+           detail: Array.isArray(d.detail) ? d.detail : null,
+           more: typeof d.more === 'number' ? d.more : 0,
+           at: Date.now()}
   }));
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const loc = (e.notification.data && e.notification.data.loc) || '';
+  const data = e.notification.data || {}, loc = data.loc || '';
+  /* A reminder about several plots opens a page listing all of them in full:
+     the banner only ever shows its first few lines, whatever the phone. */
+  const notice = loc ? null : {title:e.notification.title, body:e.notification.body,
+                               detail:data.detail || null, more:data.more || 0, at:data.at || Date.now()};
   e.waitUntil((async () => {
     const all = await self.clients.matchAll({type:'window', includeUncontrolled:true});
     for(const c of all){
       if(!('focus' in c)) continue;
       await c.focus();
       if(loc) c.postMessage({type:'open-loc', loc});
+      else c.postMessage({type:'open-notice', notice});
       return;
     }
-    if(self.clients.openWindow) return self.clients.openWindow(loc ? './?loc=' + encodeURIComponent(loc) : './');
+    if(!self.clients.openWindow) return;
+    if(loc) return self.clients.openWindow('./?loc=' + encodeURIComponent(loc));
+    /* too long for a URL: parked where the opening window picks it up */
+    try{
+      const c = await caches.open(NOTICE_CACHE);
+      await c.put(NOTICE_KEY, new Response(JSON.stringify(notice), {headers:{'Content-Type':'application/json'}}));
+    }catch(err){}
+    return self.clients.openWindow('./?notice=1');
   })());
 });
