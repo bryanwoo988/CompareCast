@@ -25,4 +25,14 @@ function cacheStrategy(urlString, selfOrigin){
   return 'never';
 }
 
-if(typeof module !== 'undefined') module.exports = {cacheStrategy};
+/* The cache key for one of our own files: the URL without its query. Scripts
+   are requested as app.js?r=<index.html's revision>; keyed by the full URL,
+   every deploy would add another copy of every file, and an offline start
+   could only find the copy for exactly its own revision. */
+function cacheKey(urlString){
+  const u = new URL(urlString);
+  u.search = '';
+  return u.href;
+}
+
+if(typeof module !== 'undefined') module.exports = {cacheStrategy, cacheKey};
