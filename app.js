@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.21.1';
+const APP_VERSION = '3.22.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,13 @@ const APP_VERSION = '3.21.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.22.0',
+   zh:['更新检查改成看网站上的 index.html 有没有新版本：以后每次上传新版，打开中的 App 都会自己发现并更新，不需要再手动改任何版本号',
+       '修好：更新后偶尔会「一半新、一半旧」（新的页面配上旧的程序），现在每个文件都跟着页面的版本走'],
+   en:['Update checks now look at whether a newer index.html is live: every new upload is picked up by open apps on its own, with no version number to change by hand',
+       'Fixed: an update could occasionally come out half new, half old (the new page running the old code); every file now follows the page\u2019s revision'],
+   ms:['Semakan kemas kini kini melihat sama ada index.html yang lebih baharu sudah ada: setiap muat naik baharu dikesan sendiri oleh aplikasi yang sedang dibuka, tanpa perlu menukar nombor versi',
+       'Dibaiki: kemas kini kadangkala separuh baharu, separuh lama (halaman baharu dengan kod lama); kini setiap fail mengikut versi halaman']},
   {v:'3.21.1',
    zh:['拿掉了下雨、太阳、云和星星的背景动画，比较省电；每种天气的背景颜色照旧，启动画面也保留'],
    en:['Removed the rain, sun, cloud and star background animations to save battery; each weather keeps its background colour, and the splash screen stays'],
@@ -347,7 +354,7 @@ zh:{
   ntTzNote:(z)=>`时间按地块所在时区计算（${z}）`,
   ntModelNote:'提醒里的温度、雨量和风，用的是每个地块自己选的模式；降雨机率来自 Best Match，跟详情页一样。',
   qrCap:'扫描二维码，就能用手机浏览器直接打开这个 App', qrAlt:'打开这个 App 的二维码', shareApp:'分享 App 链接', shareText:'多模式天气对比，按地块发提醒', linkCopied:'链接已复制',
-  updReady:(v)=>`新版本 ${v} 已准备好`, updNow:'立即更新', updLater:'稍后',
+  updReady:'新版本已准备好', updNow:'立即更新', updLater:'稍后',
   noticeAt:(w)=>`提醒送达于 ${w}`, noticeMore:(n)=>`还有 ${n} 个地块放不进这条通知，请到地块列表查看。`, noticeGone:'这个地块已经删除',
   mapLoading:'正在载入地图…', mapFail:'地图没载入成功。',
   updAt:(w)=>`更新于 ${w}`, updAgo:(h)=>`${h} 小时前`,
@@ -442,7 +449,7 @@ en:{
   ntTzNote:(z)=>`Times are in each location's own time zone (${z})`,
   ntModelNote:'Reminder temperatures, rainfall and wind use each location\u2019s own model; chance of rain comes from Best Match, as on the detail page.',
   qrCap:'Scan to open this app straight in a phone browser', qrAlt:'QR code that opens this app', shareApp:'Share the app link', shareText:'Multi-model weather comparison with per-plot reminders', linkCopied:'Link copied',
-  updReady:(v)=>`Version ${v} is ready`, updNow:'Update now', updLater:'Later',
+  updReady:'A new version is ready', updNow:'Update now', updLater:'Later',
   noticeAt:(w)=>`Delivered ${w}`, noticeMore:(n)=>`${n} more locations did not fit in this notification; see them in the location list.`, noticeGone:'This location has been deleted',
   mapLoading:'Loading the map\u2026', mapFail:'The map did not load.',
   updAt:(w)=>`Updated ${w}`, updAgo:(h)=>`${h} h ago`,
@@ -537,7 +544,7 @@ ms:{
   ntTzNote:(z)=>`Masa mengikut zon waktu lokasi itu sendiri (${z})`,
   ntModelNote:'Suhu, hujan dan angin dalam peringatan menggunakan model setiap lokasi; kebarangkalian hujan dari Best Match, sama seperti halaman butiran.',
   qrCap:'Imbas untuk membuka aplikasi ini terus dalam pelayar telefon', qrAlt:'Kod QR untuk membuka aplikasi ini', shareApp:'Kongsi pautan aplikasi', shareText:'Perbandingan cuaca pelbagai model dengan peringatan setiap petak', linkCopied:'Pautan disalin',
-  updReady:(v)=>`Versi ${v} sudah sedia`, updNow:'Kemas kini', updLater:'Nanti',
+  updReady:'Versi baharu sudah sedia', updNow:'Kemas kini', updLater:'Nanti',
   noticeAt:(w)=>`Dihantar ${w}`, noticeMore:(n)=>`${n} lagi lokasi tidak muat dalam pemberitahuan ini; lihat dalam senarai lokasi.`, noticeGone:'Lokasi ini telah dipadam',
   mapLoading:'Memuatkan peta\u2026', mapFail:'Peta gagal dimuatkan.',
   updAt:(w)=>`Dikemas kini ${w}`, updAgo:(h)=>`${h} jam lalu`,
@@ -1240,10 +1247,11 @@ async function runRefresh(){
    whether to apply it at once or offer it. The service worker revalidates
    every file with the server, so a reload always brings the new build. */
 let visibleSince = Date.now(), updateReady = null, lastUpdateCheck = 0;
-async function liveVersion(){
+/* the revision of index.html live on the server (updatelogic.js) */
+async function liveRevision(){
   try{
-    const r = await fetch('./sw.js', {cache:'no-cache'});
-    return r.ok ? parseSwVersion(await r.text()) : null;
+    const r = await fetch('./index.html', {method:'HEAD', cache:'no-cache'});
+    return r.ok ? r.headers.get('last-modified') : null;
   }catch(e){ return null; }
 }
 async function checkForUpdate(opts){
@@ -1256,9 +1264,11 @@ async function checkForUpdate(opts){
     const reg = 'serviceWorker' in navigator && await navigator.serviceWorker.getRegistration();
     if(reg) reg.update().catch(() => {});
   }catch(e){}
-  const v = await liveVersion();
-  if(!v || v === APP_VERSION) return false;
-  updateReady = v;
+  /* document.lastModified is the Last-Modified of the index.html this page
+     is running, whether it came from the network or the offline copy */
+  const live = await liveRevision();
+  if(!newerRevision(document.lastModified, live)) return false;
+  updateReady = live;
   actOnUpdate(asked);
   return true;
 }
@@ -1275,7 +1285,7 @@ function actOnUpdate(asked){
   const what = updateAction({hidden:document.visibilityState !== 'visible',
                              sinceVisibleMs:Date.now() - visibleSince, busy:appBusy(), asked:!!asked});
   if(what === 'apply') applyUpdate(false);
-  else if(what === 'banner') showUpdateBar(updateReady);
+  else if(what === 'banner') showUpdateBar();
 }
 /* reload into the new build, back on the same page. An automatic one is
    tried once per version per ten minutes (updatelogic.js: no reload loops);
@@ -1283,7 +1293,7 @@ function actOnUpdate(asked){
 function applyUpdate(byUser){
   let tried = null;
   try{ tried = JSON.parse(sessionStorage.getItem('pw:tried') || 'null'); }catch(e){}
-  if(byUser !== true && !mayAutoReload(tried, updateReady, Date.now())){ showUpdateBar(updateReady); return; }
+  if(byUser !== true && !mayAutoReload(tried, updateReady, Date.now())){ showUpdateBar(); return; }
   try{ sessionStorage.setItem('pw:tried', JSON.stringify({v:updateReady, at:Date.now()})); }catch(e){}
   try{
     sessionStorage.setItem('pw:resume', JSON.stringify({
@@ -1292,10 +1302,10 @@ function applyUpdate(byUser){
   }catch(e){}
   location.reload();
 }
-function showUpdateBar(v){
+function showUpdateBar(){
   const bar = $('#upd-bar');
   if(!bar || bar.classList.contains('on')) return;
-  $('#upd-text').textContent = t('updReady')(v);
+  $('#upd-text').textContent = t('updReady');
   $('#upd-go').textContent = t('updNow');
   bar.classList.add('on');
 }

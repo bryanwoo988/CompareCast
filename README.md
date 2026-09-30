@@ -59,11 +59,20 @@ node --test tests/*.test.js
 
 ## 发新版
 
-1. `app.js` 的 `APP_VERSION` 和 `sw.js` 的 `VERSION` 一起改（`tests/version.test.js` 检查两边一致）。
-2. 在 `app.js` 的 `RELEASES` 最前面加一条，三种语言都要（`tests/releases.test.js` 检查）。用户下次打开会看到这一条。
-3. 推到 `main`，GitHub Pages 自动部署。改了 `server/` 的话另外 `cd server && npx wrangler deploy`。
+**`sw.js` 不用改。** 把新的文件推上去（GitHub Pages 自动部署）就算发版了：GitHub Pages 每次部署都会更新 `index.html` 的 `Last-Modified`，打开中的 App 拿它跟自己正在跑的那一版（`document.lastModified`）比，比较新就更新。`sw.js` 只有在 Service Worker 本身的逻辑要改的时候才需要动。
 
-**用户不用清缓存、也不用关掉重开**：App 打开时、回到前台时、使用中每 15 分钟，会向服务器确认线上是哪一版（读 `sw.js` 里的版本号，所以每次发版一定要改版本号）。刚打开或刚回到 App 就直接更新，而且回到原来那一页；正在操作时只在底部提示「新版本已准备好」，不打断，下次回到 App 自动更新。更新后会弹出这一版的更新说明。Service Worker 每次都向服务器确认文件（GitHub Pages 的 `max-age=600` 不会再让人拿到旧文件）。
+要让用户看到「这一版有什么变化」的话：
+
+1. 改 `app.js` 的 `APP_VERSION`（「关于」里显示的版本号）。
+2. 在 `app.js` 的 `RELEASES` 最前面加一条，三种语言都要（`tests/releases.test.js` 检查）。
+
+改了 `server/` 的话另外 `cd server && npx wrangler deploy`。
+
+**用户不用清缓存、也不用关掉重开**：App 打开时、回到前台时、使用中每 15 分钟，会问服务器 `index.html` 的最新版本。刚打开或刚回到 App 就直接更新，而且回到原来那一页；正在操作时只在底部提示「新版本已准备好」，不打断，下次回到 App 自动更新。有更新说明的话，更新后会弹出来。Service Worker 每次都向服务器确认文件（GitHub Pages 的 `max-age=600` 不会再让人拿到旧文件）。
+
+**每个脚本都带着页面的版本**：`index.html` 用 `app.js?r=<index.html 的 Last-Modified>` 这种网址载入自己的脚本（`index.html` 底部的 `APP_SCRIPTS`）。新的 `index.html` 就会要全新的网址，浏览器的任何一层缓存都拿不出旧的程序，所以更新不会「一半新、一半旧」。加新的脚本文件时，加进 `APP_SCRIPTS` 和 `sw.js` 的 `SHELL_FILES`（`tests/shell.test.js` 会检查）。
+
+`sw.js` 里有一行 `const VERSION = 'pw-v3.22.0'` 是固定的过渡标记，**不要改**：3.21.x 的旧页面靠读这一行发现新版，这个值让它们搬到新的检查方式。
 
 ## 数据来源
 

@@ -1,8 +1,16 @@
 /* 天气预测 · service worker
    Shell is cached so the app opens offline.
    Weather data is NEVER cached — forecasts must always be fresh. */
-const VERSION = 'pw-v3.21.1';
-const SHELL = VERSION + '-shell';
+/* No release number here. A new build reaches phones because every request
+   is revalidated with the server (network first, 'no-cache'), and the page
+   notices a new revision from index.html's Last-Modified — so this file
+   changes only when the worker's own logic does, and no release has to
+   remember to bump it. */
+const SHELL = 'pw-shell';
+/* Frozen, never to be changed. Pages from 3.21.x decide whether a newer build
+   is live by reading this line; this value moves them, once, onto the
+   revision check. Nothing else reads it. */
+const VERSION = 'pw-v3.22.0';
 const SHELL_FILES = [
   './', './index.html', './swpolicy.js', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './summary.js', './layout.js', './reqlogic.js', './updatelogic.js', './app.js', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png', './qr.svg',
@@ -16,6 +24,8 @@ const SHELL_FILES = [
    launch repairs the worker. */
 try{ importScripts('./swpolicy.js'); }catch(e){}
 const strategyFor = (typeof cacheStrategy === 'function') ? cacheStrategy : (() => 'never');
+/* one entry per file, whatever revision asked for it (swpolicy.js) */
+const keyFor = (typeof cacheKey === 'function') ? cacheKey : (u => u);
 
 /* How long to wait for the network before falling back to cache. Long enough
    for a slow mobile connection to win, short enough that a dead one does not
@@ -49,7 +59,8 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => !k.startsWith(VERSION) && k !== NOTICE_CACHE).map(k => caches.delete(k)));
+    /* the versioned caches of earlier builds ('pw-v3.x-shell') go */
+    await Promise.all(keys.filter(k => k !== SHELL && k !== NOTICE_CACHE).map(k => caches.delete(k)));
     await self.clients.claim();
   })());
 });
@@ -88,7 +99,10 @@ self.addEventListener('fetch', e => {
      for weeks. Now the first launch gets the new code, and the cache is the
      fallback rather than the default. */
   e.respondWith((async () => {
-    const cached = await caches.match(req);
+    /* scripts arrive as app.js?r=<revision>; the cache holds one copy of each
+       file, the newest fetched, so an offline start finds it whatever
+       revision the page it opens happens to be */
+    const cached = await caches.match(keyFor(req.url));
     let timer;
     const timeout = new Promise(r => { timer = setTimeout(() => r(null), NET_TIMEOUT_MS); });
     /* 'no-cache' asks the server every time (a 304 when nothing changed, so it
@@ -99,7 +113,7 @@ self.addEventListener('fetch', e => {
     const net = (req.mode === 'navigate'
         ? fetch(req.url, {cache:'no-cache', credentials:'same-origin'})
         : fetch(req, {cache:'no-cache'})).then(res => {
-      if(res && res.ok) caches.open(SHELL).then(c => c.put(req, res.clone())).catch(() => {});
+      if(res && res.ok) caches.open(SHELL).then(c => c.put(keyFor(req.url), res.clone())).catch(() => {});
       return res && res.ok ? res : null;
     }).catch(() => null);
 

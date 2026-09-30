@@ -842,14 +842,25 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 
 <div class="toast" id="toast"></div>
 
-<script src="daylogic.js"></script>
-<script src="maplogic.js"></script>
-<script src="listlogic.js"></script>
-<script src="notifylogic.js"></script>
-<script src="summary.js"></script>
-<script src="layout.js"></script>
-<script src="reqlogic.js"></script>
-<script src="updatelogic.js"></script>
-<script src="app.js"></script>
+<script>
+/* The app's scripts are requested as file?r=<this index.html's revision>.
+   GitHub Pages marks every file max-age=600, and on a reload within those ten
+   minutes the browser handed back its in-memory copies of the scripts without
+   asking anyone — a new index.html running last version's app.js. With the
+   revision in the URL, a new index.html asks for addresses no cache has ever
+   seen, so every file always matches the page, and nothing needs a version
+   number bumped by hand. Loaded in order, app.js last. */
+(function(){
+  const APP_SCRIPTS = ['daylogic.js', 'maplogic.js', 'listlogic.js', 'notifylogic.js', 'summary.js',
+                     'layout.js', 'reqlogic.js', 'updatelogic.js', 'app.js'];
+  var r = encodeURIComponent(document.lastModified || '');
+  APP_SCRIPTS.forEach(function(src){
+    var s = document.createElement('script');
+    s.src = src + '?r=' + r;
+    s.async = false;
+    document.body.appendChild(s);
+  });
+})();
+</script>
 </body>
 </html>

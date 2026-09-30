@@ -1,6 +1,6 @@
 const {test} = require('node:test');
 const assert = require('node:assert');
-const {cacheStrategy} = require('../swpolicy.js');
+const {cacheStrategy, cacheKey} = require('../swpolicy.js');
 
 const O = 'https://bryanwoo988.github.io';
 const s = u => cacheStrategy(u, O);
@@ -39,4 +39,18 @@ test('无法解析的 URL 不抛错', () => {
 });
 test('本地开发的 origin 同样算自己的文件', () => {
   assert.strictEqual(cacheStrategy('http://127.0.0.1:8777/app.js', 'http://127.0.0.1:8777'), 'fresh');
+});
+
+/* ---- one cache entry per file, whatever revision asked for it ----
+   Scripts arrive as app.js?r=<revision>. Keyed by the full URL, every deploy
+   would add another copy of every file, and an offline start could only find
+   the copy for exactly its own revision. */
+test('脚本的修订标记不进缓存键', () => {
+  assert.strictEqual(cacheKey('https://a.github.io/CompareCast/app.js?r=09%2F30%2F2026'), 'https://a.github.io/CompareCast/app.js');
+});
+test('页面的查询参数也不进缓存键', () => {
+  assert.strictEqual(cacheKey('https://a.github.io/CompareCast/index.html?loc=kl'), 'https://a.github.io/CompareCast/index.html');
+});
+test('没有查询参数的原样', () => {
+  assert.strictEqual(cacheKey('https://a.github.io/CompareCast/sw.js'), 'https://a.github.io/CompareCast/sw.js');
 });

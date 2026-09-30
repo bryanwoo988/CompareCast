@@ -5,12 +5,21 @@
    so it could run last week's code for days while the server had moved on.
    People cleared their cache to get past it. The page now checks for a newer
    build when it is opened, when it comes back to the screen, and every quarter
-   hour while in use, and these two functions decide what that check means. */
+   hour while in use, and these functions decide what that check means. */
 
-/* the deployed version, read from the live sw.js ('pw-v3.21.0' → '3.21.0') */
-function parseSwVersion(text){
-  const m = /const VERSION = 'pw-v([0-9.]+)'/.exec(String(text == null ? '' : text));
-  return m ? m[1] : null;
+/* Whether the index.html live on the server is a newer revision than the one
+   this page is running.
+
+   Both are index.html's Last-Modified, which GitHub Pages sets on every
+   deploy: the running one from document.lastModified ("MM/DD/YYYY hh:mm:ss",
+   local time), the live one from a HEAD request (an HTTP date). This used to
+   compare a version number read out of sw.js, so every release had to edit
+   sw.js by hand or phones never heard of it; a revision needs nobody to
+   remember anything. Only a newer one counts — a rollback is not pushed onto
+   phones — and anything unreadable counts as no update. */
+function newerRevision(running, live){
+  const a = Date.parse(String(running || '')), b = Date.parse(String(live || ''));
+  return isFinite(a) && isFinite(b) && b - a >= 1000;
 }
 
 /* What to do once a newer build is known to be live.
@@ -41,4 +50,4 @@ function mayAutoReload(tried, v, now){
   return !(tried && tried.v === v && now - tried.at < RETRY_MS);
 }
 
-if(typeof module !== 'undefined') module.exports = {parseSwVersion, updateAction, mayAutoReload, JUST_MS};
+if(typeof module !== 'undefined') module.exports = {newerRevision, updateAction, mayAutoReload, JUST_MS};
