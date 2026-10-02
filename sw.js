@@ -60,7 +60,9 @@ self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
     /* the versioned caches of earlier builds ('pw-v3.x-shell') go */
-    await Promise.all(keys.filter(k => k !== SHELL && k !== NOTICE_CACHE).map(k => caches.delete(k)));
+    /* only our own: every app on bryanwoo988.github.io shares this origin's
+       Cache Storage, and the others' offline copies must survive */
+    await Promise.all(keys.filter(k => k.startsWith('pw-') && k !== SHELL && k !== NOTICE_CACHE).map(k => caches.delete(k)));
     await self.clients.claim();
   })());
 });
