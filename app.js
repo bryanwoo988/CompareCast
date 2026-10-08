@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.22.1';
+const APP_VERSION = '3.22.2';
 
 /* What changed, per release.
 
@@ -16,6 +16,16 @@ const APP_VERSION = '3.22.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.22.2',
+   zh:['「定位到我」和用 GPS 加地点更准了：以前直接用手机给的第一个位置，那常常是 Wi-Fi 或基站估的，可能差几百米；现在会等几秒、取最准的那个（最多 15 秒）',
+       '地图上的蓝点外面多了一圈，圈的大小就是误差范围',
+       '精度超过 ±100 米时会提醒你到室外，或打开手机设置里的「精确位置」'],
+   en:['\u201cLocate me\u201d and adding a location by GPS are more accurate: they used to take the phone\u2019s first reading, often a Wi-Fi or cell-tower estimate hundreds of metres out; they now wait a few seconds for the best fix (15 s at most)',
+       'The blue dot on the map now has a ring around it showing how far off the reading may be',
+       'If the reading is worse than \u00b1100 m you are told to step outside or switch on Precise Location in your phone settings'],
+   ms:['\u201cCari lokasi saya\u201d dan menambah lokasi dengan GPS kini lebih tepat: dahulu ia mengambil bacaan pertama telefon, selalunya anggaran Wi-Fi atau menara sel yang tersasar ratusan meter; kini ia menunggu beberapa saat untuk bacaan terbaik (paling lama 15 saat)',
+       'Titik biru pada peta kini dikelilingi bulatan yang menunjukkan julat ralat bacaan',
+       'Jika bacaan lebih teruk daripada \u00b1100 m, anda diminta keluar ke kawasan lapang atau menghidupkan Lokasi Tepat dalam tetapan telefon']},
   {v:'3.22.1',
    zh:['修好：换了语言、单位或地块的模式之后，提醒还是用旧的语言、单位和模式发出来；现在一改就会同步到服务器',
        '修好：模式准度核对进行中时离开 App、过一阵再回来，那张卡会一直停在「正在取…」',
@@ -329,6 +339,7 @@ zh:{
   gpsBtn:'读取我的位置', gpsWait:'正在读取…',
   gpsDenied:'定位被拒绝。请到手机设置里允许本页使用位置。',
   gpsFail:'读不到位置。到室外空旷处再试一次。',
+  gpsBetter:'正在提高精度…', gpsCoarse:(m)=>`精度只有 ±${m} 米。到室外空旷处，并确认手机设置里这个 App 的「精确位置」是开着的。`,
   gpsInsecure:'定位需要 HTTPS。用 https:// 打开这个网址再试。',
   myLoc:'我的位置', searchPh:'搜索城市、城镇或地区', searchEmpty:'输入名字，搜全世界的城市',
   searching:'搜索中…', noResult:'找不到这个地方。换个写法或改用经纬度。',
@@ -424,6 +435,7 @@ en:{
   gpsBtn:'Read my location', gpsWait:'Reading…',
   gpsDenied:'Location was blocked. Allow this page to use location in your phone settings.',
   gpsFail:'Could not get a fix. Step outside and try again.',
+  gpsBetter:'Improving accuracy…', gpsCoarse:(m)=>`Only accurate to ±${m} m. Step outside, and check that Precise Location is on for this app in your phone settings.`,
   gpsInsecure:'Location needs HTTPS. Open this page over https:// and try again.',
   myLoc:'My location', searchPh:'Search city, town, or area', searchEmpty:'Find any city in the world',
   searching:'Searching…', noResult:'No match. Try another spelling, or enter coordinates.',
@@ -519,6 +531,7 @@ ms:{
   gpsBtn:'Baca lokasi saya', gpsWait:'Sedang membaca…',
   gpsDenied:'Lokasi disekat. Benarkan halaman ini guna lokasi dalam tetapan telefon.',
   gpsFail:'Tidak dapat kedudukan. Keluar ke kawasan lapang dan cuba lagi.',
+  gpsBetter:'Meningkatkan ketepatan…', gpsCoarse:(m)=>`Ketepatan hanya ±${m} m. Keluar ke kawasan lapang, dan pastikan Lokasi Tepat dihidupkan untuk aplikasi ini dalam tetapan telefon.`,
   gpsInsecure:'Lokasi perlukan HTTPS. Buka halaman ini melalui https:// dan cuba lagi.',
   myLoc:'Lokasi saya', searchPh:'Cari bandar, pekan atau kawasan', searchEmpty:'Cari mana-mana bandar di dunia',
   searching:'Mencari…', noResult:'Tiada padanan. Cuba ejaan lain atau masukkan koordinat.',
@@ -1661,25 +1674,70 @@ function renderPlaceBar(){
   });
 }
 
-let myDot = null;
+/* Watch the position and keep the most accurate fix (maplogic.js): the first
+   reading is usually a Wi-Fi or cell estimate, hundreds of metres out, and
+   taking it — or a cached one up to 30 s old, as the map button did — is why
+   "locate me" landed in the wrong place. onFix sees every improvement,
+   onDone the final fix; returns a function that stops early. */
+function trackFix(onFix, onDone, onError){
+  const geo = navigator.geolocation;
+  let best = null, id = null, over = false;
+  const finish = () => {
+    if(over) return;
+    stop();
+    if(best) onDone(best); else onError({code:3});
+  };
+  const timer = setTimeout(finish, FIX_MAX_MS);
+  const stop = () => {
+    if(over) return;
+    over = true; clearTimeout(timer);
+    if(id !== null) geo.clearWatch(id);
+  };
+  id = geo.watchPosition(pos => {
+    if(over) return;
+    const next = betterFix(best, asFix(pos));
+    if(next === best) return;
+    best = next; onFix(best);
+    if(fixDone(best)) finish();
+  }, err => {
+    if(over) return;
+    /* a fix in hand beats an error later in the watch */
+    if(best){ finish(); return; }
+    stop(); onError(err);
+  }, {enableHighAccuracy:true, maximumAge:0, timeout:FIX_MAX_MS});
+  if(over) geo.clearWatch(id);
+  return stop;
+}
+
+let myDot = null, myRing = null, stopLocate = null;
 /* navigates only — saving the spot is a separate, deliberate act (press +) */
 function locateMe(){
   const btn = $('[data-rail="locate"]');
   if(!navigator.geolocation){ toast(t('gpsFail')); return; }
   if(!window.isSecureContext){ toast(t('gpsInsecure')); return; }
+  if(stopLocate) stopLocate();
   if(btn) btn.classList.add('busy');
-  navigator.geolocation.getCurrentPosition(pos => {
-    if(btn) btn.classList.remove('busy');
-    const lat = pos.coords.latitude, lon = pos.coords.longitude;
-    /* added to the map, not to myLayer, which refreshPins clears */
+  let first = true;
+  stopLocate = trackFix(fix => {
+    /* added to the map, not to myLayer, which refreshPins clears; the ring
+       is the error circle, so a rough fix looks rough */
     if(myDot) map.removeLayer(myDot);
-    myDot = L.marker([lat, lon], {interactive:false,
+    if(myRing) map.removeLayer(myRing);
+    myRing = L.circle([fix.lat, fix.lon], {radius:fix.acc, interactive:false, weight:1,
+      color:'#4d9dff', fillColor:'#4d9dff', fillOpacity:.15}).addTo(map);
+    myDot = L.marker([fix.lat, fix.lon], {interactive:false,
       icon:L.divIcon({className:'', html:'<div class="me-dot"></div>', iconSize:[0,0]})}).addTo(map);
-    jumpTo(lat, lon, 14);
+    map.fitBounds(myRing.getBounds(), {maxZoom:17, animate:false});
+    if(first){ first = false; if(!fixDone(fix)) toast(t('gpsBetter')); }
+  }, fix => {
+    stopLocate = null;
+    if(btn) btn.classList.remove('busy');
+    if(fixCoarse(fix)) toast(t('gpsCoarse')(Math.round(fix.acc)));
   }, err => {
+    stopLocate = null;
     if(btn) btn.classList.remove('busy');
     toast(err && err.code === 1 ? t('gpsDenied') : t('gpsFail'));
-  }, {enableHighAccuracy:true, timeout:12000, maximumAge:30000});
+  });
 }
 
 const pins = {};
@@ -1734,6 +1792,7 @@ $$('.picker button').forEach(b => b.addEventListener('click', () => {
   ['gps','search','manual'].forEach(m => $('#mode-' + m).classList.toggle('hide', m !== b.dataset.mode));
 }));
 $('#btn-add').addEventListener('click', () => {
+  if(stopGps){ stopGps(); stopGps = null; }
   $('#gps-out').innerHTML = '';
   $('#q').value = '';
   $('#q-out').innerHTML = `<p class="searching">${t('searchEmpty')}</p>`;
@@ -1741,23 +1800,42 @@ $('#btn-add').addEventListener('click', () => {
   show('#sheet-add');
 });
 
+/* the add-location GPS: the fix shown and saved is the best one so far, and
+   keeps improving while the sheet is open (trackFix) */
+let stopGps = null;
 $('#btn-gps').addEventListener('click', () => {
   const out = $('#gps-out');
   if(!window.isSecureContext){ out.innerHTML = `<p class="err">${t('gpsInsecure')}</p>`; return; }
   if(!navigator.geolocation){ out.innerHTML = `<p class="err">${t('gpsFail')}</p>`; return; }
+  if(stopGps) stopGps();
   out.innerHTML = `<p class="hint">${t('gpsWait')}</p>`;
-  navigator.geolocation.getCurrentPosition(p => {
-    const lat = +p.coords.latitude.toFixed(5), lon = +p.coords.longitude.toFixed(5);
-    const acc = Math.round(p.coords.accuracy);
-    out.innerHTML = `<div class="field" style="margin-top:16px"><label>${t('fName')}</label>
-        <input id="g-name" type="text" value="${esc(t('myLoc'))}"></div>
-      <p class="hint" style="margin-bottom:12px">${lat}°, ${lon}° · ±${acc} m</p>
-      <button class="cta" id="g-save">${t('saveLoc')}</button>`;
-    $('#g-save').addEventListener('click', () =>
-      addLocation({name:$('#g-name').value.trim() || t('myLoc'), lat, lon, region:''}));
-  }, err => {
-    out.innerHTML = `<p class="err">${err.code === 1 ? t('gpsDenied') : t('gpsFail')}</p>`;
-  }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+  let best = null;
+  const line = done => {
+    const p = $('#g-fix'); if(!p || !best) return;
+    const coarse = done && fixCoarse(best);
+    p.className = coarse ? 'err' : 'hint';
+    p.textContent = `${best.lat.toFixed(5)}°, ${best.lon.toFixed(5)}° · ±${Math.round(best.acc)} m`
+      + (done ? (coarse ? ' · ' + t('gpsCoarse')(Math.round(best.acc)) : '') : ' · ' + t('gpsBetter'));
+  };
+  stopGps = trackFix(fix => {
+    const firstFix = !best;
+    best = fix;
+    if(firstFix){
+      out.innerHTML = `<div class="field" style="margin-top:16px"><label>${t('fName')}</label>
+          <input id="g-name" type="text" value="${esc(t('myLoc'))}"></div>
+        <p id="g-fix" class="hint" style="margin-bottom:12px"></p>
+        <button class="cta" id="g-save">${t('saveLoc')}</button>`;
+      $('#g-save').addEventListener('click', () => {
+        if(stopGps){ stopGps(); stopGps = null; }
+        addLocation({name:$('#g-name').value.trim() || t('myLoc'),
+                     lat:+best.lat.toFixed(5), lon:+best.lon.toFixed(5), region:''});
+      });
+    }
+    line(false);
+  }, () => { stopGps = null; line(true); }, err => {
+    stopGps = null;
+    out.innerHTML = `<p class="err">${err && err.code === 1 ? t('gpsDenied') : t('gpsFail')}</p>`;
+  });
 });
 
 $('#q').addEventListener('input', e => {

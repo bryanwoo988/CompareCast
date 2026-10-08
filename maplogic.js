@@ -30,4 +30,38 @@ function findNearby(locations, lat, lon, metres){
   return null;
 }
 
-if(typeof module !== 'undefined') module.exports = {findNearby, distanceM};
+/* Reading the phone's position.
+
+   A single getCurrentPosition() returns the first fix the phone has, and
+   that is usually a Wi-Fi or cell-tower estimate taken before the GPS has
+   locked on: off by hundreds of metres, sometimes kilometres. The fix
+   improves over the next few seconds, so the position is watched and the
+   most accurate fix kept, until it is good enough or time runs out.
+
+   FIX_GOAL_M   — good enough to stop: a typical open-sky phone GPS fix
+   FIX_MAX_MS   — the longest the user waits; the best fix so far is used
+   FIX_COARSE_M — worse than this, the user is told why (indoors, or the
+                  phone's "precise location" switched off) */
+const FIX_GOAL_M = 20, FIX_MAX_MS = 15000, FIX_COARSE_M = 100;
+
+/* a reading in usable shape, or null */
+function asFix(pos){
+  const c = pos && pos.coords;
+  if(!c) return null;
+  const lat = +c.latitude, lon = +c.longitude, acc = +c.accuracy;
+  if(!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+  return {lat, lon, acc:Number.isFinite(acc) && acc >= 0 ? acc : Infinity};
+}
+
+/* the better of two fixes: the smaller error circle. A tie keeps the newer
+   one, which is the more current position. */
+function betterFix(best, next){
+  if(!next) return best || null;
+  if(!best) return next;
+  return next.acc <= best.acc ? next : best;
+}
+
+const fixDone = fix => !!fix && fix.acc <= FIX_GOAL_M;
+const fixCoarse = fix => !!fix && fix.acc > FIX_COARSE_M;
+
+if(typeof module !== 'undefined') module.exports = {findNearby, distanceM, asFix, betterFix, fixDone, fixCoarse, FIX_GOAL_M, FIX_MAX_MS, FIX_COARSE_M};
