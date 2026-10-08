@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.22.0';
+const APP_VERSION = '3.22.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,16 @@ const APP_VERSION = '3.22.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.22.1',
+   zh:['修好：换了语言、单位或地块的模式之后，提醒还是用旧的语言、单位和模式发出来；现在一改就会同步到服务器',
+       '修好：模式准度核对进行中时离开 App、过一阵再回来，那张卡会一直停在「正在取…」',
+       '修好：某个模式没有当前气温时，详情页顶部会写成 0°；现在显示 —'],
+   en:['Fixed: after changing language, units or a location’s model, reminders kept arriving in the old language, units and model; the change now reaches the server straight away',
+       'Fixed: leaving the app while the model accuracy check was running, and coming back later, left that card stuck on loading',
+       'Fixed: a model with no current temperature showed 0° at the top of the detail page; it now shows —'],
+   ms:['Dibaiki: selepas menukar bahasa, unit atau model sesuatu lokasi, peringatan masih tiba dalam bahasa, unit dan model lama; perubahan kini terus sampai ke pelayan',
+       'Dibaiki: meninggalkan aplikasi semasa semakan ketepatan model berjalan, kemudian kembali, menyebabkan kad itu tersekat pada memuatkan',
+       'Dibaiki: model tanpa suhu semasa memaparkan 0° di atas halaman butiran; kini memaparkan —']},
   {v:'3.22.0',
    zh:['更新检查改成看网站上的 index.html 有没有新版本：以后每次上传新版，打开中的 App 都会自己发现并更新，不需要再手动改任何版本号',
        '修好：更新后偶尔会「一半新、一半旧」（新的页面配上旧的程序），现在每个文件都跟着页面的版本走'],
@@ -1846,7 +1856,10 @@ function paintHead(){
     const c = sum.current, code = pick(c,'weather_code',m.id,true), day = pick(c,'is_day',m.id,true);
     const w = wmo(code);
     $('#d-icon').innerHTML = icon(iconFor(code, day), 110);
-    $('#d-temp').innerHTML = `${Math.round(pick(c,'temperature_2m',m.id,true))}<span style="font-size:30px;letter-spacing:-1px">${uT()}</span>`;
+    /* a model with no current temperature used to read as a confident 0° */
+    const tc = pick(c,'temperature_2m',m.id,true);
+    $('#d-temp').innerHTML = nz(tc)
+      ? `${Math.round(tc)}<span style="font-size:30px;letter-spacing:-1px">${uT()}</span>` : '—';
     $('#d-cond').textContent = w[S.lang];
     if(day === 0) page.classList.add('night');
     else if(w.s === 'rain') page.classList.add('rain');
@@ -2079,9 +2092,13 @@ function renderCardGrid(){
   const eh = ex && ex.hourly ? ex.hourly : null;
   const k = (today && eh) ? nowIndex(eh.time, (c && c.time) || '') : -1;
 
+  /* one value out of a series the reply may not carry: a missing series used
+     to throw here and take the whole detail page down with it */
+  const at = (arr, i) => (Array.isArray(arr) && nz(arr[i])) ? arr[i] : null;
+  const exd = ex && ex.daily ? ex.daily : {};
   const uv = today
-    ? (k >= 0 && eh.uv_index && nz(eh.uv_index[k]) ? eh.uv_index[k] : null)
-    : (ex && ex.daily && nz(ex.daily.uv_index_max[D.day]) ? ex.daily.uv_index_max[D.day] : null);
+    ? (k >= 0 ? at(eh.uv_index, k) : null)
+    : at(exd.uv_index_max, D.day);
 
   let cards = '';
   if(today && c){
@@ -2101,8 +2118,8 @@ function renderCardGrid(){
   }
   const ps = pick(dd, 'precipitation_sum', m.id, true);
   const prob = today
-    ? (k >= 0 && eh && nz(eh.precipitation_probability[k]) ? eh.precipitation_probability[k] : null)
-    : (ex && ex.daily && nz(ex.daily.precipitation_probability_max[D.day]) ? ex.daily.precipitation_probability_max[D.day] : null);
+    ? (k >= 0 ? at(eh.precipitation_probability, k) : null)
+    : at(exd.precipitation_probability_max, D.day);
   if(ps && nz(ps[D.day])) cards += card(t('cRain'),
     `<div class="cbig">${fR(ps[D.day])}</div><p class="cnote">${nz(prob) ? Math.round(prob) + '%' : ''}</p>`);
 
@@ -2971,7 +2988,11 @@ function armAccuracy(){
 
 async function runAccuracy(){
   D.acc = 'busy';
-  const loc = D.loc, models = S.compare.slice(), seq = D.seq;
+  /* This run's own token, not D.seq. The quiet refresh on returning to the
+     app bumps D.seq without touching D.acc, so a check still in flight was
+     thrown away and the card sat on "loading" for good. */
+  const page = D, run = D.accRun = {};
+  const loc = D.loc, models = S.compare.slice();
   let out = null;
 
   /* 1. real verification against ERA5 reanalysis.
@@ -3036,9 +3057,10 @@ async function runAccuracy(){
     }catch(e){}
   }
 
-  /* the same guard loadDetail uses: a verification for a location the user has
-     already left must never paint over the one now on screen */
-  if(D.seq !== seq) return;
+  /* a verification for a page the user has left, or one superseded by a
+     change of units, models or model list (each resets D.acc), must never
+     paint over what is on screen now */
+  if(D !== page || D.accRun !== run || D.acc !== 'busy') return;
   D.acc = out || {mode:'consensus', rows:[], max:0, unit:uT()};
   if($('#detail').classList.contains('on')) paintAccuracyCard();
 }
@@ -3519,6 +3541,13 @@ function scheduleSync(ms){
   clearTimeout(syncTimer);
   syncTimer = setTimeout(syncPush, ms === undefined ? 3000 : ms);
 }
+/* The worker keeps its own copy of the language, the units and each plot's
+   model, and writes reminders from that copy. Only the reminder page used to
+   re-sync, so after switching to English or °F, or changing a plot's model,
+   reminders kept arriving in the old language, units or model. */
+function resyncReminders(){
+  if(S.notify && S.notify.enabled) scheduleSync();
+}
 
 async function syncPush(){
   const done = st => { syncState = st; if($('#notify').classList.contains('on')) paintSyncStatus(); };
@@ -3637,7 +3666,7 @@ function drawModelPicker(){
   $$('#model-list [data-pick]').forEach(b => b.addEventListener('click', () => {
     const id = b.dataset.pick;
     if(D.loc){
-      D.loc.model = id; save(); hide();
+      D.loc.model = id; save(); hide(); resyncReminders();
       /* the old model's payload goes with the old choice: repainting from it
          put its numbers under the new model's badge, and kept them there if
          the refetch then failed (finding B3) */
@@ -3645,7 +3674,7 @@ function drawModelPicker(){
       paintHead(); updateCard(D.loc.id); updatePin(D.loc.id);
       loadDetail();
     } else {
-      S.defaultModel = id; save(); hide(); drawSettings();
+      S.defaultModel = id; save(); hide(); drawSettings(); resyncReminders();
     }
   }));
 }
@@ -3706,13 +3735,13 @@ function drawSettings(){
   body.querySelectorAll('[data-unit]').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.unit;
     if(S.units[k] === b.dataset.val) return;
-    S.units[k] = b.dataset.val; save(); drawSettings();
+    S.units[k] = b.dataset.val; save(); drawSettings(); resyncReminders();
     Object.keys(cache).forEach(x => delete cache[x]);
     renderList(); refreshPins(); loadAll();
     if(D.loc && $('#detail').classList.contains('on')){ D.acc = null; D.ext = null; loadDetail(); }
   }));
   body.querySelectorAll('[data-def]').forEach(b => b.addEventListener('click', () => {
-    S.defaultModel = b.dataset.def; save(); drawSettings();
+    S.defaultModel = b.dataset.def; save(); drawSettings(); resyncReminders();
   }));
   body.querySelectorAll('[data-cmp]').forEach(b => b.addEventListener('click', () => {
     const id = b.dataset.cmp;
@@ -3898,7 +3927,7 @@ $('#btn-set').addEventListener('click', () => { drawSettings(); show('#sheet-set
 $('#btn-lang').addEventListener('click', e => { e.stopPropagation(); $('#lang-menu').classList.toggle('on'); });
 document.addEventListener('click', () => $('#lang-menu').classList.remove('on'));
 $$('#lang-menu [data-lang]').forEach(b => b.addEventListener('click', () => {
-  S.lang = b.dataset.lang; save(); applyLang(); $('#lang-menu').classList.remove('on');
+  S.lang = b.dataset.lang; save(); applyLang(); $('#lang-menu').classList.remove('on'); resyncReminders();
 }));
 
 function applyLang(){
