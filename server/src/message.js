@@ -7,7 +7,7 @@
 const L = {
   zh:{
     morning:'早上', afternoon:'下午', evening:'晚上', night:'凌晨',
-    rainProb:'降雨概率', rainSum:'降雨', tMax:'最高', tMin:'最低', wind:'风', gust:'阵风',
+    rainProb:'降雨机率', rainSum:'降雨', tMax:'最高', tMin:'最低', wind:'风', gust:'阵风',
     noData:'暂时查不到预报', sep:' · ', colon:'：', list:'、', many:(w, n) => `${w} · ${n} 个地块`,
     over:(w, n) => `${w} · ${n} 个地块超过门槛`, peak:p => `降雨最高 ${p}`
   },

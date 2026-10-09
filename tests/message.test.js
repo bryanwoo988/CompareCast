@@ -58,7 +58,7 @@ const E = (name, rainProb) => ({name, stats:{rainProb}, hits:['rainProb']});
 test('只有一个地块时保持原来的样子：标题是地块名', () => {
   const m = messageForWindow('zh', TH, [E('Alpha', 90)], RULES, METRIC);
   assert.strictEqual(m.title, 'Alpha');
-  assert.strictEqual(m.body, '下午 · 降雨概率 90% (≥60%)');
+  assert.strictEqual(m.body, '下午 · 降雨机率 90% (≥60%)');
 });
 /* ---- many plots: compact, grouped, worst first ----
    Eight plots as one line each ran to 250-360 characters; an iPhone banner
@@ -74,7 +74,7 @@ test('门槛模式：按条件分组，一行放多个地块，最严重的在�
   const m = messageForWindow('zh', TH, EIGHT, W8, METRIC);
   assert.strictEqual(m.title, '下午 · 8 个地块超过门槛');
   assert.deepStrictEqual(m.body.split('\n'), [
-    '降雨概率 ≥60%：Blok B 95%、Blok F 90%、Blok D 88%、Blok H 83%、Blok G 77%、Blok A 72%、Blok C 64%、Blok E 61%',
+    '降雨机率 ≥60%：Blok B 95%、Blok F 90%、Blok D 88%、Blok H 83%、Blok G 77%、Blok A 72%、Blok C 64%、Blok E 61%',
     /* equal values keep the rain order — the same "worst first" as the rest */
     '风 ≥20 km/h：Blok D 24、Blok G 24、Blok A 24']);
 });
@@ -85,8 +85,8 @@ test('紧凑排版短得多（8 个地块）', () => {
 test('每个地块的完整内容另外带着，给 App 里的提醒页用，同样最严重的在前', () => {
   const m = messageForWindow('zh', TH, EIGHT, W8, METRIC);
   assert.strictEqual(m.detail.length, 8);
-  assert.deepStrictEqual(m.detail[0], {id:'Blok B', name:'Blok B', text:'降雨概率 95% (≥60%)'});
-  assert.strictEqual(m.detail.find(x => x.id === 'Blok A').text, '降雨概率 72% (≥60%) · 风 24 km/h (≥20 km/h)');
+  assert.deepStrictEqual(m.detail[0], {id:'Blok B', name:'Blok B', text:'降雨机率 95% (≥60%)'});
+  assert.strictEqual(m.detail.find(x => x.id === 'Blok A').text, '降雨机率 72% (≥60%) · 风 24 km/h (≥20 km/h)');
 });
 test('查不到预报的地块单独一行，排在最后', () => {
   const m = messageForWindow('zh', TH, [...EIGHT.slice(0, 2), {id:'X', name:'Blok X', noData:true}], W8, METRIC);

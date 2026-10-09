@@ -208,7 +208,7 @@ test('一小时内都取不到预报：最后一次机会时发一条告知，�
 
 test('取不到的地块和有数据的地块在同一条通知里', async () => {
   const rep = await runDevice(mkEnv(), mkDev([A, B]), at(12, 45), mkRun({1:WET, 2:null}));
-  assert.match(rep[0].body, /降雨概率 ≥60%：Alpha 90%/);
+  assert.match(rep[0].body, /降雨机率 ≥60%：Alpha 90%/);
   assert.match(rep[0].body, /暂时查不到预报：Beta/);
 });
 

@@ -358,7 +358,7 @@ zh:{
   condT:'实况', vRain:'降雨', vWind:'风速', sInten:'强度', sChance:'降雨机率',
   lyEntry:'详情页排版', lyDesc:'长按一行拖动排序，右边的开关决定显示或隐藏。顶部的温度和日期条固定不动。',
   lySummary:'一句白话结论', lyTenday:'十天', lyCards:'数据卡片', lyCells:'当天数据格',
-  lyChartT:'气温对比图', lyChartP:'降雨概率图', lyAccuracy:'准确度',
+  lyChartT:'气温对比图', lyChartP:'降雨机率图', lyAccuracy:'准确度',
   lyChipNote:'模式选择在这张卡里。藏起来之后，改对比模式要来设置这边。',
   lyReset:'恢复默认排版', lyHidden:'已隐藏', lyAllHidden:'中间的区块全部藏起来了，详情页只剩顶部和底部。',
   lyOn:'显示', lyOff:'隐藏',
@@ -382,7 +382,7 @@ zh:{
   saveFail:'保存失败：手机储存空间可能已满，刚才的更改可能没有存下来。',
   covNone:(s)=>`这天没有数据：${s}`, covPart:(s)=>`这天只有部分小时，不计入上面的差异：${s}`, covUntil:(d)=>`只到 ${d}`, covHours:(h)=>`${h} 小时`,
   ntDigest:'每天摘要', ntThreshold:'仅超阈值',
-  rRainProb:'降雨概率', rRainSum:'降雨量', rTMax:'最高温', rTMin:'最低温', rWind:'风速', rGust:'阵风',
+  rRainProb:'降雨机率', rRainSum:'降雨量', rTMax:'最高温', rTMin:'最低温', rWind:'风速', rGust:'阵风',
   ntNoLoc:'还没有地点。先加一个，才能设定要提醒哪一块。',
   ntNoWin:'四个时段都关闭了。上面至少打开一个，才有东西可以勾。',
   ntPermOn:'已允许通知', ntPermAsk:'允许通知', ntPermDenied:'通知被系统拒绝了。要改的话，去手机设置里找到这个网站或应用，重新允许。',
@@ -401,8 +401,8 @@ zh:{
   pickModel:'预报模式', pickModelD:'选择由哪个模式驱动这个地点。',
   unavail:'这个地点没有该模式数据', avail:'可用',
   now:'当前实况', humid:'湿度', wind:'风速', gust:'阵风', press:'气压',
-  rainToday:'今日降雨', rainChance:'降雨概率', rainChanceMax:'最高降雨概率', uv:'紫外线', uvMax:'最高紫外线', dir:'风向', sunrise:'日出', sunset:'日落',
-  probSrc:'降雨概率与紫外线来自 Best Match 混合模式，因为有几个模式不输出这两项。',
+  rainToday:'今日降雨', rainChance:'降雨机率', rainChanceMax:'最高降雨机率', uv:'紫外线', uvMax:'最高紫外线', dir:'风向', sunrise:'日出', sunset:'日落',
+  probSrc:'降雨机率与紫外线来自 Best Match 混合模式，因为有几个模式不输出这两项。',
   now2:'现在',
   tMax:'最高气温', tMin:'最低气温', rainSum:'降雨总量', windMax:'最大风速',
   vTemp:'气温', hiMark:'高', loMark:'低',
@@ -3859,7 +3859,7 @@ zh:`<h4 class="info-h">这个 App 做什么</h4>
 <ul class="info-l">
 <li>全球模式的格点在 9–25 公里之间，一个格点代表一大片区域，不等于你园区里的实测值。</li>
 <li>热带的对流性阵雨尺度小、变化快，任何模式的降雨量都只能当参考。</li>
-<li>降雨概率只有部分模式输出，所以对比图用的是降雨量，各家都有。</li>
+<li>降雨机率只有部分模式输出，所以对比图用的是降雨量，各家都有。</li>
 <li>预报不是观测。要核对实际下了多少雨，还是得看园区的雨量筒。</li>
 <li>App 不缓存天气数据。App 开着的时候断网，会继续显示已经读到的内容，并写明是几点更新的；没有网络时重新打开，就没有预报可看。</li>
 </ul>`,
