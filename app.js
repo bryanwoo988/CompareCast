@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.22.2';
+const APP_VERSION = '3.23.0';
 
 /* What changed, per release.
 
@@ -16,7 +16,14 @@ const APP_VERSION = '3.22.2';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
-  {v:'3.22.2',
+  {v:'3.23.0', date:'2026-10-13',
+   zh:['更新说明现在会写出每一版的发布日期',
+       '在「关于」里可以随时查看全部更新记录'],
+   en:['The release notes now show the date of each version',
+       'The full list of updates is available any time from About'],
+   ms:['Nota keluaran kini menunjukkan tarikh setiap versi',
+       'Senarai penuh kemas kini boleh dilihat bila-bila masa dari Perihal']},
+  {v:'3.22.2', date:'2026-10-08',
    zh:['「定位到我」和用 GPS 加地点更准了：以前直接用手机给的第一个位置，那常常是 Wi-Fi 或基站估的，可能差几百米；现在会等几秒、取最准的那个（最多 15 秒）',
        '地图上的蓝点外面多了一圈，圈的大小就是误差范围',
        '精度超过 ±100 米时会提醒你到室外，或打开手机设置里的「精确位置」'],
@@ -26,7 +33,7 @@ const RELEASES = [
    ms:['\u201cCari lokasi saya\u201d dan menambah lokasi dengan GPS kini lebih tepat: dahulu ia mengambil bacaan pertama telefon, selalunya anggaran Wi-Fi atau menara sel yang tersasar ratusan meter; kini ia menunggu beberapa saat untuk bacaan terbaik (paling lama 15 saat)',
        'Titik biru pada peta kini dikelilingi bulatan yang menunjukkan julat ralat bacaan',
        'Jika bacaan lebih teruk daripada \u00b1100 m, anda diminta keluar ke kawasan lapang atau menghidupkan Lokasi Tepat dalam tetapan telefon']},
-  {v:'3.22.1',
+  {v:'3.22.1', date:'2026-10-08',
    zh:['修好：换了语言、单位或地块的模式之后，提醒还是用旧的语言、单位和模式发出来；现在一改就会同步到服务器',
        '修好：模式准度核对进行中时离开 App、过一阵再回来，那张卡会一直停在「正在取…」',
        '修好：某个模式没有当前气温时，详情页顶部会写成 0°；现在显示 —'],
@@ -36,18 +43,18 @@ const RELEASES = [
    ms:['Dibaiki: selepas menukar bahasa, unit atau model sesuatu lokasi, peringatan masih tiba dalam bahasa, unit dan model lama; perubahan kini terus sampai ke pelayan',
        'Dibaiki: meninggalkan aplikasi semasa semakan ketepatan model berjalan, kemudian kembali, menyebabkan kad itu tersekat pada memuatkan',
        'Dibaiki: model tanpa suhu semasa memaparkan 0° di atas halaman butiran; kini memaparkan —']},
-  {v:'3.22.0',
+  {v:'3.22.0', date:'2026-09-30',
    zh:['更新检查改成看网站上的 index.html 有没有新版本：以后每次上传新版，打开中的 App 都会自己发现并更新，不需要再手动改任何版本号',
        '修好：更新后偶尔会「一半新、一半旧」（新的页面配上旧的程序），现在每个文件都跟着页面的版本走'],
    en:['Update checks now look at whether a newer index.html is live: every new upload is picked up by open apps on its own, with no version number to change by hand',
        'Fixed: an update could occasionally come out half new, half old (the new page running the old code); every file now follows the page\u2019s revision'],
    ms:['Semakan kemas kini kini melihat sama ada index.html yang lebih baharu sudah ada: setiap muat naik baharu dikesan sendiri oleh aplikasi yang sedang dibuka, tanpa perlu menukar nombor versi',
        'Dibaiki: kemas kini kadangkala separuh baharu, separuh lama (halaman baharu dengan kod lama); kini setiap fail mengikut versi halaman']},
-  {v:'3.21.1',
+  {v:'3.21.1', date:'2026-09-30',
    zh:['拿掉了下雨、太阳、云和星星的背景动画，比较省电；每种天气的背景颜色照旧，启动画面也保留'],
    en:['Removed the rain, sun, cloud and star background animations to save battery; each weather keeps its background colour, and the splash screen stays'],
    ms:['Animasi latar hujan, matahari, awan dan bintang dibuang untuk menjimatkan bateri; warna latar setiap cuaca kekal, dan skrin pembuka dikekalkan']},
-  {v:'3.21.0',
+  {v:'3.21.0', date:'2026-09-30',
    zh:['以后更新不用清缓存、也不用关掉重开：刚打开或回到 App 时自动换成新版本，并回到你原来那一页；正在操作时只在底部提示，不会打断你',
        '打开 App 时有启动画面',
        '「关于」里加了 Created by Bryan Woo 和二维码：别人扫一下就能用手机浏览器直接打开这个 App，也可以直接分享链接'],
@@ -57,7 +64,7 @@ const RELEASES = [
    ms:['Kemas kini tidak lagi perlu cache dikosongkan atau aplikasi ditutup dan dibuka semula: aplikasi bertukar ke versi baharu apabila dibuka atau dikembalikan, dan membawa anda kembali ke halaman tadi; semasa anda sibuk ia hanya menawarkan kemas kini di bawah tanpa mengganggu',
        'Skrin pembuka apabila aplikasi dibuka',
        'Perihal kini memaparkan Created by Bryan Woo dan kod QR: sesiapa boleh mengimbasnya untuk membuka aplikasi terus dalam pelayar telefon, atau anda boleh berkongsi pautan']},
-  {v:'3.20.0',
+  {v:'3.20.0', date:'2026-09-30',
    zh:['地块多的时候，提醒改成紧凑排版：按条件分组、一行放好几个地块、最严重的排最前面，弹出来就能看到最要紧的',
        '「每天摘要」的提醒把降雨机率最高的地块排最前面，标题直接写出最高值',
        '点开提醒会进到 App 里的一页，列出这条提醒涵盖的每个地块和完整数字，点任何一个地块就能进去看'],
@@ -67,7 +74,7 @@ const RELEASES = [
    ms:['Dengan banyak lokasi, peringatan kini padat: dikumpul mengikut had, beberapa lokasi sebaris, paling teruk dahulu, jadi sepanduk menunjukkan yang paling penting',
        'Peringatan ringkasan harian meletakkan lokasi paling basah di hadapan dan menunjukkan nilai tertinggi dalam tajuk',
        'Mengetik peringatan membuka halaman dalam aplikasi yang menyenaraikan setiap lokasi berserta angka penuh; ketik mana-mana untuk membukanya']},
-  {v:'3.19.0',
+  {v:'3.19.0', date:'2026-09-30',
    zh:['「模式准度」改成真正的预报准度：比较各模式提前 1 天、提前 3 天的预报。以前量到的是起始分析，会把排名排错——在吉隆坡，旧方法排第一的 ECMWF，真正的提前 1 天预报只排第三',
        '每张卡和详情页都写着「更新于几点」；超过三小时的数据会变灰并写明多久以前。App 回到前台时，超过半小时的数据会自动重新读取',
        '切换单位或模式时，慢回来的旧数据不会再盖掉新数据（例如卡片卡在 30° 而不是 86°F）',
@@ -92,7 +99,7 @@ const RELEASES = [
        'Pustaka peta dimuatkan apabila peta dibuka, jadi senarai muncul lebih cepat; jika gagal, anda diberitahu dan boleh cuba lagi',
        'Pilih bahasa semasa pelancaran pertama; zum cubit berfungsi; teks malap lebih jelas; butang lebih mudah ditekan',
        'Teks dalam kotak nama tidak lagi hilang semasa segar semula; dua tab tidak lagi menulis ganti satu sama lain; kegagalan simpan dimaklumkan']},
-  {v:'3.18.0',
+  {v:'3.18.0', date:'2026-09-30',
    zh:['跨午夜的提醒时段（例如 22:00–02:00）现在读的是当晚到次日凌晨那几个小时。以前会读错小时',
        '把某个地块用到的时段全部关掉后，服务器上的旧提醒会一并撤掉。以前旧排程会留着继续发',
        '一小时内都取不到某地块的预报时，会发一条「暂时查不到预报」，不再沉默——沉默容易被当成没事',
@@ -114,7 +121,7 @@ const RELEASES = [
        'Halaman peringatan kini menyatakan angka peringatan menggunakan model setiap lokasi',
        'Telefon lama tanpa randomUUID tidak pernah dapat mendaftar; kini boleh',
        'Penyegerakan yang gagal dicuba semula beberapa kali, dan pelayan menyemak kunci push dengan lebih ketat']},
-  {v:'3.17.0',
+  {v:'3.17.0', date:'2026-09-30',
    zh:['同一时段的提醒合成一条通知，列出所有地块。以前每个地块各发一条，而且会互相覆盖——十个地块只看得到最后一个',
        '晚上设的提醒现在讲的是接下来的时段。以前晚上九点提醒「早上时段」，报的是当天已经过去的那个早上',
        '提醒发送失败（网络或服务器一时不通）会在一小时内自动补发，不再当天直接丢掉',
@@ -133,7 +140,7 @@ const RELEASES = [
        'Angka dalam peringatan sepadan dengan aplikasi: setiap lokasi guna model yang ditetapkan, kebarangkalian hujan masih dari Best Match',
        'Pelayan kini hanya menerima perkhidmatan push sebenar dan mengehadkan saiz permintaan serta bilangan peranti',
        'Muat turun kemas kini yang tidak lengkap tidak lagi merosakkan salinan luar talian']},
-  {v:'3.16.1',
+  {v:'3.16.1', date:'2026-09-29',
    zh:['修好设置页滑不顺：在弹层里往下滑会被误判成下拉刷新，刷新逻辑再把弹层自己的滚动挡掉。现在弹层和覆盖页一律不触发下拉刷新',
        '全 App 的滚动更顺了：挡滚动的监听器以前一直挂着，现在只在真的在拖动或下拉时才挂',
        '修好今天那句白话结论说错话：它只看当前时间之后，却写「全天无雨」——明明早上下过 1.1mm。现在写「接下来降雨机率低」',
@@ -152,7 +159,7 @@ const RELEASES = [
        '\u201cTiada hujan\u201d ditukar kepada \u201ckebarangkalian hujan rendah\u201d',
        'Paparan hujan kini menyatakan sumber kedua-dua nombornya',
        'Menamatkan seretan dalam penyunting susunan tidak lagi menogol suis baris itu']},
-  {v:'3.16.0',
+  {v:'3.16.0', date:'2026-09-29',
    zh:['详情页现在可以自己排版：设置 → 详情页排版，长按一行拖动排序，右边的开关决定显示或隐藏',
        '喷药看风、收成看雨——把你最常看的那块拖到最上面就好，不用每次滑到下面去找',
        '可排的有八块：一句白话结论、实况、十天、数据卡片、当天数据格、气温对比图、降雨概率图、准确度',
@@ -163,11 +170,11 @@ const RELEASES = [
        'Eight sections can be moved: the plain-language line, Conditions, ten days, data cards, day figures, the temperature comparison, the rain chance chart, accuracy',
        'The temperature header and the date strip stay fixed, so no arrangement can strand you on one day',
        'Sections added in later releases appear in your arrangement on their own \u2014 no need to redo it']},
-  {v:'3.15.1',
+  {v:'3.15.1', date:'2026-09-29',
    zh:['十天卡片挪到实况卡片正下方，跟 iPhone 一样——小时和十天是同一个问题的两个尺度，本来就该连着看；数据格子和对比图往下挪'],
    en:['The ten-day card now sits directly under the Conditions card, the way iPhone has it \u2014 hours and days are the same question at two scales, so they belong together; the data cards and comparison charts moved down'],
    ms:['Kad sepuluh hari kini betul-betul di bawah kad Keadaan, sama seperti iPhone \u2014 jam dan hari ialah soalan sama pada dua skala; kad data dan graf perbandingan turun ke bawah']},
-  {v:'3.15.0',
+  {v:'3.15.0', date:'2026-09-29',
    zh:['切到水滴，小时条变成降雨强度柱：柱高就是雨量，全天同一把尺，底下是降雨机率',
        '切到风，小时条变成一条贯穿全天的风速曲线，现在之前虚线、现在一个圆点，浅色带是阵风',
        '每小时的风向箭头现在是真的风向，按当时风往哪吹转',
@@ -180,18 +187,18 @@ const RELEASES = [
        'The temperature tab no longer prints rain percentages \u2014 those belong to the rain tab',
        'The ten-day list follows the same switch: hourly bars + total + chance for rain, a line + a speed range for wind',
        'Dropped the \u201cNext 10 days\u201d heading; ten dated rows already say it']},
-  {v:'3.14.0',
+  {v:'3.14.0', date:'2026-09-29',
    zh:['详情页重新排序，学 iOS 天气：实况小时条排在前面，十天概览接着，多模式对比图挪到下面',
        '实况卡片加了气温 / 降雨 / 风速三个切换，按一下就看接下来每小时的那一项',
        '风速视图的每小时图标换成风向箭头'],
    en:['The detail page follows iOS Weather\u2019s order now: the hourly Conditions card first, the ten-day list next, the model-comparison charts moved further down',
        'The Conditions card has temperature / precipitation / wind toggles \u2014 tap one to read that metric hour by hour',
        'On the wind view each hour shows a direction arrow instead of a weather icon']},
-  {v:'3.13.1',
+  {v:'3.13.1', date:'2026-09-29',
    zh:['风向与气压两张卡片重做：密齿刻度环，风向用「来向圆点 + 去向箭头」，四个方位都标'],
    en:['Rebuilt the wind and pressure cards: a proper tick ring, wind shown as a dot for where it comes from and an arrow for where it goes'],
    ms:['Kad angin dan tekanan dibina semula: cincin penanda sebenar, angin ditunjuk dengan titik arah datang dan anak panah arah tuju']},
-  {v:'3.13.0',
+  {v:'3.13.0', date:'2026-09-29',
    zh:['详情页顶部加了一句白话结论，例如「下午有雨，最高 86%」——不用自己从一堆数字里推',
        '数据格子改成卡片：风向罗盘、气压表盘、日出日落弧线、紫外线色阶条',
        '加回十天概览，而且现在可以点，点哪天就看哪天',
@@ -204,31 +211,31 @@ const RELEASES = [
        'Sel data menjadi kad: kompas angin, tolok tekanan, lengkung matahari, skala UV',
        'Gambaran sepuluh hari kembali, dan mengetik baris kini memilih hari itu',
        'Menambah penglihatan dan takat embun']},
-  {v:'3.12.0',
+  {v:'3.12.0', date:'2026-09-29',
    zh:['修好「当前实况」里降雨概率和紫外线显示全天最高值的问题——晚上九点不会再写着 100% 下雨、紫外线 9',
        '其他日期的这两格改称「最高降雨概率」「最高紫外线」，说清楚是全天值'],
    en:['Fixed rain chance and UV under "Right now" showing the whole day\u2019s peak — 9pm no longer claims 100% rain and UV 9',
        'On other days those two now read "Peak rain chance" and "Peak UV", so it is clear they are daily figures'],
    ms:['Membaiki peluang hujan dan UV di bawah "Sekarang" yang memaparkan nilai tertinggi harian',
        'Pada hari lain kedua-duanya kini "Peluang hujan tertinggi" dan "UV tertinggi"']},
-  {v:'3.11.1',
+  {v:'3.11.1', date:'2026-09-29',
    zh:['修好了一处会让离线与通知一起失效的隐患', '清掉 66 条没人用的旧文案，应用包更小'],
    en:['Fixed a fault that could have taken offline support and notifications down together',
        'Removed 66 unused strings, so the app downloads smaller'],
    ms:['Membaiki kelemahan yang boleh melumpuhkan sokongan luar talian dan pemberitahuan sekali gus',
        'Membuang 66 teks tidak terpakai, jadi aplikasi lebih kecil']},
-  {v:'3.11.0',
+  {v:'3.11.0', date:'2026-09-29',
    zh:['详情页加了天气动画：下雨会下雨、阴天有云飘、晴天有阳光、夜晚有星星',
        '晴天以前没有专属配色，现在有了'],
    en:['The detail page now animates the weather: rain falls, clouds drift, sun glows, stars twinkle',
        'Clear days finally have their own colour scheme'],
    ms:['Halaman perincian kini beranimasi mengikut cuaca: hujan turun, awan hanyut, matahari bersinar, bintang berkelip',
        'Hari cerah kini ada skema warna tersendiri']},
-  {v:'3.10.0',
+  {v:'3.10.0', date:'2026-09-29',
    zh:['更新现在开一次就到位，不用再开两次'],
    en:['Updates now land on the first launch instead of the second'],
    ms:['Kemas kini kini tiba pada lancaran pertama, bukan kedua']},
-  {v:'3.9.0',
+  {v:'3.9.0', date:'2026-09-29',
    zh:['更新后会弹出这张说明，告诉你这一版改了什么',
        '修好了设定提醒时间时，时间选择器会自己收起来的问题',
        '修好了拖动排序时，后台刷新会让拖拽失效的问题',
@@ -244,33 +251,33 @@ const RELEASES = [
        'Susun-seret tidak lagi gagal senyap apabila muat semula latar tiba',
        'Tiada lokasi ditanda tidak lagi dipaparkan sebagai ralat',
        'Butang kembali kini berfungsi selepas membuka peringatan dari tetapan']},
-  {v:'3.8.0',
+  {v:'3.8.0', date:'2026-09-29',
    zh:['通知登记状态不再谎报成功，失败会说明原因', '登记失败后会自动重试'],
    en:['Reminder registration no longer claims success when it failed, and says why',
        'A failed registration now retries by itself'],
    ms:['Pendaftaran peringatan tidak lagi mendakwa berjaya apabila gagal',
        'Pendaftaran yang gagal kini mencuba semula sendiri']},
-  {v:'3.7.0',
+  {v:'3.7.0', date:'2026-09-29',
    zh:['提醒改用地块所在时区，「早上 6 点」指的是田里的 6 点', '「关于」里的版本号现在是真的'],
    en:['Reminders follow each location\u2019s own time zone', 'The version in About is now the real one'],
    ms:['Peringatan mengikut zon waktu lokasi itu sendiri', 'Versi dalam Perihal kini yang sebenar']},
-  {v:'3.6.0',
+  {v:'3.6.0', date:'2026-09-29',
    zh:['天气提醒上线：按时段、按地块推送'],
    en:['Weather reminders are live: per time window, per location'],
    ms:['Peringatan cuaca kini aktif: ikut tempoh masa dan lokasi']},
-  {v:'3.3.0',
+  {v:'3.3.0', date:'2026-09-29',
    zh:['下拉刷新，并会顺带检查有没有新版本'],
    en:['Pull to refresh, which also checks for a new version'],
    ms:['Tarik untuk muat semula, sekali gus menyemak versi baharu']},
-  {v:'3.2.0',
+  {v:'3.2.0', date:'2026-09-29',
    zh:['长按地点可拖动排序，排最前的成为地图默认视角'],
    en:['Hold a location to drag it into order; the first becomes the map\u2019s default view'],
    ms:['Tekan dan tahan lokasi untuk menyusunnya']},
-  {v:'3.1.0',
+  {v:'3.1.0', date:'2026-09-29',
    zh:['地图加了定位、加点与地名搜索', '修好了地图手势与页面滚动打架'],
    en:['The map gained locate, add and place search', 'Fixed map gestures fighting page scroll'],
    ms:['Peta kini ada cari lokasi, tambah dan carian tempat']},
-  {v:'3.0.0',
+  {v:'3.0.0', date:'2026-09-29',
    zh:['详情页改为按日期组织，图表可触摸查值'],
    en:['The detail page is organised by date, with touch-readable charts'],
    ms:['Halaman perincian disusun mengikut tarikh']}
@@ -424,7 +431,7 @@ zh:{
   defModel:'新地点默认模式', defModelD:'加新地点时先用这个模式。之后每个地点都能单独改。',
   cmpSection:'对比哪些模式', cmpD:'勾选的模式会出现在每个地点的对比图和准度核对里。',
   about:'关于', version:'版本',
-  relTitle:'这一版有什么变化', relDone:'知道了', dataSrc:'数据来源', savedOk:'已保存', deleted:'已删除'
+  relAll:'更新记录', relTitle:'这一版有什么变化', relDone:'知道了', dataSrc:'数据来源', savedOk:'已保存', deleted:'已删除'
 },
 en:{
   app:'Predict Weather', subSaved:'My Locations', subMap:'Weather Map', tabSaved:'Saved', tabMap:'Map',
@@ -520,7 +527,7 @@ en:{
   defModel:'Default model for new locations', defModelD:'Used when you add a location. You can still change it per location.',
   cmpSection:'Models to compare', cmpD:'Ticked models appear in the compare chart and the accuracy check.',
   about:'About', version:'Version',
-  relTitle:'What changed', relDone:'Got it', dataSrc:'Data sources', savedOk:'Saved', deleted:'Removed'
+  relAll:'What\'s new', relTitle:'What changed', relDone:'Got it', dataSrc:'Data sources', savedOk:'Saved', deleted:'Removed'
 },
 ms:{
   app:'Ramalan Cuaca', subSaved:'Lokasi Saya', subMap:'Peta Cuaca', tabSaved:'Lokasi', tabMap:'Peta',
@@ -616,7 +623,7 @@ ms:{
   defModel:'Model asal untuk lokasi baharu', defModelD:'Digunakan bila anda tambah lokasi. Boleh tukar untuk setiap lokasi.',
   cmpSection:'Model untuk dibanding', cmpD:'Model bertanda muncul dalam carta banding dan semakan ketepatan.',
   about:'Perihal', version:'Versi',
-  relTitle:'Apa yang berubah', relDone:'Faham', dataSrc:'Sumber data', savedOk:'Disimpan', deleted:'Dibuang'
+  relAll:'Apa yang baharu', relTitle:'Apa yang berubah', relDone:'Faham', dataSrc:'Sumber data', savedOk:'Disimpan', deleted:'Dibuang'
 }};
 
 /* ---------- 3. Weather codes + icons ---------- */
@@ -3934,7 +3941,7 @@ function drawInfo(){
         <span style="flex:1"><b>${s.n}</b><small>${s.d[S.lang]}</small></span><span class="go">↗</span></a>`).join('')}
     </div>
     <div class="group"><h4>${t('about')}</h4>
-      <p style="margin-bottom:4px">${t('app')} · ${t('version')} ${APP_VERSION}</p>
+      <p style="margin-bottom:4px">${t('app')} · ${t('version')} ${APP_VERSION}${RELEASES[0].date ? ' · ' + RELEASES[0].date : ''} · <a href="#" id="rel-all">${t('relAll')}</a></p>
       <p class="credit">Created by Bryan Woo</p>
       <div class="share-card">
         <img class="qr" src="qr.svg" alt="${esc(t('qrAlt'))}" width="200" height="200">
@@ -3966,7 +3973,7 @@ async function shareApp(){
    which is exactly what happened when the version in About stayed at 2.0. */
 function drawReleases(list){
   $('#rel-body').innerHTML = list.map(r => `
-    <div class="rel-v"><b>${esc(r.v)}</b></div>
+    <div class="rel-v"><b>${esc(r.v)}</b>${r.date ? `<small>${esc(r.date)}</small>` : ''}</div>
     <ul class="rel-l">${(r[S.lang] || r.en).map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('');
 }
 
@@ -3985,6 +3992,13 @@ function maybeShowReleaseNotes(){
 }
 
 $('#rel-done').addEventListener('click', hide);
+/* About → the whole list, any time */
+document.addEventListener('click', e => {
+  if(!e.target.closest('#rel-all')) return;
+  e.preventDefault();
+  drawReleases(RELEASES);
+  show('#sheet-rel');
+});
 
 /* ---------- 15. Tabs, language, boot ---------- */
 function setTab(which){
