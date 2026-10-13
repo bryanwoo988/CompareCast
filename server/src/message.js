@@ -129,7 +129,9 @@ function messageForWindow(lang, win, entries, rules, units){
       const head = d[k] + (limit ? ` ${down ? '≤' : '≥'}${limit}` : '');
       lines.push(head + d.colon + hit.map(x => `${x.name} ${bare(k, x.stats[k], u)}`).join(d.list));
     });
-    title = d.over(label, rows.length);
+    /* plots with no forecast are listed but crossed nothing: counting them
+       here used to call three plots "over your limits" when two were */
+    title = live.length ? d.over(label, live.length) : d.many(label, rows.length);
   } else {
     live.forEach(x => {
       const s = x.stats, parts = [];

@@ -93,6 +93,11 @@ test('查不到预报的地块单独一行，排在最后', () => {
   const lines = m.body.split('\n');
   assert.strictEqual(lines[lines.length - 1], '暂时查不到预报：Blok X');
   assert.strictEqual(m.detail[m.detail.length - 1].id, 'X');
+  assert.strictEqual(m.title, '下午 · 2 个地块超过门槛');
+});
+test('全部查不到预报时，标题不说超过门槛', () => {
+  const lost = ['X', 'Y'].map(n => ({id:n, name:n, noData:true}));
+  assert.strictEqual(messageForWindow('en', TH, lost, W8, METRIC).title, 'Afternoon · 2 locations');
 });
 test('最低温的门槛是往下算，最冷的排前面', () => {
   const cold = [['P', 21], ['Q', 18], ['R', 20]].map(([n, v]) => ({id:n, name:n, stats:{tMin:v}, hits:['tMin']}));

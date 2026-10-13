@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.24.0';
+const APP_VERSION = '3.24.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.24.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.24.1', date:'2026-10-13',
+   zh:['修好：门槛提醒的标题以前把查不到预报的地块也算成「超过门槛」，现在只算真正超过的地块'],
+   en:['Fixed: a limit reminder\u2019s title used to count locations with no forecast as \u201cover your limits\u201d; it now counts only the ones that actually crossed a limit'],
+   ms:['Dibaiki: tajuk peringatan had dahulu mengira lokasi tanpa ramalan sebagai \u201cmelepasi had\u201d; kini hanya lokasi yang benar-benar melepasi had dikira']},
   {v:'3.24.0', date:'2026-10-13',
    zh:['「关于」里的版本号旁边会显示这一版的更新日期和时间'],
    en:['About shows the date and time of this update next to the version'],
