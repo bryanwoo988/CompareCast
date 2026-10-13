@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.23.0';
+const APP_VERSION = '3.24.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.23.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.24.0', date:'2026-10-13',
+   zh:['「关于」里的版本号旁边会显示这一版的更新日期和时间'],
+   en:['About shows the date and time of this update next to the version'],
+   ms:['Perihal menunjukkan tarikh dan masa kemas kini ini di sebelah versi']},
   {v:'3.23.0', date:'2026-10-13',
    zh:['更新说明现在会写出每一版的发布日期',
        '在「关于」里可以随时查看全部更新记录'],
@@ -3934,6 +3938,14 @@ const SOURCES = [
   {n:'UKMO', d:{zh:'英国气象局',en:'UK Met Office',ms:'Met Office UK'}, u:'https://www.metoffice.gov.uk/'},
   {n:'Esri', d:{zh:'地图底图：World Imagery、World Street Map、Dark Gray Canvas、边界与地名 · Esri、Maxar、Earthstar Geographics 及 GIS 用户社群',en:'Basemaps: World Imagery, World Street Map, Dark Gray Canvas, Boundaries & Places · Esri, Maxar, Earthstar Geographics and the GIS user community',ms:'Peta asas: World Imagery, World Street Map, Dark Gray Canvas, Sempadan & Tempat · Esri, Maxar, Earthstar Geographics dan komuniti pengguna GIS'}, u:'https://www.esri.com/'}
 ];
+/* When this build went live: index.html's Last-Modified (set by GitHub Pages
+   on every deploy), as local date and time. */
+function builtAt(){
+  const d = new Date(document.lastModified);
+  if(!isFinite(d)) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 function drawInfo(){
   $('#info-body').innerHTML = INFO[S.lang] + `
     <div class="group" style="margin-top:22px"><h4>${t('dataSrc')}</h4>
@@ -3941,7 +3953,7 @@ function drawInfo(){
         <span style="flex:1"><b>${s.n}</b><small>${s.d[S.lang]}</small></span><span class="go">↗</span></a>`).join('')}
     </div>
     <div class="group"><h4>${t('about')}</h4>
-      <p style="margin-bottom:4px">${t('app')} · ${t('version')} ${APP_VERSION}${RELEASES[0].date ? ' · ' + RELEASES[0].date : ''} · <a href="#" id="rel-all">${t('relAll')}</a></p>
+      <p style="margin-bottom:4px">${t('app')} · ${t('version')} ${APP_VERSION} · ${builtAt() || RELEASES[0].date} · <a href="#" id="rel-all">${t('relAll')}</a></p>
       <p class="credit">Created by Bryan Woo</p>
       <div class="share-card">
         <img class="qr" src="qr.svg" alt="${esc(t('qrAlt'))}" width="200" height="200">
