@@ -9,6 +9,12 @@ import {RADAR_URL, STALE_MIN, frameTime, radarGrids} from './radar.js';
 
 /* the radar has its own, faster schedule (wrangler.toml) */
 const RADAR_CRON = '*/5 * * * *';
+/* River levels run on their own quarter hour, seven minutes after the
+   reminders: reading JPS's 1.3 MB feed takes about half of the free plan's
+   10 ms per run, and sharing a run with the reminders, warnings and their
+   encrypted pushes left almost nothing spare. Each schedule gets its own
+   10 ms. */
+const FLOOD_CRON = '7-59/15 * * * *';
 
 /* A real payload is a few kilobytes even at the 50-plot ceiling. */
 const MAX_BODY = 16 * 1024;
@@ -127,9 +133,13 @@ export const scheduledRadar = async (event, env, opts) => {
   return {devices:devs.length, sent, failed};
 };
 
-export const scheduled = async (event, env) => {
-  const now = new Date();
+export const scheduled = async (event, env, ctx, opts) => {
+  const now = (opts && opts.now) || new Date();
+  const floodOnly = !!(event && event.cron === FLOOD_CRON);
   const run = {
+    /* which storm checks this run makes: rivers alone on their schedule,
+       everything else on the main one */
+    parts:floodOnly ? {flood:true} : {official:true, model:true},
     cache:new Map(), seen:new Set(), stats:{noForecast:0},
     /* the storm models are hourly: checked on the first run of each hour */
     modelHour:now.getUTCMinutes() < 15,
@@ -148,7 +158,7 @@ export const scheduled = async (event, env) => {
         if(!raw) continue;
         const dev = JSON.parse(raw);
         devices++;
-        const rep = await runDevice(env, dev, now, run);
+        const rep = floodOnly ? [] : await runDevice(env, dev, now, run);
         sent += rep.filter(x => x.result === 'sent').length;
         failed += rep.filter(x => x.result === 'failed').length;
         if(rep.some(x => x.result === 'expired')) continue;
@@ -160,7 +170,7 @@ export const scheduled = async (event, env) => {
     cursor = page.list_complete ? null : page.cursor;
   } while(cursor);
   /* counts only: titles and bodies name the user's plots */
-  console.log('cron done, devices', devices, 'sent', sent, 'failed', failed, 'storm', storms, 'no forecast', run.stats.noForecast);
+  console.log(floodOnly ? 'rivers done, devices' : 'cron done, devices', devices, 'sent', sent, 'failed', failed, 'storm', storms, 'no forecast', run.stats.noForecast);
 };
 
 export default {
@@ -170,4 +180,4 @@ export default {
   }
 };
 
-export {handle, MAX_BODY, MAX_DEVICES};
+export {handle, MAX_BODY, MAX_DEVICES, FLOOD_CRON, RADAR_CRON};
