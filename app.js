@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.28.0';
+const APP_VERSION = '3.28.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.28.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.28.1', date:'2026-11-08', time:'19:05',
+   zh:['修好：从地图页打开提醒、设置或地块详情时，地图的版权标示（Leaflet、Esri）会浮在页面上'],
+   en:['Fixed: opening Reminders, Settings or a location from the map left the map\u2019s credit line (Leaflet, Esri) floating over the page'],
+   ms:['Dibaiki: membuka Peringatan, Tetapan atau sesuatu lokasi dari peta meninggalkan baris kredit peta (Leaflet, Esri) terapung di atas halaman']},
   {v:'3.28.0', date:'2026-11-08', time:'18:32',
    zh:['新增连续降雨警告：MetMalaysia 对地块所在的区发出连续降雨警告时通知你，写出等级（注意、恶劣天气、危险）和期限；等级升高或期限延长时再通知，原样重发的不再通知',
        '通知变短了：标题直接写地块名，内容只写时间和区名，河水通知只留站名、距离和水位数字',
