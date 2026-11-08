@@ -84,10 +84,19 @@ node --test tests/*.test.js
 | 准度：对照基准 | `archive-api.open-meteo.com/v1/archive`（`models=era5`） | ECMWF ERA5 再分析 |
 | 地图底图（三种） | `server.arcgisonline.com` | Esri，免 key |
 | Leaflet 1.9.4 | `cdnjs.cloudflare.com` | 打开地图时才载入，带完整性校验（SRI） |
+| 雷暴提醒：官方警告 | `api.data.gov.my/weather/warning/` | MetMalaysia 雷暴警告，服务器每 15 分钟读一次 |
+| 雷暴提醒：地块所在的区 | `nominatim.openstreetmap.org/reverse` | 由 App 查，每块地一次，用马来文（跟 MetMalaysia 的拼法一致） |
 
 降雨机率和紫外线只有部分模式输出，所以统一来自 Best Match，界面上都有注明。
 
 **为什么没有机场观测站图层**：NOAA aviationweather.gov 的 Data API 不允许跨域访问，从静态网页抓一定被浏览器挡掉。要做这个功能得另外架中转代理。
+
+## 雷暴提醒怎么判断
+
+代码在 `server/src/storm.js`，测试在 `tests/storm.test.js`。
+
+- **官方警告**：MetMalaysia 的警告只用一句话写地名，例如「Terengganu (Kemaman dan Dungun) • Pahang (Kuantan, Pekan dan Rompin)」。服务器把马来文原文拆成「州（区）」，再跟地块的州代码（ISO 3166-2）和区名对比。没有括号的州算整个州。同一条警告（同一个发布时间加结束时间）每块地只发一次。
+- **模式提醒**：Open-Meteo 上只有 ICON（偶尔 UKMO）会给马来西亚输出雷暴天气代码 95，ECMWF、GEM、Météo-France、JMA 从来不给（2026 年 11 月实测），所以不能只数「预报雷暴」的模式。一个模式在未来 3 小时内出现雷暴代码，或某一小时雨量 ≥ 5 mm 而且 CAPE ≥ 1000 J/kg，就算一票；7 个里有 3 票才提醒。只看 CAPE 不行：马来西亚下午 CAPE 几乎天天超过 2000。这几个门槛是经验值，没有做过验证，所以通知里会写出几个模式同意，并标明不是官方警告。每小时检查一次，同一块地 3 小时内最多一次。已经有官方警告的地块不再另发模式提醒。
 
 ## 模式代号
 

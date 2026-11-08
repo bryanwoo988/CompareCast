@@ -251,3 +251,10 @@ test('识别出旧的坏 id', () => {
   assert.strictEqual(validDeviceId('12345678123412341234123456789abc'), true);
   assert.strictEqual(validDeviceId(undefined), false);
 });
+
+test('只开雷暴提醒、没勾时段的地块也要同步', () => {
+  const locs = [{id:'a', notify:[], storm:true}, {id:'b', notify:[], storm:false}];
+  assert.deepStrictEqual(effectiveBlocks(locs, WINS, {official:true, model:false}).map(x => [x.id, x.storm]), [['a', true]]);
+  assert.deepStrictEqual(effectiveBlocks(locs, WINS, {official:false, model:false}), [], '两种来源都关了就不算');
+  assert.deepStrictEqual(effectiveBlocks(locs, WINS), []);
+});

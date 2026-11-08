@@ -4,7 +4,7 @@
    quarter hour send the reminders that have come due (cron.js). Request bodies
    carry the user's plot coordinates, so nothing here logs them. */
 import {validateSub} from './validate.js';
-import {runDevice} from './cron.js';
+import {runDevice, runStorm} from './cron.js';
 
 /* A real payload is a few kilobytes even at the 50-plot ceiling. */
 const MAX_BODY = 16 * 1024;
@@ -75,10 +75,12 @@ export const scheduled = async (event, env) => {
   const now = new Date();
   const run = {
     cache:new Map(), seen:new Set(), stats:{noForecast:0},
+    /* the storm models are hourly: checked on the first run of each hour */
+    modelHour:now.getUTCMinutes() < 15,
     /* a hung Open-Meteo request would otherwise hold the whole run */
     fetchJson:url => fetch(url, {signal:AbortSignal.timeout(10000)}).then(r => (r.ok ? r.json() : null))
   };
-  let cursor, devices = 0, sent = 0, failed = 0;
+  let cursor, devices = 0, sent = 0, failed = 0, storms = 0;
   do{
     const page = await env.KV.list({prefix:'dev:', cursor});
     for(const k of page.keys){
@@ -92,12 +94,16 @@ export const scheduled = async (event, env) => {
         const rep = await runDevice(env, dev, now, run);
         sent += rep.filter(x => x.result === 'sent').length;
         failed += rep.filter(x => x.result === 'failed').length;
+        if(rep.some(x => x.result === 'expired')) continue;
+        const sr = await runStorm(env, dev, now, run);
+        storms += sr.filter(x => x.result === 'sent').length;
+        failed += sr.filter(x => x.result === 'failed').length;
       }catch(e){ console.log('device failed', e && e.name); }
     }
     cursor = page.list_complete ? null : page.cursor;
   } while(cursor);
   /* counts only: titles and bodies name the user's plots */
-  console.log('cron done, devices', devices, 'sent', sent, 'failed', failed, 'no forecast', run.stats.noForecast);
+  console.log('cron done, devices', devices, 'sent', sent, 'failed', failed, 'storm', storms, 'no forecast', run.stats.noForecast);
 };
 
 export default {

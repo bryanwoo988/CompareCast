@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.24.0';
+const APP_VERSION = '3.25.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,16 @@ const APP_VERSION = '3.24.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.25.0', date:'2026-11-08',
+   zh:['新增雷暴提醒（在「通知提醒」最下面，逐块地打开）',
+       'MetMalaysia 对地块所在的区发出雷暴警告时会通知你，写明从几点到几点有效、几点发布；只限马来西亚的地块，所在的区会显示在地块名下面',
+       '7 个模式里有 3 个以上显示未来 3 小时有雷雨时也会提醒，并写明几个模式同意；这是模式推测，不是官方警告，同一块地 3 小时内最多一次'],
+   en:['New storm alerts (at the bottom of Reminders, switched on per location)',
+       'You are told when MetMalaysia issues a thunderstorm warning for a location\u2019s district, with the time it is in effect from and until and when it was issued; Malaysian locations only, and the district is shown under each location\u2019s name',
+       'You are also told when 3 or more of the 7 models show thunderstorms in the next 3 hours, with how many agreed; this is a model estimate, not an official warning, and comes at most once every 3 hours per location'],
+   ms:['Amaran ribut baharu (di bahagian bawah Peringatan, dihidupkan bagi setiap lokasi)',
+       'Anda diberitahu apabila MetMalaysia mengeluarkan amaran ribut petir untuk daerah sesuatu lokasi, dengan masa ia berkuat kuasa dari dan hingga serta masa dikeluarkan; lokasi di Malaysia sahaja, dan daerah ditunjukkan di bawah nama setiap lokasi',
+       'Anda juga diberitahu apabila 3 atau lebih daripada 7 model menunjukkan ribut petir dalam 3 jam akan datang, dengan bilangan model yang bersetuju; ini anggaran model, bukan amaran rasmi, dan paling banyak sekali setiap 3 jam bagi setiap lokasi']},
   {v:'3.24.0', date:'2026-10-13',
    zh:['「关于」里的版本号旁边会显示这一版的更新日期和时间'],
    en:['About shows the date and time of this update next to the version'],
@@ -385,6 +395,13 @@ zh:{
   ntFrom:'起', ntTo:'止', ntAt:'提醒时间', ntCross:'此时段跨天',
   ntTzNote:(z)=>`时间按地块所在时区计算（${z}）`,
   ntModelNote:'提醒里的温度、雨量和风，用的是每个地块自己选的模式；降雨机率来自 Best Match，跟详情页一样。',
+  stTitle:'⚡ 雷暴提醒', stIntro:'跟上面的时段无关，随时在检查：官方警告每 15 分钟一次，模式每小时一次。',
+  stOfficial:'MetMalaysia 官方雷暴警告',
+  stOfficialNote:'气象局对地块所在的区发出雷暴警告时通知你，写明从几点到几点有效、几点发布。只限马来西亚的地块。',
+  stModel:'模式雷雨提醒',
+  stModelNote:'7 个模式里至少 3 个显示未来 3 小时有雷雨，就通知你：直接预报雷暴，或大雨（每小时 ≥5 mm）加上大气不稳定（CAPE ≥1000）。这是模式推测，会有误报和漏报，不是官方警告；同一块地 3 小时内最多一次。',
+  stPlots:'要提醒的地块', stLooking:'正在查询所在的区…', stNotMy:'不在马来西亚：只有模式提醒',
+  stGeoFail:'查不到所在的区，稍后再试；暂时只有模式提醒', stOsm:'区名来自 OpenStreetMap',
   qrCap:'扫描二维码，就能用手机浏览器直接打开这个 App', qrAlt:'打开这个 App 的二维码', shareApp:'分享 App 链接', shareText:'多模式天气对比，按地块发提醒', linkCopied:'链接已复制',
   updReady:'新版本已准备好', updNow:'立即更新', updLater:'稍后',
   noticeAt:(w)=>`提醒送达于 ${w}`, noticeMore:(n)=>`还有 ${n} 个地块放不进这条通知，请到地块列表查看。`, noticeGone:'这个地块已经删除',
@@ -481,6 +498,13 @@ en:{
   ntFrom:'From', ntTo:'To', ntAt:'Notify at', ntCross:'This window crosses midnight',
   ntTzNote:(z)=>`Times are in each location's own time zone (${z})`,
   ntModelNote:'Reminder temperatures, rainfall and wind use each location\u2019s own model; chance of rain comes from Best Match, as on the detail page.',
+  stTitle:'⚡ Storm alerts', stIntro:'Separate from the time windows above and checked all day: official warnings every 15 minutes, models every hour.',
+  stOfficial:'MetMalaysia thunderstorm warnings',
+  stOfficialNote:'Tells you when MetMalaysia issues a thunderstorm warning for a location\u2019s district, with the time it is in effect from and until, and when it was issued. Malaysian locations only.',
+  stModel:'Model thunderstorm heads-up',
+  stModelNote:'Tells you when at least 3 of the 7 models show thunderstorms in the next 3 hours: a thunderstorm forecast outright, or heavy rain (\u22655 mm in an hour) in an unstable atmosphere (CAPE \u22651000). This is a model estimate with false alarms and misses, not an official warning; at most once every 3 hours per location.',
+  stPlots:'Locations to alert', stLooking:'Looking up the district\u2026', stNotMy:'Outside Malaysia: model heads-up only',
+  stGeoFail:'Could not look up the district, will retry later; model heads-up only for now', stOsm:'District names from OpenStreetMap',
   qrCap:'Scan to open this app straight in a phone browser', qrAlt:'QR code that opens this app', shareApp:'Share the app link', shareText:'Multi-model weather comparison with per-plot reminders', linkCopied:'Link copied',
   updReady:'A new version is ready', updNow:'Update now', updLater:'Later',
   noticeAt:(w)=>`Delivered ${w}`, noticeMore:(n)=>`${n} more locations did not fit in this notification; see them in the location list.`, noticeGone:'This location has been deleted',
@@ -577,6 +601,13 @@ ms:{
   ntFrom:'Dari', ntTo:'Hingga', ntAt:'Beritahu pada', ntCross:'Tempoh ini melepasi tengah malam',
   ntTzNote:(z)=>`Masa mengikut zon waktu lokasi itu sendiri (${z})`,
   ntModelNote:'Suhu, hujan dan angin dalam peringatan menggunakan model setiap lokasi; kebarangkalian hujan dari Best Match, sama seperti halaman butiran.',
+  stTitle:'⚡ Amaran ribut', stIntro:'Berasingan daripada tempoh masa di atas dan disemak sepanjang hari: amaran rasmi setiap 15 minit, model setiap jam.',
+  stOfficial:'Amaran ribut petir MetMalaysia',
+  stOfficialNote:'Memberitahu anda apabila MetMalaysia mengeluarkan amaran ribut petir untuk daerah sesuatu lokasi, dengan masa ia berkuat kuasa dari dan hingga, serta masa dikeluarkan. Lokasi di Malaysia sahaja.',
+  stModel:'Isyarat ribut petir daripada model',
+  stModelNote:'Memberitahu anda apabila sekurang-kurangnya 3 daripada 7 model menunjukkan ribut petir dalam 3 jam akan datang: ramalan ribut petir terus, atau hujan lebat (\u22655 mm sejam) dalam atmosfera tidak stabil (CAPE \u22651000). Ini anggaran model yang boleh tersilap atau terlepas, bukan amaran rasmi; paling banyak sekali setiap 3 jam bagi setiap lokasi.',
+  stPlots:'Lokasi untuk diberi amaran', stLooking:'Mencari daerah\u2026', stNotMy:'Di luar Malaysia: isyarat model sahaja',
+  stGeoFail:'Daerah tidak dapat dicari, akan dicuba lagi; buat masa ini isyarat model sahaja', stOsm:'Nama daerah daripada OpenStreetMap',
   qrCap:'Imbas untuk membuka aplikasi ini terus dalam pelayar telefon', qrAlt:'Kod QR untuk membuka aplikasi ini', shareApp:'Kongsi pautan aplikasi', shareText:'Perbandingan cuaca pelbagai model dengan peringatan setiap petak', linkCopied:'Pautan disalin',
   updReady:'Versi baharu sudah sedia', updNow:'Kemas kini', updLater:'Nanti',
   noticeAt:(w)=>`Dihantar ${w}`, noticeMore:(n)=>`${n} lagi lokasi tidak muat dalam pemberitahuan ini; lihat dalam senarai lokasi.`, noticeGone:'Lokasi ini telah dipadam',
@@ -743,7 +774,9 @@ const NOTIFY_DEFAULTS = {
     tMin:    {on:false, v:22},
     wind:    {on:true,  v:20},
     gust:    {on:false, v:35}
-  }
+  },
+  /* which storm sources to use; each plot still has to be ticked (l.storm) */
+  storm:{official:true, model:true}
 };
 const NOTIFY_RULES = ['rainProb','rainSum','tMax','tMin','wind','gust'];
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -780,16 +813,24 @@ function normalizeNotify(){
     };
   });
 
+  const st = (N.storm && typeof N.storm === 'object') ? N.storm : {};
+  N.storm = {
+    official:typeof st.official === 'boolean' ? st.official : NOTIFY_DEFAULTS.storm.official,
+    model:typeof st.model === 'boolean' ? st.model : NOTIFY_DEFAULTS.storm.model
+  };
+
   /* a window that no longer exists must not keep a location subscribed to it */
   const ids = N.windows.map(w => w.id);
   S.locations.forEach(l => {
     l.notify = Array.isArray(l.notify) ? l.notify.filter(x => ids.includes(x)) : [];
+    l.storm = l.storm === true;
+    if(l.geo && typeof l.geo !== 'object') delete l.geo;
   });
 }
 
 function notifySummary(){
   if(!S.notify || !S.notify.enabled) return t('ntOff');
-  const blocks = S.locations.filter(l => (l.notify || []).length).length;
+  const blocks = S.locations.filter(l => (l.notify || []).length || l.storm).length;
   const wins = S.notify.windows.filter(w => w.on).length;
   return t('ntSummary')(blocks, wins);
 }
@@ -3381,7 +3422,7 @@ function renderPermission(){
   let warn;
   if(m.kind === 'ok')        warn = `<p class="nt-ok">✓ ${t('ntSynced')}<br>${t('ntIosHint')}</p>`;
   else if(m.kind === 'busy') warn = `<p class="nt-warn">${t('ntSyncing')}</p>`;
-  else if(m.kind === 'warn') warn = `<p class="nt-warn">${m.reason === 'noblocks' ? t(S.locations.some(l => (l.notify || []).length) ? 'ntNoActive' : 'ntNoBlocksSel') : t('ntNeedPerm')}<br>${t('ntIosHint')}</p>`;
+  else if(m.kind === 'warn') warn = `<p class="nt-warn">${m.reason === 'noblocks' ? t(S.locations.some(l => (l.notify || []).length || l.storm) ? 'ntNoActive' : 'ntNoBlocksSel') : t('ntNeedPerm')}<br>${t('ntIosHint')}</p>`;
   else warn = `<p class="nt-warn">${t('ntSyncFail')}<br><code class="nt-why">${esc(m.reason)}${lastSyncError ? ' · ' + esc(lastSyncError) : ''}</code><br>${t('ntIosHint')}</p>`;
   const test = (supported && perm === 'granted')
     ? `<button class="cta ghost" id="nt-test">${t('ntTest')}</button>` : '';
@@ -3499,8 +3540,10 @@ function paintNotify(){
       <p class="nt-note" style="margin:-4px 0 12px">${esc(t('ntModelNote'))}</p>
       ${renderWindows()}</div>
     <div class="glass"><h4>${t('ntRules')}</h4>${renderRules()}</div>
-    <div class="glass"><h4>${t('ntBlocks')}</h4>${renderMatrix()}</div>`;
+    <div class="glass"><h4>${t('ntBlocks')}</h4>${renderMatrix()}</div>
+    <div class="glass"><h4>${t('stTitle')}</h4>${renderStorm()}</div>`;
   bindNotify();
+  lookupGeo();
 }
 
 function bindNotify(){
@@ -3563,7 +3606,103 @@ function bindNotify(){
     redraw();
   }));
 
+  $$('#nt-body [data-ss]').forEach(el2 => el2.addEventListener('click', () => {
+    const k = el2.dataset.ss;
+    S.notify.storm[k] = !S.notify.storm[k];
+    redraw();
+  }));
+  bindStormPlots();
   bindStatusButtons();
+}
+
+/* ---------- 11b2. Storm alerts ----------
+   Official MetMalaysia warnings name districts, so each ticked plot needs
+   its state and district. Looked up once per plot from OpenStreetMap, in
+   Malay, which spells districts the way MetMalaysia does; the result is
+   shown next to the plot so a wrong district is visible, not silent. */
+const GEO_REV = 'https://nominatim.openstreetmap.org/reverse';
+const GEO_RETRY_MS = 6 * 3600 * 1000;
+
+const needsGeo = l => !l.geo || l.geo.lat !== l.lat || l.geo.lon !== l.lon
+  || (l.geo.fail && Date.now() - (l.geo.at || 0) > GEO_RETRY_MS);
+
+function geoFrom(j, l){
+  const base = {lat:l.lat, lon:l.lon, at:Date.now()};
+  const a = j && j.address;
+  if(!a) return Object.assign(base, {fail:true});
+  if(a.country_code !== 'my' || !/^MY-\d{2}$/.test(a['ISO3166-2-lvl4'] || '')) return Object.assign(base, {none:true});
+  return Object.assign(base, {iso:a['ISO3166-2-lvl4'], state:a.state || '',
+    district:a.district || a.county || '', division:a.state_district || a.region || ''});
+}
+
+/* one at a time with a pause between, as OpenStreetMap's usage policy asks */
+let geoBusy = false;
+async function lookupGeo(){
+  if(geoBusy || !S.notify.storm.official) return;
+  geoBusy = true;
+  try{
+    for(;;){
+      const l = S.locations.find(x => x.storm && needsGeo(x));
+      if(!l) break;
+      let j = null;
+      try{
+        const r = await fetch(`${GEO_REV}?format=jsonv2&zoom=10&accept-language=ms&lat=${l.lat}&lon=${l.lon}`);
+        if(r.ok) j = await r.json();
+      }catch(e){}
+      l.geo = geoFrom(j, l);
+      save();
+      paintStormPlots();
+      resyncReminders();
+      await new Promise(res => setTimeout(res, 1100));
+    }
+  }finally{ geoBusy = false; }
+}
+
+function stormPlace(l){
+  const g = l.geo;
+  if(!g || g.lat !== l.lat || g.lon !== l.lon) return (l.storm && S.notify.storm.official) ? t('stLooking') : '';
+  if(g.none) return t('stNotMy');
+  if(g.fail) return t('stGeoFail');
+  return [g.district, g.state].filter(Boolean).join(', ');
+}
+
+function renderStormPlots(){
+  if(!S.locations.length) return `<p class="nt-note">${t('ntNoLoc')}</p>`;
+  return S.locations.map(l => {
+    const place = stormPlace(l);
+    return `<div class="nt-rule${l.storm ? '' : ' off'}"><span data-st="${l.id}">${sw(l.storm)}</span>
+      <span class="rn">${esc(l.name)}${place ? `<small class="st-geo">${esc(place)}</small>` : ''}</span></div>`;
+  }).join('');
+}
+
+function renderStorm(){
+  const N = S.notify;
+  return `<p class="nt-note" style="margin:-4px 0 8px">${t('stIntro')}</p>
+    <div class="nt-rule"><span data-ss="official">${sw(N.storm.official)}</span><span class="rn">${t('stOfficial')}</span></div>
+    <p class="nt-note" style="margin:0 0 8px">${t('stOfficialNote')}</p>
+    <div class="nt-rule"><span data-ss="model">${sw(N.storm.model)}</span><span class="rn">${t('stModel')}</span></div>
+    <p class="nt-note" style="margin:0 0 12px">${t('stModelNote')}</p>
+    <h4 style="margin-top:6px">${t('stPlots')}</h4>
+    <div id="st-plots">${renderStormPlots()}</div>
+    ${N.storm.official ? `<p class="nt-note" style="margin-top:8px">${t('stOsm')}</p>` : ''}`;
+}
+
+/* repaints only the plot list: a lookup landing must not tear out a time
+   picker the user has open elsewhere on the page */
+function paintStormPlots(){
+  const host = $('#st-plots'); if(!host) return;
+  host.innerHTML = renderStormPlots();
+  bindStormPlots();
+}
+function bindStormPlots(){
+  $$('#st-plots [data-st]').forEach(el2 => el2.addEventListener('click', () => {
+    const l = S.locations.find(x => x.id === el2.dataset.st);
+    if(!l) return;
+    l.storm = !l.storm;
+    save(); scheduleSync();
+    paintStormPlots();
+    lookupGeo();
+  }));
 }
 
 /* the one thing on this page that really does fire today — it proves the
@@ -3635,7 +3774,7 @@ function scheduleSync(ms){
    re-sync, so after switching to English or °F, or changing a plot's model,
    reminders kept arriving in the old language, units or model. */
 function resyncReminders(){
-  if(S.notify && S.notify.enabled) scheduleSync();
+  if(S.notify && S.notify.enabled){ scheduleSync(); lookupGeo(); }
 }
 
 async function syncPush(){
@@ -3668,7 +3807,7 @@ async function syncPush(){
      switched on. Ticks alone used to be enough to POST, and a plot whose
      windows were all off got the whole registration rejected while the old
      schedule stayed live on the server. */
-  const blocks = effectiveBlocks(S.locations, S.notify.windows);
+  const blocks = effectiveBlocks(S.locations, S.notify.windows, S.notify.storm);
   if(!blocks.length){
     try{ await withdrawDevice(); }
     catch(e){
@@ -3700,12 +3839,15 @@ async function syncPush(){
       lang:S.lang,
       units:S.units,
       sub:{endpoint:sub.endpoint, keys:{p256dh:keys.p256dh, auth:keys.auth}},
-      notify:{windows:S.notify.windows, rules:S.notify.rules},
+      notify:{windows:S.notify.windows, rules:S.notify.rules, storm:S.notify.storm},
       /* the plot's own zone, so "6am" means 6am at the field — right even if
          the phone is somewhere else. Falls back to the device's zone only
          when the forecast for that plot has not loaded yet. */
-      blocks:blocks.map(({loc:l, windows}) =>
-        ({id:l.id, name:l.name, lat:l.lat, lon:l.lon, windows,
+      blocks:blocks.map(({loc:l, windows, storm}) =>
+        ({id:l.id, name:l.name, lat:l.lat, lon:l.lon, windows, storm,
+          /* the district official storm warnings are matched against */
+          geo:(storm && l.geo && l.geo.iso && l.geo.lat === l.lat && l.geo.lon === l.lon)
+            ? {iso:l.geo.iso, state:l.geo.state, district:l.geo.district, division:l.geo.division} : undefined,
           tz:(cache[l.id] && cache[l.id].timezone) || undefined,
           /* the plot's model, so a reminder quotes the figures its page shows */
           model:l.model || S.defaultModel}))
@@ -4263,7 +4405,7 @@ function hideSplash(){
   initPullRefresh();
   loadAll();
   /* a subscription that failed in an earlier session repairs itself here */
-  if(S.notify && S.notify.enabled) scheduleSync(4000);
+  if(S.notify && S.notify.enabled){ scheduleSync(4000); lookupGeo(); }
   hideSplash();
   if(firstLaunch) askFirstLanguage();
   else maybeShowReleaseNotes();

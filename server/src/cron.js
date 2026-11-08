@@ -3,7 +3,8 @@
    Kept apart from the HTTP entry point so it can be driven end to end with
    KV, Open-Meteo and the push service all stood in (tests/cron.test.js). */
 import {minutesOf, dueWindows, occurrence, windowIndices, aggregate, breaches} from '../../notifylogic.js';
-import {messageForWindow} from './message.js';
+import {messageForWindow, stormOfficialMessage, stormModelMessage} from './message.js';
+import {WARN_API, STORM_MODELS, MODEL_COOLDOWN_S, liveWarnings, plotInAreas, modelSignal, modelAlert} from './storm.js';
 import {sentKey, sendOne, readLedger, writeLedger} from './send.js';
 import {modelsParam, forModel} from './models.js';
 
@@ -145,4 +146,106 @@ async function runDevice(env, dev, now, run){
   return report;
 }
 
-export {runDevice, localNow, DUE_GRACE_MIN};
+/* ---- storm alerts ----
+   Checked on every run, apart from the reminder windows: a storm does not
+   wait for 6am. Official warnings are read once per run for every device;
+   the model check only runs on the first run of each hour, since the models
+   are hourly and seven of them per plot every quarter hour would eat the
+   Open-Meteo allowance for nothing. */
+
+const STORM_TZ = 'Asia/Kuala_Lumpur';
+const hhmm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+
+function warnings(run){
+  if(!run.warnings) run.warnings = Promise.resolve()
+    .then(() => run.fetchJson(WARN_API))
+    .then(j => (Array.isArray(j) ? j : null))
+    .catch(() => null);
+  return run.warnings;
+}
+
+function stormForecast(run, lat, lon, tz){
+  const key = `storm:${lat.toFixed(4)},${lon.toFixed(4)},${tz}`;
+  if(run.cache.has(key)) return run.cache.get(key);
+  const q = new URLSearchParams({
+    latitude:String(lat), longitude:String(lon), timezone:tz, forecast_days:'2',
+    hourly:'weather_code,precipitation,cape', models:STORM_MODELS.join(',')
+  });
+  const p = Promise.resolve()
+    .then(() => run.fetchJson(API + '?' + q))
+    .then(j => (j && j.hourly && Array.isArray(j.hourly.time) ? j.hourly : null))
+    .catch(() => null);
+  run.cache.set(key, p);
+  return p;
+}
+
+/* finish a storm message the way reminders are finished, and send it */
+async function deliver(env, dev, msg, tag, run){
+  msg.tag = tag;
+  let loc;
+  if(msg.ids.length === 1) loc = msg.loc = msg.ids[0];
+  delete msg.ids;
+  fitPayload(msg);
+  const result = await sendOne(env, dev, msg, run.post);
+  return {result, title:msg.title, body:msg.body, tag, loc};
+}
+
+async function runStorm(env, dev, now, run){
+  const report = [];
+  const st = dev && dev.notify && dev.notify.storm;
+  if(!st || (!st.official && !st.model) || !Array.isArray(dev.blocks)) return report;
+  const plots = dev.blocks.filter(b => b && b.storm);
+  if(!plots.length) return report;
+  const myt = localNow(STORM_TZ, now);
+  const nowMyt = `${myt.day}T${hhmm(myt.min)}`;
+  /* plots under an official warning get no model heads-up on top of it */
+  const covered = new Set();
+
+  if(st.official){
+    for(const w of liveWarnings(await warnings(run), nowMyt)){
+      const hit = plots.filter(b => plotInAreas(b.geo, w.areas));
+      hit.forEach(b => covered.add(b.id));
+      if(!hit.length) continue;
+      /* once per warning issue and plot; a reissue (a new issue time or end
+         time) is news and goes out again */
+      const key = `storm:o:${dev.id}:${w.issued || ''}:${w.to}`;
+      if(run.seen.has(key)) continue;
+      const done = await readLedger(env, key);
+      const todo = hit.filter(b => !done.has(b.id));
+      if(!todo.length) continue;
+      const msg = stormOfficialMessage(dev.lang, w, todo.map(b => ({id:b.id, name:b.name, geo:b.geo})), nowMyt);
+      const r = await deliver(env, dev, msg, `pw:storm:o:${w.issued || ''}:${w.to}:${todo[0].id}`, run);
+      report.push(Object.assign({kind:'official', key, ids:todo.map(b => b.id)}, r));
+      if(r.result === 'expired') return report;
+      if(r.result === 'failed') continue;
+      await writeLedger(env, key, [...done, ...todo.map(b => b.id)]);
+      run.seen.add(key);
+    }
+  }
+
+  if(st.model && run.modelHour){
+    const due = [];
+    for(const b of plots){
+      if(covered.has(b.id)) continue;
+      const tz = b.tz || dev.tz;
+      const fc = await stormForecast(run, b.lat, b.lon, tz);
+      if(!fc) continue;
+      const {day, min} = localNow(tz, now);
+      const sig = modelSignal(fc, fc.time.indexOf(`${day}T${hhmm(min).slice(0, 2)}:00`));
+      if(!modelAlert(sig)) continue;
+      const cool = `storm:m:${dev.id}:${b.id}`;
+      if(await env.KV.get(cool)) continue;
+      due.push({id:b.id, name:b.name, sig, cool});
+    }
+    if(due.length){
+      const msg = stormModelMessage(dev.lang, due);
+      const r = await deliver(env, dev, msg, `pw:storm:m:${nowMyt}:${due[0].id}`, run);
+      report.push(Object.assign({kind:'model', ids:due.map(x => x.id)}, r));
+      if(r.result === 'sent')
+        for(const x of due) await env.KV.put(x.cool, '1', {expirationTtl:MODEL_COOLDOWN_S});
+    }
+  }
+  return report;
+}
+
+export {runDevice, runStorm, localNow, DUE_GRACE_MIN};
