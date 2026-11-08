@@ -3,8 +3,10 @@
    Kept apart from the HTTP entry point so it can be driven end to end with
    KV, Open-Meteo and the push service all stood in (tests/cron.test.js). */
 import {minutesOf, dueWindows, occurrence, windowIndices, aggregate, breaches} from '../../notifylogic.js';
-import {messageForWindow, stormOfficialMessage, stormModelMessage} from './message.js';
+import {messageForWindow, stormOfficialMessage, stormModelMessage, radarMessage, floodMessage} from './message.js';
 import {WARN_API, STORM_MODELS, MODEL_COOLDOWN_S, liveWarnings, plotInAreas, modelSignal, modelAlert} from './storm.js';
+import {RADAR_COOLDOWN_S, inMap, radarAt} from './radar.js';
+import {FLOOD_URL, floodStations, floodNear} from './flood.js';
 import {sentKey, sendOne, readLedger, writeLedger} from './send.js';
 import {modelsParam, forModel} from './models.js';
 
@@ -164,6 +166,14 @@ function warnings(run){
   return run.warnings;
 }
 
+function floodList(run){
+  if(!run.floodList) run.floodList = Promise.resolve()
+    .then(() => run.fetchJson(FLOOD_URL))
+    .then(j => (Array.isArray(j) ? j : null))
+    .catch(() => null);
+  return run.floodList;
+}
+
 function stormForecast(run, lat, lon, tz){
   const key = `storm:${lat.toFixed(4)},${lon.toFixed(4)},${tz}`;
   if(run.cache.has(key)) return run.cache.get(key);
@@ -193,7 +203,7 @@ async function deliver(env, dev, msg, tag, run){
 async function runStorm(env, dev, now, run){
   const report = [];
   const st = dev && dev.notify && dev.notify.storm;
-  if(!st || (!st.official && !st.model) || !Array.isArray(dev.blocks)) return report;
+  if(!st || (!st.official && !st.model && !st.flood) || !Array.isArray(dev.blocks)) return report;
   const plots = dev.blocks.filter(b => b && b.storm);
   if(!plots.length) return report;
   const myt = localNow(STORM_TZ, now);
@@ -223,6 +233,33 @@ async function runStorm(env, dev, now, run){
     }
   }
 
+  if(st.flood){
+    const live = floodStations(await floodList(run), nowMyt);
+    const due = [], marks = [];
+    for(const b of plots){
+      const near = floodNear(live, b.lat, b.lon);
+      if(!near.length) continue;
+      /* each station once per level per day: again only if it climbs from
+         Warning to Danger */
+      const key = `storm:f:${dev.id}:${b.id}`;
+      let seen = {};
+      try{ seen = JSON.parse(await env.KV.get(key) || '{}') || {}; }catch(e){ seen = {}; }
+      const fresh = near.filter(x => !(seen[x.id] >= x.rank));
+      if(!fresh.length) continue;
+      due.push({id:b.id, name:b.name, stations:fresh});
+      near.forEach(x => { seen[x.id] = Math.max(seen[x.id] || 0, x.rank); });
+      marks.push([key, seen]);
+    }
+    if(due.length){
+      const msg = floodMessage(dev.lang, due);
+      const r = await deliver(env, dev, msg, `pw:flood:${nowMyt}:${due[0].id}`, run);
+      report.push(Object.assign({kind:'flood', ids:due.map(x => x.id)}, r));
+      if(r.result === 'expired') return report;
+      if(r.result === 'sent')
+        for(const [key, seen] of marks) await env.KV.put(key, JSON.stringify(seen), {expirationTtl:86400});
+    }
+  }
+
   if(st.model && run.modelHour){
     const due = [];
     for(const b of plots){
@@ -248,4 +285,44 @@ async function runStorm(env, dev, now, run){
   return report;
 }
 
-export {runDevice, runStorm, localNow, DUE_GRACE_MIN};
+/* ---- radar ----
+   Runs on its own five-minute schedule against grids decoded once per run
+   (index.js). `frameMs` is the newest radar frame's time. */
+const hmOf = ms => { const {min} = localNow(STORM_TZ, new Date(ms)); return hhmm(min); };
+
+async function runRadar(env, dev, grids, frameMs, now, run){
+  const report = [];
+  const st = dev && dev.notify && dev.notify.storm;
+  if(!st || !st.radar || !Array.isArray(dev.blocks) || !grids) return report;
+  const due = [];
+  for(const b of dev.blocks){
+    if(!b || !b.storm || !inMap(b.lat, b.lon)) continue;
+    const r = radarAt(grids, b.lat, b.lon);
+    if(!r) continue;
+    let at;
+    if(r.kind === 'coming'){
+      const arrive = frameMs + r.min * 60000;
+      /* the frame is 11–20 minutes old by now: an arrival already behind us
+         is left for the next frame to show as rain nearby */
+      if(arrive <= now.getTime()) continue;
+      at = hmOf(arrive);
+    }
+    const cool = `storm:r:${dev.id}:${b.id}`;
+    if(await env.KV.get(cool)) continue;
+    due.push({id:b.id, name:b.name, r, at, cool, model:`storm:m:${dev.id}:${b.id}`});
+  }
+  if(!due.length) return report;
+  const msg = radarMessage(dev.lang, due, hmOf(frameMs));
+  const r = await deliver(env, dev, msg, `pw:radar:${frameMs}:${due[0].id}`, run);
+  report.push(Object.assign({kind:'radar', ids:due.map(x => x.id)}, r));
+  if(r.result === 'sent'){
+    for(const x of due){
+      await env.KV.put(x.cool, '1', {expirationTtl:RADAR_COOLDOWN_S});
+      /* the radar has seen the real thing: no model guess about it as well */
+      await env.KV.put(x.model, '1', {expirationTtl:MODEL_COOLDOWN_S});
+    }
+  }
+  return report;
+}
+
+export {runDevice, runStorm, runRadar, localNow, DUE_GRACE_MIN};

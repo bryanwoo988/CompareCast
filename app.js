@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.25.0';
+const APP_VERSION = '3.26.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,16 @@ const APP_VERSION = '3.25.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.26.0', date:'2026-11-08',
+   zh:['新增雷达提醒：MetMalaysia 雷达看到强降雨（每小时 >20 mm）往你的地块移过来时通知你，写明从哪个方向来、多远、大约几点到',
+       '新增河水提醒：地块 10 km 内的 JPS 水位站达到「警告」或「危险」水位时通知你',
+       '「雷暴提醒」改名为「恶劣天气提醒」，四种来源各有开关，地块的开关共用'],
+   en:['New radar alerts: when MetMalaysia\u2019s radar shows heavy rain (over 20 mm an hour) moving towards a location, you are told which direction it is coming from, how far it is and roughly when it will arrive',
+       'New river alerts: when a JPS river station within 10 km of a location reaches its Warning or Danger level',
+       '\u201cStorm alerts\u201d is now \u201cSevere weather alerts\u201d, with a switch for each of the four sources and one switch per location for all of them'],
+   ms:['Amaran radar baharu: apabila radar MetMalaysia menunjukkan hujan lebat (lebih 20 mm sejam) bergerak ke arah lokasi anda, anda diberitahu dari arah mana, sejauh mana dan anggaran masa tiba',
+       'Amaran sungai baharu: apabila stesen sungai JPS dalam lingkungan 10 km dari lokasi mencapai paras Amaran atau Bahaya',
+       '\u201cAmaran ribut\u201d kini \u201cAmaran cuaca buruk\u201d, dengan suis bagi setiap empat sumber dan satu suis bagi setiap lokasi untuk semuanya']},
   {v:'3.25.0', date:'2026-11-08',
    zh:['新增雷暴提醒（在「通知提醒」最下面，逐块地打开）',
        'MetMalaysia 对地块所在的区发出雷暴警告时会通知你，写明从几点到几点有效、几点发布；只限马来西亚的地块，所在的区会显示在地块名下面',
@@ -395,7 +405,11 @@ zh:{
   ntFrom:'起', ntTo:'止', ntAt:'提醒时间', ntCross:'此时段跨天',
   ntTzNote:(z)=>`时间按地块所在时区计算（${z}）`,
   ntModelNote:'提醒里的温度、雨量和风，用的是每个地块自己选的模式；降雨机率来自 Best Match，跟详情页一样。',
-  stTitle:'⚡ 雷暴提醒', stIntro:'跟上面的时段无关，随时在检查：官方警告每 15 分钟一次，模式每小时一次。',
+  stTitle:'⚠️ 恶劣天气提醒', stIntro:'跟上面的时段无关，随时在检查：官方警告和河水每 15 分钟，雷达每 5 分钟，模式每小时。',
+  stRadar:'MetMalaysia 雷达：强降雨接近',
+  stRadarNote:'雷达看到强降雨（每小时 >20 mm）在地块约 10 km 内，或预计一小时内移到这里时通知你，写明方向、距离和大约几点到。雷达看的是雨，不是闪电；雷达图本身晚约 11 分钟，位置误差约几公里。同一块地 2 小时内最多一次。只限马来西亚、新加坡、汶莱一带。',
+  stFlood:'JPS 河水水位',
+  stFloodNote:'地块 10 km 内的河流水位站达到「警告」或「危险」水位时通知你，写明站名、水位和警戒线。同一个站同一级一天只发一次，升到危险会再发。只限马来西亚。',
   stOfficial:'MetMalaysia 官方雷暴警告',
   stOfficialNote:'气象局对地块所在的区发出雷暴警告时通知你，写明从几点到几点有效、几点发布。只限马来西亚的地块。',
   stModel:'模式雷雨提醒',
@@ -498,7 +512,11 @@ en:{
   ntFrom:'From', ntTo:'To', ntAt:'Notify at', ntCross:'This window crosses midnight',
   ntTzNote:(z)=>`Times are in each location's own time zone (${z})`,
   ntModelNote:'Reminder temperatures, rainfall and wind use each location\u2019s own model; chance of rain comes from Best Match, as on the detail page.',
-  stTitle:'⚡ Storm alerts', stIntro:'Separate from the time windows above and checked all day: official warnings every 15 minutes, models every hour.',
+  stTitle:'⚠️ Severe weather alerts', stIntro:'Separate from the time windows above and checked all day: official warnings and rivers every 15 minutes, radar every 5 minutes, models every hour.',
+  stRadar:'MetMalaysia radar: heavy rain approaching',
+  stRadarNote:'Tells you when the radar shows heavy rain (over 20 mm an hour) within about 10 km of a location, or moving there within the hour, with its direction, distance and rough arrival time. Radar sees rain, not lightning; the image is about 11 minutes old when published and positions are off by a few km. At most once every 2 hours per location. Malaysia, Singapore and Brunei only.',
+  stFlood:'JPS river levels',
+  stFloodNote:'Tells you when a river station within 10 km of a location reaches its Warning or Danger level, with the station, the level and the threshold. Each station once per level per day, again if it rises to Danger. Malaysia only.',
   stOfficial:'MetMalaysia thunderstorm warnings',
   stOfficialNote:'Tells you when MetMalaysia issues a thunderstorm warning for a location\u2019s district, with the time it is in effect from and until, and when it was issued. Malaysian locations only.',
   stModel:'Model thunderstorm heads-up',
@@ -601,7 +619,11 @@ ms:{
   ntFrom:'Dari', ntTo:'Hingga', ntAt:'Beritahu pada', ntCross:'Tempoh ini melepasi tengah malam',
   ntTzNote:(z)=>`Masa mengikut zon waktu lokasi itu sendiri (${z})`,
   ntModelNote:'Suhu, hujan dan angin dalam peringatan menggunakan model setiap lokasi; kebarangkalian hujan dari Best Match, sama seperti halaman butiran.',
-  stTitle:'⚡ Amaran ribut', stIntro:'Berasingan daripada tempoh masa di atas dan disemak sepanjang hari: amaran rasmi setiap 15 minit, model setiap jam.',
+  stTitle:'⚠️ Amaran cuaca buruk', stIntro:'Berasingan daripada tempoh masa di atas dan disemak sepanjang hari: amaran rasmi dan sungai setiap 15 minit, radar setiap 5 minit, model setiap jam.',
+  stRadar:'Radar MetMalaysia: hujan lebat menghampiri',
+  stRadarNote:'Memberitahu anda apabila radar menunjukkan hujan lebat (lebih 20 mm sejam) dalam lingkungan kira-kira 10 km dari lokasi, atau bergerak ke sana dalam masa sejam, dengan arah, jarak dan anggaran masa tiba. Radar melihat hujan, bukan kilat; imej berusia kira-kira 11 minit semasa diterbitkan dan kedudukan boleh tersasar beberapa km. Paling banyak sekali setiap 2 jam bagi setiap lokasi. Malaysia, Singapura dan Brunei sahaja.',
+  stFlood:'Paras sungai JPS',
+  stFloodNote:'Memberitahu anda apabila stesen paras sungai dalam lingkungan 10 km dari lokasi mencapai paras Amaran atau Bahaya, dengan nama stesen, paras dan had. Setiap stesen sekali bagi setiap tahap sehari, sekali lagi jika naik ke Bahaya. Malaysia sahaja.',
   stOfficial:'Amaran ribut petir MetMalaysia',
   stOfficialNote:'Memberitahu anda apabila MetMalaysia mengeluarkan amaran ribut petir untuk daerah sesuatu lokasi, dengan masa ia berkuat kuasa dari dan hingga, serta masa dikeluarkan. Lokasi di Malaysia sahaja.',
   stModel:'Isyarat ribut petir daripada model',
@@ -776,7 +798,7 @@ const NOTIFY_DEFAULTS = {
     gust:    {on:false, v:35}
   },
   /* which storm sources to use; each plot still has to be ticked (l.storm) */
-  storm:{official:true, model:true}
+  storm:{official:true, model:true, radar:true, flood:true}
 };
 const NOTIFY_RULES = ['rainProb','rainSum','tMax','tMin','wind','gust'];
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -816,7 +838,9 @@ function normalizeNotify(){
   const st = (N.storm && typeof N.storm === 'object') ? N.storm : {};
   N.storm = {
     official:typeof st.official === 'boolean' ? st.official : NOTIFY_DEFAULTS.storm.official,
-    model:typeof st.model === 'boolean' ? st.model : NOTIFY_DEFAULTS.storm.model
+    model:typeof st.model === 'boolean' ? st.model : NOTIFY_DEFAULTS.storm.model,
+    radar:typeof st.radar === 'boolean' ? st.radar : NOTIFY_DEFAULTS.storm.radar,
+    flood:typeof st.flood === 'boolean' ? st.flood : NOTIFY_DEFAULTS.storm.flood
   };
 
   /* a window that no longer exists must not keep a location subscribed to it */
@@ -3680,6 +3704,10 @@ function renderStorm(){
   return `<p class="nt-note" style="margin:-4px 0 8px">${t('stIntro')}</p>
     <div class="nt-rule"><span data-ss="official">${sw(N.storm.official)}</span><span class="rn">${t('stOfficial')}</span></div>
     <p class="nt-note" style="margin:0 0 8px">${t('stOfficialNote')}</p>
+    <div class="nt-rule"><span data-ss="radar">${sw(N.storm.radar)}</span><span class="rn">${t('stRadar')}</span></div>
+    <p class="nt-note" style="margin:0 0 8px">${t('stRadarNote')}</p>
+    <div class="nt-rule"><span data-ss="flood">${sw(N.storm.flood)}</span><span class="rn">${t('stFlood')}</span></div>
+    <p class="nt-note" style="margin:0 0 8px">${t('stFloodNote')}</p>
     <div class="nt-rule"><span data-ss="model">${sw(N.storm.model)}</span><span class="rn">${t('stModel')}</span></div>
     <p class="nt-note" style="margin:0 0 12px">${t('stModelNote')}</p>
     <h4 style="margin-top:6px">${t('stPlots')}</h4>

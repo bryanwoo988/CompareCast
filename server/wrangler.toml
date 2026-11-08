@@ -8,10 +8,12 @@ compatibility_flags = ["nodejs_compat"]
 binding = "KV"
 id = "5bb11669556f4f9399cf8313db72e82d"
 
-# every quarter hour; a window is "due" if its notify time falls in the
-# 15 minutes that just passed
+# every quarter hour: reminders (a window is "due" if its notify time falls
+# in the 15 minutes that just passed), MetMalaysia warnings, JPS river levels
+# and the hourly model check. Every five minutes: the radar (index.js),
+# which needs the Workers Paid plan's CPU allowance to decode.
 [triggers]
-crons = ["*/15 * * * *"]
+crons = ["*/15 * * * *", "*/5 * * * *"]
 
 [vars]
 ORIGIN = "https://bryanwoo988.github.io"

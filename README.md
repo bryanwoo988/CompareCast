@@ -85,6 +85,8 @@ node --test tests/*.test.js
 | 地图底图（三种） | `server.arcgisonline.com` | Esri，免 key |
 | Leaflet 1.9.4 | `cdnjs.cloudflare.com` | 打开地图时才载入，带完整性校验（SRI） |
 | 雷暴提醒：官方警告 | `api.data.gov.my/weather/warning/` | MetMalaysia 雷暴警告，服务器每 15 分钟读一次 |
+| 雷达提醒 | `api.met.gov.my/static/images/radar-latest.gif` | MetMalaysia 12 雷达拼图，每 10 分钟一帧，服务器每 5 分钟检查一次 |
+| 河水提醒 | `publicinfobanjir.water.gov.my/.../latestreadingstrendabc.json` | JPS 全国水位站（JPS 地图本身用的数据），服务器每 15 分钟读一次 |
 | 雷暴提醒：地块所在的区 | `nominatim.openstreetmap.org/reverse` | 由 App 查，每块地一次，用马来文（跟 MetMalaysia 的拼法一致） |
 
 降雨机率和紫外线只有部分模式输出，所以统一来自 Best Match，界面上都有注明。
@@ -97,6 +99,26 @@ node --test tests/*.test.js
 
 - **官方警告**：MetMalaysia 的警告只用一句话写地名，例如「Terengganu (Kemaman dan Dungun) • Pahang (Kuantan, Pekan dan Rompin)」。服务器把马来文原文拆成「州（区）」，再跟地块的州代码（ISO 3166-2）和区名对比。没有括号的州算整个州。同一条警告（同一个发布时间加结束时间）每块地只发一次。
 - **模式提醒**：Open-Meteo 上只有 ICON（偶尔 UKMO）会给马来西亚输出雷暴天气代码 95，ECMWF、GEM、Météo-France、JMA 从来不给（2026 年 11 月实测），所以不能只数「预报雷暴」的模式。一个模式在未来 3 小时内出现雷暴代码，或某一小时雨量 ≥ 5 mm 而且 CAPE ≥ 1000 J/kg，就算一票；7 个里有 3 票才提醒。只看 CAPE 不行：马来西亚下午 CAPE 几乎天天超过 2000。这几个门槛是经验值，没有做过验证，所以通知里会写出几个模式同意，并标明不是官方警告。每小时检查一次，同一块地 3 小时内最多一次。已经有官方警告的地块不再另发模式提醒。
+
+## 雷达提醒怎么判断
+
+代码在 `server/src/radar.js`，测试在 `tests/radar.test.js` 和 `tests/alerts.test.js`。
+
+- **数据**：MetMalaysia 的雷达拼图 GIF，6 帧，每帧相隔 10 分钟，发布约晚 11 分钟。GIF 里没有可读的时间，所以最新一帧的时间取文件写入时间往前推到上一个 10 分钟（07:51 写入 → 07:40 那帧，用真实数据核对过）。超过 40 分钟没更新就不发。
+- **解码**：GIF 解码是自己写的，只取调色板索引、不转 RGBA，跟 omggif 逐像素比对过（0 差异）。颜色按图上的图例分成小雨（≥1 mm/h）和大雨（>20 mm/h，MetMalaysia 发雷暴警告的标准）；10 到 50 mm/h 之间那条没有标数字的分界当作 20。右边图例那一栏不读。
+- **定位**：把图当成普通经纬度网格（实际是 Albers 等积投影），用槟城、关丹、新加坡、亚庇、古达等地标核对，误差约 2–7 km，所以「附近」定为 10 km。
+- **移动**：在地块周围约 ±110 km 的范围比对前后两帧，找出让最多雨区重叠的位移（每 10 分钟最多 8 像素，约 110 km/h）。平手时取较小的位移，免得不动的杂波被算成在移动。
+- **提醒**：10 km 内已有 3 个以上大雨像素 →「就在附近」；否则把大雨像素沿移动方向往前推，第 3 早进到 10 km 内的时间（避免单一像素决定）若在一小时内、且还没过 →「约几点到」。同一块地 2 小时内最多一次，发了雷达提醒的地块 3 小时内不再发模式提醒。
+- **使用条款**：MetMalaysia 的 API 页面说明 Web API 免费开放给公众，但没有写雷达图的授权条款。通知里写明来源（MetMalaysia 雷达）。
+- **运算量**：解码三帧约 25 毫秒，超过 Cloudflare 免费版每次 10 毫秒的上限，所以雷达要用 Workers Paid 方案。雷达有自己的 `*/5` 定时（`wrangler.toml`），超时也不会拖累每 15 分钟的提醒。
+
+## 河水提醒怎么判断
+
+代码在 `server/src/flood.js`，测试在 `tests/flood.test.js`。
+
+- **数据**：JPS Public Infobanjir 地图用的 JSON，每个站有经纬度、水位、JPS 自己判定的等级（Normal / Alert / Warning / Danger）、超过的警戒线和读数时间。data.gov.my 的 flood-warning 接口从 2024 年 2 月起停更，不能用。
+- **过滤**：只看 Warning 和 Danger；警戒线是 0 的站当作没设定（沙巴有一批这样的站被标成 Danger）；读数超过 2 小时的站不算。
+- **提醒**：地块 10 km 内的站。同一个站同一级一天只发一次，从警告升到危险会再发。
 
 ## 模式代号
 

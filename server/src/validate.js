@@ -88,7 +88,8 @@ function cleanRules(r){
 /* storm alerts: which of the two sources the device wants */
 function cleanStorm(st){
   const src = st && typeof st === 'object' ? st : {};
-  return {official:src.official === true, model:src.model === true};
+  return {official:src.official === true, model:src.model === true,
+          radar:src.radar === true, flood:src.flood === true};
 }
 
 /* the state and district the app looked up for a plot (OSM, in Malay) —
@@ -124,7 +125,7 @@ function validateSub(body){
      and has switched on */
   const live = new Set(windows.filter(w => w.on).map(w => w.id));
   const storm = cleanStorm(notify.storm);
-  const stormOn = storm.official || storm.model;
+  const stormOn = storm.official || storm.model || storm.radar || storm.flood;
 
   const raw = Array.isArray(body.blocks) ? body.blocks : [];
   if(raw.length > MAX_BLOCKS) return bad('blocks');

@@ -186,7 +186,7 @@ function effectiveBlocks(locations, windows, storm){
   const on = new Set((Array.isArray(windows) ? windows : []).filter(w => w && w.on).map(w => w.id));
   /* a plot ticked for storm alerts counts on its own, with no window at all,
      as long as one of the two storm sources is switched on */
-  const stormOn = !!(storm && (storm.official || storm.model));
+  const stormOn = !!(storm && (storm.official || storm.model || storm.radar || storm.flood));
   return (Array.isArray(locations) ? locations : [])
     .map(l => ({loc:l, windows:(Array.isArray(l && l.notify) ? l.notify : []).filter(id => on.has(id)),
                 storm:stormOn && !!l && l.storm === true}))

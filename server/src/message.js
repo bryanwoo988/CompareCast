@@ -247,4 +247,89 @@ function stormModelMessage(lang, plots){
           detail:sorted.map(p => ({id:p.id, name:p.name, text:d.agree(p.sig.count, p.sig.total) + from(p.sig)}))};
 }
 
-export {messageFor, messageForWindow, stormOfficialMessage, stormModelMessage};
+/* ---- radar and flood alerts ---- */
+
+const RL = {
+  zh:{
+    coming:'⛈ 强降雨接近', near:'⛈ 强降雨就在附近', many:'⛈ 强降雨',
+    dir:{N:'北', NE:'东北', E:'东', SE:'东南', S:'南', SW:'西南', W:'西', NW:'西北'},
+    comingBody:(dir, km, at, frame) => `雷达：${dir}方约 ${km} km 有强降雨（>20 mm/h），正往这边移动，约 ${at} 到（${frame} 雷达图）`,
+    nearBody:(dir, km, frame) => `雷达：${dir}方约 ${km} km 有强降雨（>20 mm/h）（${frame} 雷达图）`,
+    comingLine:(name, dir, km, at) => `${name}：${dir}方约 ${km} km，约 ${at} 到`,
+    nearLine:(name, dir, km) => `${name}：${dir}方约 ${km} km，已在附近`,
+    source:frame => `MetMalaysia 雷达 ${frame}`,
+    river:sev => `🌊 河水达到${sev}水位`, rivers:'🌊 河水警报', sev:{Warning:'警告', Danger:'危险'},
+    trend:{Rising:'上涨中', Receding:'下降中', 'No Change':'持平'},
+    station:(st, km, level, sev, thr, trend, t) => `${st}（约 ${km} km）：${level} m，超过「${sev}」线 ${thr} m${trend ? '，' + trend : ''}（JPS ${t}）`,
+    plotLine:(name, st, km, sev, level) => `${name}：${st}（约 ${km} km）${sev} ${level} m`,
+    plots:n => `${n} 个地块`, sep:' · '
+  },
+  en:{
+    coming:'⛈ Heavy rain approaching', near:'⛈ Heavy rain nearby', many:'⛈ Heavy rain',
+    dir:{N:'north', NE:'northeast', E:'east', SE:'southeast', S:'south', SW:'southwest', W:'west', NW:'northwest'},
+    comingBody:(dir, km, at, frame) => `Radar: heavy rain (>20 mm/h) about ${km} km to the ${dir}, moving this way, arriving about ${at} (radar ${frame})`,
+    nearBody:(dir, km, frame) => `Radar: heavy rain (>20 mm/h) about ${km} km to the ${dir} (radar ${frame})`,
+    comingLine:(name, dir, km, at) => `${name}: about ${km} km ${dir}, arriving about ${at}`,
+    nearLine:(name, dir, km) => `${name}: about ${km} km ${dir}, already close`,
+    source:frame => `MetMalaysia radar ${frame}`,
+    river:sev => `🌊 River at ${sev} level`, rivers:'🌊 River alert', sev:{Warning:'Warning', Danger:'Danger'},
+    trend:{Rising:'rising', Receding:'falling', 'No Change':'steady'},
+    station:(st, km, level, sev, thr, trend, t) => `${st} (about ${km} km): ${level} m, above the ${sev} level of ${thr} m${trend ? ', ' + trend : ''} (JPS ${t})`,
+    plotLine:(name, st, km, sev, level) => `${name}: ${st} (about ${km} km) ${sev} ${level} m`,
+    plots:n => `${n} locations`, sep:' · '
+  },
+  ms:{
+    coming:'⛈ Hujan lebat menghampiri', near:'⛈ Hujan lebat berhampiran', many:'⛈ Hujan lebat',
+    dir:{N:'utara', NE:'timur laut', E:'timur', SE:'tenggara', S:'selatan', SW:'barat daya', W:'barat', NW:'barat laut'},
+    comingBody:(dir, km, at, frame) => `Radar: hujan lebat (>20 mm/j) kira-kira ${km} km di ${dir}, bergerak ke arah ini, dijangka tiba kira-kira ${at} (radar ${frame})`,
+    nearBody:(dir, km, frame) => `Radar: hujan lebat (>20 mm/j) kira-kira ${km} km di ${dir} (radar ${frame})`,
+    comingLine:(name, dir, km, at) => `${name}: kira-kira ${km} km di ${dir}, tiba kira-kira ${at}`,
+    nearLine:(name, dir, km) => `${name}: kira-kira ${km} km di ${dir}, sudah dekat`,
+    source:frame => `Radar MetMalaysia ${frame}`,
+    river:sev => `🌊 Paras sungai ${sev}`, rivers:'🌊 Amaran sungai', sev:{Warning:'Amaran', Danger:'Bahaya'},
+    trend:{Rising:'sedang naik', Receding:'sedang turun', 'No Change':'tidak berubah'},
+    station:(st, km, level, sev, thr, trend, t) => `${st} (kira-kira ${km} km): ${level} m, melepasi paras ${sev} ${thr} m${trend ? ', ' + trend : ''} (JPS ${t})`,
+    plotLine:(name, st, km, sev, level) => `${name}: ${st} (kira-kira ${km} km) ${sev} ${level} m`,
+    plots:n => `${n} lokasi`, sep:' · '
+  }
+};
+
+/* Plots the radar flagged this run: {id, name, r, at} with r from
+   radarAt() and `at` the arrival as 'HH:MM' for one on its way. `frame`
+   is the radar frame time, 'HH:MM', so the reader can judge how fresh it is. */
+function radarMessage(lang, plots, frame){
+  const d = RL[lang] || RL.en;
+  if(!Array.isArray(plots) || !plots.length) return null;
+  const ids = plots.map(p => p.id);
+  const dir = r => d.dir[r.dir] || r.dir;
+  if(plots.length === 1){
+    const p = plots[0], r = p.r;
+    return r.kind === 'near'
+      ? {title:d.near + d.sep + p.name, body:d.nearBody(dir(r), r.km, frame), ids}
+      : {title:d.coming + d.sep + p.name, body:d.comingBody(dir(r), r.km, p.at, frame), ids};
+  }
+  const line = p => (p.r.kind === 'near' ? d.nearLine(p.name, dir(p.r), p.r.km) : d.comingLine(p.name, dir(p.r), p.r.km, p.at));
+  return {title:d.many + d.sep + d.plots(plots.length), body:plots.map(line).join('\n') + '\n' + d.source(frame), ids,
+          detail:plots.map(p => ({id:p.id, name:p.name, text:line(p)}))};
+}
+
+const fmtM = v => (Math.round(v * 100) / 100).toFixed(2);
+
+/* Plots with a river station at Warning or Danger: {id, name, stations},
+   stations from floodNear(), worst first. */
+function floodMessage(lang, plots){
+  const d = RL[lang] || RL.en;
+  if(!Array.isArray(plots) || !plots.length) return null;
+  const ids = plots.map(p => p.id);
+  const sev = s => d.sev[s.severity] || s.severity;
+  const full = s => d.station(s.name, Math.max(1, Math.round(s.km)), fmtM(s.level), sev(s), fmtM(s.thr), d.trend[s.trend] || '', s.time.slice(11, 16));
+  if(plots.length === 1){
+    const p = plots[0];
+    return {title:d.river(sev(p.stations[0])) + d.sep + p.name, body:p.stations.slice(0, 3).map(full).join('\n'), ids};
+  }
+  const short = p => { const s = p.stations[0]; return d.plotLine(p.name, s.name, Math.max(1, Math.round(s.km)), sev(s), fmtM(s.level)); };
+  return {title:d.rivers + d.sep + d.plots(plots.length), body:plots.map(short).join('\n'), ids,
+          detail:plots.map(p => ({id:p.id, name:p.name, text:p.stations.slice(0, 3).map(full).join('\n')}))};
+}
+
+export {messageFor, messageForWindow, stormOfficialMessage, stormModelMessage, radarMessage, floodMessage};
