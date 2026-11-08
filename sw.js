@@ -12,7 +12,7 @@ const SHELL = 'pw-shell';
    revision check. Nothing else reads it. */
 const VERSION = 'pw-v3.22.0';
 const SHELL_FILES = [
-  './', './index.html', './swpolicy.js', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './summary.js', './layout.js', './reqlogic.js', './updatelogic.js', './app.js', './manifest.webmanifest',
+  './', './index.html', './swpolicy.js', './daylogic.js', './maplogic.js', './listlogic.js', './notifylogic.js', './inbox.js', './summary.js', './layout.js', './reqlogic.js', './updatelogic.js', './app.js', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png', './qr.svg',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
@@ -23,6 +23,9 @@ const SHELL_FILES = [
    back to not intercepting keeps the app working online-only until the next
    launch repairs the worker. */
 try{ importScripts('./swpolicy.js'); }catch(e){}
+/* the notification inbox (inbox.js); guarded the same way, and without it a
+   push is still shown, just not filed */
+try{ importScripts('./inbox.js'); }catch(e){}
 const strategyFor = (typeof cacheStrategy === 'function') ? cacheStrategy : (() => 'never');
 /* one entry per file, whatever revision asked for it (swpolicy.js) */
 const keyFor = (typeof cacheKey === 'function') ? cacheKey : (u => u);
@@ -144,7 +147,14 @@ self.addEventListener('push', e => {
   let d = {};
   try{ d = e.data ? e.data.json() : {}; }catch(err){ d = {}; }
   const title = d.title || 'CompareCast';
-  e.waitUntil(self.registration.showNotification(title, {
+  /* a copy for the app's Alerts tab: iOS will not let the app read back
+     notifications already shown */
+  const entry = typeof inboxEntry === 'function' ? inboxEntry(d, Date.now()) : null;
+  const filed = entry ? inboxAdd(entry).then(async () => {
+    const all = await self.clients.matchAll({type:'window', includeUncontrolled:true});
+    all.forEach(c => c.postMessage({type:'inbox'}));
+  }).catch(() => {}) : Promise.resolve();
+  e.waitUntil(Promise.all([filed, self.registration.showNotification(title, {
     body: d.body || '',
     icon: './icon-192.png',
     badge: './icon-192.png',
@@ -158,13 +168,16 @@ self.addEventListener('push', e => {
     data: {loc: typeof d.loc === 'string' ? d.loc : '',
            detail: Array.isArray(d.detail) ? d.detail : null,
            more: typeof d.more === 'number' ? d.more : 0,
-           at: Date.now()}
-  }));
+           at: Date.now(),
+           inbox: entry ? entry.id : ''}
+  })]));
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const data = e.notification.data || {}, loc = data.loc || '';
+  /* tapped is read */
+  if(data.inbox && typeof inboxMarkRead === 'function') e.waitUntil(inboxMarkRead(data.inbox).catch(() => {}));
   /* A reminder about several plots opens a page listing all of them in full:
      the banner only ever shows its first few lines, whatever the phone. */
   const notice = loc ? null : {title:e.notification.title, body:e.notification.body,

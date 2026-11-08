@@ -18,7 +18,7 @@ test('更新说明按版本从新到旧排列', () => {
   assert.deepStrictEqual(versions, sorted, '顺序乱了，用户会先看到旧的');
 });
 test('每条说明三种语言都要有内容', () => {
-  const blocks = [...app.matchAll(/\{v:'[^']+',\s*date:'[^']+',\s*zh:\[([\s\S]*?)\],\s*en:\[([\s\S]*?)\],\s*ms:\[([\s\S]*?)\]\s*\}/g)];
+  const blocks = [...app.matchAll(/\{v:'[^']+',\s*date:'[^']+',\s*time:'[^']+',\s*zh:\[([\s\S]*?)\],\s*en:\[([\s\S]*?)\],\s*ms:\[([\s\S]*?)\]\s*\}/g)];
   assert.ok(blocks.length >= 1, '解析不到任何更新说明');
   blocks.forEach(b => {
     [1,2,3].forEach(i => assert.ok(b[i].trim().length > 4, '有语言是空的: ' + b[0].slice(0,24)));
@@ -29,6 +29,12 @@ test('每条说明都要有发布日期（YYYY-MM-DD）', () => {
   const entries = [...app.matchAll(/^\s*\{v:'([^']+)',\s*date:'([^']*)'/gm)];
   assert.strictEqual(entries.length, versions.length, '有版本没写 date');
   entries.forEach(m => assert.match(m[2], /^\d{4}-\d{2}-\d{2}$/, m[1] + ' 的日期格式不对'));
+});
+
+test('每条说明都要有马来西亚时间（HH:MM）', () => {
+  const entries = [...app.matchAll(/^\s*\{v:'([^']+)',\s*date:'[^']*',\s*time:'([^']*)'/gm)];
+  assert.strictEqual(entries.length, versions.length, '有版本没写 time');
+  entries.forEach(m => assert.match(m[2], /^([01]\d|2[0-3]):[0-5]\d$/, m[1] + ' 的时间格式不对'));
 });
 
 test('版本比较', () => {
