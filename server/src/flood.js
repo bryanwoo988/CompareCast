@@ -52,6 +52,27 @@ function floodStations(list, nowMyt){
   return out;
 }
 
+/* The same, straight from the feed's text. Parsing all 1.3 MB of it costs
+   11–19 ms of CPU, more than the whole run is allowed on Cloudflare's free
+   plan, and only a few dozen of its ~2,700 stations are ever at Warning or
+   Danger. Each station is a flat object, so the ones marked so are cut out
+   and parsed alone. */
+function floodStationsFromText(text, nowMyt){
+  if(typeof text !== 'string') return [];
+  const rows = [];
+  for(const mark of ['"n":"Warning"', '"n":"Danger"']){
+    let i = text.indexOf(mark);
+    while(i >= 0){
+      const a = text.lastIndexOf('{', i), b = text.indexOf('}', i);
+      if(a >= 0 && b > i){
+        try{ rows.push(JSON.parse(text.slice(a, b + 1))); }catch(e){}
+      }
+      i = text.indexOf(mark, i + mark.length);
+    }
+  }
+  return floodStations(rows, nowMyt);
+}
+
 function km(lat1, lon1, lat2, lon2){
   const r = Math.PI / 180, dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r;
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLon / 2) ** 2;
@@ -66,4 +87,4 @@ function floodNear(stations, lat, lon){
     .sort((a, b) => b.rank - a.rank || a.km - b.km);
 }
 
-export {FLOOD_URL, FLOOD_KM, FRESH_MIN, RANK, isoOf, floodStations, floodNear, km};
+export {FLOOD_URL, FLOOD_KM, FRESH_MIN, RANK, isoOf, floodStations, floodStationsFromText, floodNear, km};

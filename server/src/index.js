@@ -134,7 +134,8 @@ export const scheduled = async (event, env) => {
     /* the storm models are hourly: checked on the first run of each hour */
     modelHour:now.getUTCMinutes() < 15,
     /* a hung Open-Meteo request would otherwise hold the whole run */
-    fetchJson:url => fetch(url, {signal:AbortSignal.timeout(10000)}).then(r => (r.ok ? r.json() : null))
+    fetchJson:url => fetch(url, {signal:AbortSignal.timeout(10000)}).then(r => (r.ok ? r.json() : null)),
+    fetchText:url => fetch(url, {signal:AbortSignal.timeout(20000)}).then(r => (r.ok ? r.text() : null))
   };
   let cursor, devices = 0, sent = 0, failed = 0, storms = 0;
   do{
