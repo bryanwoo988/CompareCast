@@ -68,32 +68,32 @@ test('只留下还没结束的雷暴警告；海上和其他警告不算', () =>
 /* ---- wording: both ends of the validity, and when it was issued ---- */
 const W = {issued:'2026-11-08T16:20', from:'2026-11-08T16:00', to:'2026-11-08T19:00'};
 
-test('已经生效：现在至几点，加发布时间', () => {
+test('已经生效：至几点，加发布时间；标题有地块名，内容只写区', () => {
   const m = stormOfficialMessage('zh', W, [{id:'a', name:'Setia Alam', geo:{district:'Petaling', state:'Selangor'}}], '2026-11-08T16:30');
-  assert.strictEqual(m.title, '⚡ MetMalaysia 雷暴警告 · Setia Alam');
-  assert.strictEqual(m.body, 'Petaling, Selangor · 现在至 19:00 有效（16:20 发布）');
+  assert.strictEqual(m.title, '⚡ 雷暴警告 · Setia Alam');
+  assert.strictEqual(m.body, '至 19:00（16:20 发布）\nPetaling');
 });
 
 test('还没开始：写出起止时间', () => {
   const w = Object.assign({}, W, {from:'2026-11-08T17:00'});
   const m = stormOfficialMessage('en', w, [{id:'a', name:'Farm', geo:{district:'Petaling', state:'Selangor'}}], '2026-11-08T16:30');
-  assert.strictEqual(m.body, 'Petaling, Selangor · In effect 17:00 – 19:00 (issued 16:20)');
+  assert.strictEqual(m.body, '17:00 – 19:00 (issued 16:20)\nPetaling');
 });
 
 test('跨日：两边都写今天／明天', () => {
   const w = {issued:'2026-11-08T21:10', from:'2026-11-08T22:00', to:'2026-11-09T01:00'};
   const m = stormOfficialMessage('zh', w, [{id:'a', name:'X', geo:{}}], '2026-11-08T21:15');
-  assert.strictEqual(m.body, '今天 22:00 – 明天 01:00 有效（21:10 发布）');
+  assert.strictEqual(m.body, '今天 22:00 – 明天 01:00（21:10 发布）');
   const ms = stormOfficialMessage('ms', w, [{id:'a', name:'X', geo:{}}], '2026-11-08T22:30');
-  assert.strictEqual(ms.body, 'Berkuat kuasa sekarang hingga esok 01:00 (dikeluarkan 21:10)');
+  assert.strictEqual(ms.body, 'Hingga esok 01:00 (dikeluarkan 21:10)');
 });
 
-test('几个地块同一条警告：一则通知，全部列出', () => {
+test('几个地块同一条警告：一则通知，标题列出地块名，内容列出区', () => {
   const m = stormOfficialMessage('zh', W, [
     {id:'a', name:'Setia Alam', geo:{district:'Petaling', state:'Selangor'}},
     {id:'b', name:'Sp.Pelangai', geo:{district:'Bentong', state:'Pahang'}}], '2026-11-08T16:30');
-  assert.strictEqual(m.title, '⚡ MetMalaysia 雷暴警告 · 2 个地块');
-  assert.strictEqual(m.body, '现在至 19:00 有效（16:20 发布）\nSetia Alam（Petaling, Selangor）、Sp.Pelangai（Bentong, Pahang）');
+  assert.strictEqual(m.title, '⚡ 雷暴警告 · Setia Alam、Sp.Pelangai');
+  assert.strictEqual(m.body, '至 19:00（16:20 发布）\nPetaling · Bentong');
   assert.strictEqual(m.detail.length, 2);
 });
 
@@ -137,7 +137,7 @@ test('三小时以外的不算', () => {
 test('模式提醒写明几个模式同意，并标明不是官方警告', () => {
   const m = stormModelMessage('zh', [{id:'a', name:'Setia Alam', sig:{count:4, total:7, first:'2026-11-08T15:00'}}]);
   assert.strictEqual(m.title, '⛈ 可能有雷雨 · Setia Alam');
-  assert.strictEqual(m.body, '4/7 个模式显示未来 3 小时有雷雨，约 15:00 起 · 模式预测，不是官方警告');
+  assert.strictEqual(m.body, '4/7 个模式 · 约 15:00 起 · 模式推测');
 });
 
 /* ---- validation ---- */
@@ -213,7 +213,7 @@ test('官方警告：配对到的地块发一次，下一轮不再重复', async
   assert.strictEqual(r1.length, 1);
   assert.strictEqual(r1[0].result, 'sent');
   assert.deepStrictEqual(r1[0].ids, ['k']);
-  assert.strictEqual(r1[0].body, 'Kuantan, Pahang · 现在至 12:00 有效（08:50 发布）');
+  assert.strictEqual(r1[0].body, '至 12:00（08:50 发布）\nKuantan');
   assert.strictEqual(r1[0].loc, 'k', '只有一个地块时，点通知直接打开那块地');
   const r2 = await runStorm(env, d, new Date('2026-11-08T02:45:00Z'), mkRun(url => [WARN], false));
   assert.strictEqual(r2.length, 0);
@@ -241,7 +241,7 @@ test('模式提醒：每小时第一轮才查，发过后三小时内不再发',
   const r = await runStorm(env, d, NOW, mkRun(fetched, true));
   assert.strictEqual(r.length, 1);
   assert.strictEqual(r[0].kind, 'model');
-  assert.strictEqual(r[0].body, '3/7 个模式显示未来 3 小时有雷雨，约 11:00 起 · 模式预测，不是官方警告');
+  assert.strictEqual(r[0].body, '3/7 个模式 · 约 11:00 起 · 模式推测');
   assert.strictEqual((await runStorm(env, d, NOW, mkRun(fetched, true))).length, 0, '冷却中');
 });
 
@@ -260,4 +260,75 @@ test('没开雷暴提醒的设备一个请求都不发', async () => {
   const r = await runStorm(mkEnv(), dev(undefined, [KUANTAN_PLOT]), NOW, run);
   assert.strictEqual(r.length, 0);
   assert.strictEqual(run.calls.length, 0);
+});
+
+/* ---- continuous rain, and the area formats found in November 2026 ---- */
+const RAIN_BM = 'AMARAN HUJAN BERTERUSAN (WASPADA) I) Hujan berterusan dijangka berlaku di negeri Kelantan (Tanah Merah, Pasir Mas, Tumpat, Kota Bharu, Machang, Bachok, Pasir Puteh, Kuala Krai dan Jeli) • Terengganu • Pahang (Kuantan, Pekan dan Rompin) sehingga Rabu, 11 November 2026. II) Hujan berterusan dijangka berlaku di negeri Sabah: Kudat, Sandakan (Paitan, Telupid, Labuk & Sugut, Sandakan dan Kinabatangan) dalam tempoh Isnin, 9 November 2026 sehingga Rabu, 11 November 2026.';
+const rainRec = from => ({warning_issue:{issued:'2026-11-08T16:30:00', title_bm:'Amaran Hujan Berterusan', title_en:'Continuous Rain Warning'},
+  valid_from:from, valid_to:'2026-11-11T23:59:59', heading_en:'CONTINUOUS RAIN WARNING (ALERT)', heading_bm:'AMARAN HUJAN BERTERUSAN (WASPADA)', text_bm:RAIN_BM});
+
+test('连续降雨：两段都读到；拆开的两笔合并成一条，从最早开始到最晚结束', () => {
+  const ws = liveWarnings([rainRec('2026-11-08T00:00:00'), rainRec('2026-11-09T00:00:00')], '2026-11-08T17:00');
+  assert.strictEqual(ws.length, 1);
+  const w = ws[0];
+  assert.deepStrictEqual([w.kind, w.level, w.from, w.to], ['rain', 1, '2026-11-08T00:00', '2026-11-11T23:59']);
+  assert.strictEqual(plotInAreas({iso:'MY-11', state:'Terengganu', district:'Kemaman'}, w.areas), true, '整个登嘉楼');
+  assert.strictEqual(plotInAreas({iso:'MY-12', state:'Sabah', district:'Pitas', division:'Kudat'}, w.areas), true, '古达省全省');
+  assert.strictEqual(plotInAreas({iso:'MY-12', state:'Sabah', district:'Telupid', division:'Sandakan'}, w.areas), true);
+  assert.strictEqual(plotInAreas({iso:'MY-12', state:'Sabah', district:'Kota Kinabalu', division:'Pantai Barat'}, w.areas), false);
+  assert.strictEqual(plotInAreas(BENTONG, w.areas), false);
+});
+
+test('连续降雨的等级看标题：注意、恶劣天气、危险', () => {
+  const {rainLevel} = require('../server/src/storm.js');
+  assert.strictEqual(rainLevel({heading_bm:'AMARAN HUJAN BERTERUSAN (WASPADA)'}), 1);
+  assert.strictEqual(rainLevel({heading_bm:'AMARAN HUJAN BERTERUSAN (BURUK)'}), 2);
+  assert.strictEqual(rainLevel({heading_en:'CONTINUOUS RAIN WARNING (DANGER)'}), 3);
+});
+
+test('砂拉越写法：每个省各带括号，没括号的是全省', () => {
+  const a = parseAreas('dijangka di negeri Sarawak: Miri, Sri Aman, Bintulu (Tatau), Kapit (Kapit), Samarahan (Sebuyau, Gedong dan Simunjan) sehingga 9:00 Malam');
+  assert.deepStrictEqual(a, [{state:'sarawak', places:['miri', 'sri aman', 'tatau', 'kapit', 'sebuyau', 'gedong', 'simunjan']}]);
+  assert.strictEqual(plotInAreas({iso:'MY-13', state:'Sarawak', district:'Miri', division:'Miri'}, a), true);
+  assert.strictEqual(plotInAreas({iso:'MY-13', state:'Sarawak', district:'Bintulu', division:'Bintulu'}, a), false, '民都鲁省只列了 Tatau');
+});
+
+test('森美兰：「Negeri Sembilan」的 Negeri 不能被当成前缀删掉', () => {
+  const a = parseAreas('dijangka di negeri Melaka • Negeri Sembilan • Johor (Muar) sehingga 9:00 Malam');
+  assert.strictEqual(plotInAreas({iso:'MY-05', state:'Negeri Sembilan', district:'Seremban'}, a), true);
+});
+
+test('连续降雨文案：等级、几天的期限写日期和星期；地块太多时标题改写数目', () => {
+  const {warningMessage} = require('../server/src/message.js');
+  const w = {kind:'rain', level:2, issued:'2026-11-08T16:30', from:'2026-11-08T00:00', to:'2026-11-11T23:59'};
+  const m = warningMessage('zh', w, [{id:'a', name:'Sp.Pelangai', geo:{district:'Bentong'}}], '2026-11-08T17:00');
+  assert.strictEqual(m.title, '🌧 连续降雨（恶劣天气） · Sp.Pelangai');
+  assert.strictEqual(m.body, '至 11/11 周三（16:30 发布）\nBentong');
+  const many = ['Ladang Satu', 'Ladang Dua', 'Ladang Tiga'].map((n, i) => ({id:String(i), name:n, geo:{district:'Bentong'}}));
+  assert.strictEqual(warningMessage('en', w, many, '2026-11-08T17:00').title, '🌧 Continuous rain (Bad weather) · 3 locations');
+});
+
+test('连续降雨：第一次发；原样重发不发；延长再发（写「延长至」）；升级再发', async () => {
+  const PLOT = Object.assign({}, KUANTAN_PLOT);
+  const env = mkEnv();
+  const d = dev({official:true, model:false}, [PLOT]);
+  const at = (list, iso) => runStorm(env, d, new Date(iso), mkRun(() => list, false));
+  const base = rainRec('2026-11-08T00:00:00');
+
+  const r1 = await at([base], '2026-11-08T09:00:00Z');
+  assert.deepStrictEqual(r1.map(x => x.kind), ['rain']);
+  assert.strictEqual(r1[0].title, '🌧 连续降雨（注意） · Kuantan');
+
+  const reissued = Object.assign({}, base, {warning_issue:Object.assign({}, base.warning_issue, {issued:'2026-11-09T10:00:00'})});
+  assert.strictEqual((await at([reissued], '2026-11-09T03:00:00Z')).length, 0, '同等级、同期限的重发不发');
+
+  const longer = Object.assign({}, reissued, {valid_to:'2026-11-13T23:59:59'});
+  const r3 = await at([longer], '2026-11-09T04:00:00Z');
+  assert.strictEqual(r3.length, 1);
+  assert.ok(r3[0].body.startsWith('延长至 13/11'), r3[0].body);
+
+  const worse = Object.assign({}, longer, {heading_bm:'AMARAN HUJAN BERTERUSAN (BURUK)', heading_en:'CONTINUOUS RAIN WARNING (BAD WEATHER)'});
+  const r4 = await at([worse], '2026-11-09T05:00:00Z');
+  assert.strictEqual(r4[0].title, '🌧 连续降雨（恶劣天气） · Kuantan');
+  assert.ok(r4[0].body.startsWith('至 13/11'), '升级不写「延长」：' + r4[0].body);
 });

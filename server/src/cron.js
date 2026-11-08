@@ -3,7 +3,7 @@
    Kept apart from the HTTP entry point so it can be driven end to end with
    KV, Open-Meteo and the push service all stood in (tests/cron.test.js). */
 import {minutesOf, dueWindows, occurrence, windowIndices, aggregate, breaches} from '../../notifylogic.js';
-import {messageForWindow, stormOfficialMessage, stormModelMessage, radarMessage, floodMessage} from './message.js';
+import {messageForWindow, warningMessage, stormModelMessage, radarMessage, floodMessage} from './message.js';
 import {WARN_API, STORM_MODELS, MODEL_COOLDOWN_S, liveWarnings, plotInAreas, modelSignal, modelAlert} from './storm.js';
 import {RADAR_COOLDOWN_S, inMap, radarAt} from './radar.js';
 import {FLOOD_URL, floodStations, floodStationsFromText, floodNear} from './flood.js';
@@ -217,8 +217,13 @@ async function runStorm(env, dev, now, run){
   if(st.official){
     for(const w of liveWarnings(await warnings(run), nowMyt)){
       const hit = plots.filter(b => plotInAreas(b.geo, w.areas));
-      hit.forEach(b => covered.add(b.id));
       if(!hit.length) continue;
+      if(w.kind === 'rain'){
+        const r = await rainWarning(env, dev, w, hit, nowMyt, run);
+        if(r){ report.push(r); if(r.result === 'expired') return report; }
+        continue;
+      }
+      hit.forEach(b => covered.add(b.id));
       /* once per warning issue and plot; a reissue (a new issue time or end
          time) is news and goes out again */
       const key = `storm:o:${dev.id}:${w.issued || ''}:${w.to}`;
@@ -226,7 +231,7 @@ async function runStorm(env, dev, now, run){
       const done = await readLedger(env, key);
       const todo = hit.filter(b => !done.has(b.id));
       if(!todo.length) continue;
-      const msg = stormOfficialMessage(dev.lang, w, todo.map(b => ({id:b.id, name:b.name, geo:b.geo})), nowMyt);
+      const msg = warningMessage(dev.lang, w, todo.map(b => ({id:b.id, name:b.name, geo:b.geo})), nowMyt);
       const r = await deliver(env, dev, msg, `pw:storm:o:${w.issued || ''}:${w.to}:${todo[0].id}`, run);
       report.push(Object.assign({kind:'official', key, ids:todo.map(b => b.id)}, r));
       if(r.result === 'expired') return report;
@@ -286,6 +291,33 @@ async function runStorm(env, dev, now, run){
     }
   }
   return report;
+}
+
+/* A continuous rain warning runs for days and MetMalaysia reissues it as
+   it goes, often unchanged. Each plot hears about it when it first covers
+   them, again if the level rises (Alert → Bad weather → Danger) or the end
+   moves later, and not for a reissue that changes neither. */
+async function rainWarning(env, dev, w, hit, nowMyt, run){
+  const todo = [], marks = [];
+  for(const b of hit){
+    const key = `storm:c:${dev.id}:${b.id}`;
+    let had = null;
+    try{ had = JSON.parse(await env.KV.get(key) || 'null'); }catch(e){ had = null; }
+    const known = had && typeof had === 'object' && typeof had.to === 'string';
+    if(known && w.level <= had.level && w.to <= had.to) continue;
+    todo.push({id:b.id, name:b.name, geo:b.geo, extended:known && w.level <= had.level});
+    marks.push(key);
+  }
+  if(!todo.length) return null;
+  const msg = warningMessage(dev.lang, w, todo, nowMyt);
+  const r = await deliver(env, dev, msg, `pw:rain:${w.issued || ''}:${w.level}:${todo[0].id}`, run);
+  if(r.result === 'sent'){
+    /* kept a day past the warning's end, so a reissue just after it ends is
+       still recognised */
+    const ttl = Math.max(86400, Math.round((Date.parse(w.to + ':00Z') - Date.parse(nowMyt + ':00Z')) / 1000) + 86400);
+    for(const key of marks) await env.KV.put(key, JSON.stringify({level:w.level, to:w.to}), {expirationTtl:ttl});
+  }
+  return Object.assign({kind:'rain', ids:todo.map(x => x.id)}, r);
 }
 
 /* ---- radar ----
