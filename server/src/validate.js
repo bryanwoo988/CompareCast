@@ -85,6 +85,20 @@ function cleanRules(r){
   return out;
 }
 
+/* storm alerts: which of the two sources the device wants */
+function cleanStorm(st){
+  const src = st && typeof st === 'object' ? st : {};
+  return {official:src.official === true, model:src.model === true};
+}
+
+/* the state and district the app looked up for a plot (OSM, in Malay) —
+   short strings only, and only a Malaysian state code */
+function cleanGeo(g){
+  if(!g || typeof g !== 'object' || typeof g.iso !== 'string' || !/^MY-\d{2}$/.test(g.iso)) return undefined;
+  const str = v => (typeof v === 'string' && v.length <= 60 ? v : undefined);
+  return {iso:g.iso, state:str(g.state), district:str(g.district), division:str(g.division)};
+}
+
 function validateSub(body){
   const bad = error => ({ok:false, error});
   if(!body || typeof body !== 'object') return bad('body');
@@ -109,6 +123,8 @@ function validateSub(body){
   /* the only window ids that may survive are ones this payload both declares
      and has switched on */
   const live = new Set(windows.filter(w => w.on).map(w => w.id));
+  const storm = cleanStorm(notify.storm);
+  const stormOn = storm.official || storm.model;
 
   const raw = Array.isArray(body.blocks) ? body.blocks : [];
   if(raw.length > MAX_BLOCKS) return bad('blocks');
@@ -118,15 +134,18 @@ function validateSub(body){
     if(typeof b.id !== 'string' || !b.id || b.id.length > 64) return bad('blockId');
     if(!num(b.lat, -90, 90) || !num(b.lon, -180, 180)) return bad('coords');
     const bw = (Array.isArray(b.windows) ? b.windows : []).filter(w => live.has(w));
-    if(!bw.length) continue;                   // nothing to send for this block
+    const bs = stormOn && b.storm === true;
+    if(!bw.length && !bs) continue;            // nothing to send for this block
     /* the plot's own zone when the client knew it; validated the same way as
        the device zone so a bad value cannot break the cron */
     const btz = validTz(b.tz) ? b.tz : undefined;
     /* the plot's model, so a reminder quotes the figures its page shows; an
        unknown one falls back to Best Match rather than failing the request */
     const model = MODEL_IDS.includes(b.model) ? b.model : undefined;
-    blocks.push({id:b.id, name:String(b.name || '').slice(0, 80), lat:b.lat, lon:b.lon,
-                 windows:[...new Set(bw)], tz:btz, model});
+    const out = {id:b.id, name:String(b.name || '').slice(0, 80), lat:b.lat, lon:b.lon,
+                 windows:[...new Set(bw)], tz:btz, model};
+    if(bs){ out.storm = true; out.geo = cleanGeo(b.geo); }
+    blocks.push(out);
   }
   if(!blocks.length) return bad('noBlocks');
 
@@ -135,7 +154,7 @@ function validateSub(body){
     lang:LANGS.includes(body.lang) ? body.lang : 'en',
     units:cleanUnits(body.units),
     sub:{endpoint:sub.endpoint, keys:{p256dh:keys.p256dh, auth:keys.auth}},
-    notify:{windows, rules:cleanRules(notify.rules)},
+    notify:{windows, rules:cleanRules(notify.rules), storm},
     blocks,
     at:Date.now()
   }};

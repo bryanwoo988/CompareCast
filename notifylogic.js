@@ -182,12 +182,16 @@ function syncMessage(state, enabled, permission){
 
    Checking only "has ticks" used to POST plots whose windows were all off;
    the server rejected the lot and the old schedule kept sending. */
-function effectiveBlocks(locations, windows){
+function effectiveBlocks(locations, windows, storm){
   const on = new Set((Array.isArray(windows) ? windows : []).filter(w => w && w.on).map(w => w.id));
+  /* a plot ticked for storm alerts counts on its own, with no window at all,
+     as long as one of the two storm sources is switched on */
+  const stormOn = !!(storm && (storm.official || storm.model));
   return (Array.isArray(locations) ? locations : [])
-    .map(l => ({loc:l, windows:(Array.isArray(l && l.notify) ? l.notify : []).filter(id => on.has(id))}))
-    .filter(x => x.windows.length)
-    .map(x => ({id:x.loc.id, loc:x.loc, windows:x.windows}));
+    .map(l => ({loc:l, windows:(Array.isArray(l && l.notify) ? l.notify : []).filter(id => on.has(id)),
+                storm:stormOn && !!l && l.storm === true}))
+    .filter(x => x.windows.length || x.storm)
+    .map(x => ({id:x.loc.id, loc:x.loc, windows:x.windows, storm:x.storm}));
 }
 
 /* The id this device registers under — the server's only proof of ownership,

@@ -156,4 +156,95 @@ function messageFor(lang, win, stats, hits, rules, units, blockName){
   return messageForWindow(lang, win, [{name:blockName, stats, hits}], rules, units);
 }
 
-export {messageFor, messageForWindow};
+/* ---- storm alerts ---- */
+
+const SL = {
+  zh:{
+    official:'⚡ MetMalaysia 雷暴警告', model:'⛈ 可能有雷雨', plots:n => `${n} 个地块`,
+    today:'今天', tomorrow:'明天', yesterday:'昨天',
+    nowUntil:t => `现在至 ${t} 有效`, span:(a, b) => `${a} – ${b} 有效`, issued:t => `（${t} 发布）`,
+    agree:(c, n) => `${c}/${n} 个模式显示未来 3 小时有雷雨`, from:t => `，约 ${t} 起`,
+    line:(name, c, n) => `${name}：${c}/${n} 个模式`, note:'模式预测，不是官方警告',
+    sep:' · ', list:'、', open:'（', close:'）'
+  },
+  en:{
+    official:'⚡ MetMalaysia thunderstorm warning', model:'⛈ Thunderstorms possible', plots:n => `${n} locations`,
+    today:'today', tomorrow:'tomorrow', yesterday:'yesterday',
+    nowUntil:t => `In effect now until ${t}`, span:(a, b) => `In effect ${a} – ${b}`, issued:t => ` (issued ${t})`,
+    agree:(c, n) => `${c}/${n} models show thunderstorms in the next 3 hours`, from:t => `, from about ${t}`,
+    line:(name, c, n) => `${name}: ${c}/${n} models`, note:'model forecast, not an official warning',
+    sep:' · ', list:', ', open:' (', close:')'
+  },
+  ms:{
+    official:'⚡ Amaran ribut petir MetMalaysia', model:'⛈ Kemungkinan ribut petir', plots:n => `${n} lokasi`,
+    today:'hari ini', tomorrow:'esok', yesterday:'semalam',
+    nowUntil:t => `Berkuat kuasa sekarang hingga ${t}`, span:(a, b) => `Berkuat kuasa ${a} – ${b}`, issued:t => ` (dikeluarkan ${t})`,
+    agree:(c, n) => `${c}/${n} model menunjukkan ribut petir dalam 3 jam akan datang`, from:t => `, mulai kira-kira ${t}`,
+    line:(name, c, n) => `${name}: ${c}/${n} model`, note:'ramalan model, bukan amaran rasmi',
+    sep:' · ', list:', ', open:' (', close:')'
+  }
+};
+
+const dayShift = (dayISO, n) => { const x = new Date(dayISO + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+
+/* 'YYYY-MM-DDTHH:MM' as the reader would say it relative to now: the bare
+   time when `bare` and it is today, otherwise with today / tomorrow /
+   yesterday, or the date */
+function when(d, t, nowDay, bare){
+  const day = t.slice(0, 10), hm = t.slice(11, 16);
+  if(day === nowDay) return bare ? hm : `${d.today} ${hm}`;
+  if(day === dayShift(nowDay, 1)) return `${d.tomorrow} ${hm}`;
+  if(day === dayShift(nowDay, -1)) return `${d.yesterday} ${hm}`;
+  return `${day.slice(8, 10)}/${day.slice(5, 7)} ${hm}`;
+}
+
+/* "现在至 19:00 有效（16:20 发布）" or "17:00 – 19:00 有效（16:20 发布）":
+   start and end both said, the start as "now" once it has passed, and the
+   issue time so a late or long-lingering banner can be judged for freshness */
+function validity(d, w, now){
+  const nowDay = now.slice(0, 10);
+  const started = !w.from || w.from <= now;
+  /* a day word on one side means a day word on both, so "今天 22:00 – 明天 01:00"
+     never reads as "22:00 – 明天 01:00" */
+  const bare = w.to.slice(0, 10) === nowDay && (started || w.from.slice(0, 10) === nowDay);
+  const span = started ? d.nowUntil(when(d, w.to, nowDay, bare))
+                       : d.span(when(d, w.from, nowDay, bare), when(d, w.to, nowDay, bare));
+  return span + (w.issued ? d.issued(when(d, w.issued, nowDay, true)) : '');
+}
+
+const placeOf = g => [g && g.district, g && g.state].filter(Boolean).join(', ');
+
+/* One official warning, every matched plot in one message. `plots` are
+   {id, name, geo}; `now` is Malaysian time, 'YYYY-MM-DDTHH:MM'. */
+function stormOfficialMessage(lang, w, plots, now){
+  const d = SL[lang] || SL.en;
+  if(!w || !Array.isArray(plots) || !plots.length) return null;
+  const span = validity(d, w, now);
+  const ids = plots.map(p => p.id);
+  if(plots.length === 1){
+    const place = placeOf(plots[0].geo);
+    return {title:d.official + d.sep + plots[0].name, body:(place ? place + d.sep : '') + span, ids};
+  }
+  const named = plots.map(p => { const pl = placeOf(p.geo); return p.name + (pl ? d.open + pl + d.close : ''); });
+  return {title:d.official + d.sep + d.plots(plots.length), body:span + '\n' + named.join(d.list), ids,
+          detail:plots.map(p => ({id:p.id, name:p.name, text:(placeOf(p.geo) ? placeOf(p.geo) + d.sep : '') + span}))};
+}
+
+/* The model heads-up for the plots that crossed the bar this hour. `plots`
+   are {id, name, sig} with sig from modelSignal(). */
+function stormModelMessage(lang, plots){
+  const d = SL[lang] || SL.en;
+  if(!Array.isArray(plots) || !plots.length) return null;
+  const ids = plots.map(p => p.id);
+  const from = s => (s.first ? d.from(s.first.slice(11, 16)) : '');
+  if(plots.length === 1){
+    const s = plots[0].sig;
+    return {title:d.model + d.sep + plots[0].name, body:d.agree(s.count, s.total) + from(s) + d.sep + d.note, ids};
+  }
+  const sorted = plots.slice().sort((a, b) => b.sig.count - a.sig.count);
+  return {title:d.model + d.sep + d.plots(plots.length),
+          body:sorted.map(p => d.line(p.name, p.sig.count, p.sig.total) + from(p.sig)).join('\n') + '\n' + d.note, ids,
+          detail:sorted.map(p => ({id:p.id, name:p.name, text:d.agree(p.sig.count, p.sig.total) + from(p.sig)}))};
+}
+
+export {messageFor, messageForWindow, stormOfficialMessage, stormModelMessage};
