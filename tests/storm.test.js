@@ -157,7 +157,7 @@ function body(over){
 test('只开了雷暴提醒的地块也要收下', () => {
   const r = validateSub(body());
   assert.ok(r.ok, r.error);
-  assert.deepStrictEqual(r.value.notify.storm, {official:true, model:false});
+  assert.deepStrictEqual(r.value.notify.storm, {official:true, model:false, radar:false, flood:false});
   assert.strictEqual(r.value.blocks[0].storm, true);
   assert.deepStrictEqual(r.value.blocks[0].geo, {iso:'MY-10', state:'Selangor', district:'Petaling', division:undefined});
 });

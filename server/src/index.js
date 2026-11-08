@@ -4,7 +4,11 @@
    quarter hour send the reminders that have come due (cron.js). Request bodies
    carry the user's plot coordinates, so nothing here logs them. */
 import {validateSub} from './validate.js';
-import {runDevice, runStorm} from './cron.js';
+import {runDevice, runStorm, runRadar} from './cron.js';
+import {RADAR_URL, STALE_MIN, frameTime, radarGrids} from './radar.js';
+
+/* the radar has its own, faster schedule (wrangler.toml) */
+const RADAR_CRON = '*/5 * * * *';
 
 /* A real payload is a few kilobytes even at the 50-plot ceiling. */
 const MAX_BODY = 16 * 1024;
@@ -71,6 +75,58 @@ async function handle(request, env){
   return reply(env, 204);
 }
 
+/* Every five minutes: read MetMalaysia's radar once, if it has changed and
+   anyone wants it, and check every device's radar plots against it. */
+export const scheduledRadar = async (event, env, opts) => {
+  const now = (opts && opts.now) || new Date();
+  const get = (opts && opts.fetch) || fetch;
+  const devs = [];
+  let cursor;
+  do{
+    const page = await env.KV.list({prefix:'dev:', cursor});
+    for(const k of page.keys){
+      try{
+        const dev = JSON.parse(await env.KV.get(k.name) || 'null');
+        const st = dev && dev.notify && dev.notify.storm;
+        if(st && st.radar && Array.isArray(dev.blocks) && dev.blocks.some(b => b && b.storm)) devs.push(dev);
+      }catch(e){ console.log('device failed', e && e.name); }
+    }
+    cursor = page.list_complete ? null : page.cursor;
+  } while(cursor);
+  if(!devs.length) return {skipped:'nobody'};
+
+  const seenLm = await env.KV.get('radar:lm');
+  let res;
+  try{
+    res = await get(RADAR_URL, {signal:AbortSignal.timeout(20000),
+      headers:seenLm ? {'If-Modified-Since':seenLm} : {}});
+  }catch(e){ console.log('radar fetch failed', e && e.name); return {skipped:'fetch'}; }
+  if(res.status === 304) return {skipped:'unchanged'};
+  if(!res.ok){ console.log('radar http', res.status); return {skipped:'http'}; }
+  const lm = res.headers.get('Last-Modified');
+  if(lm && lm === seenLm) return {skipped:'unchanged'};
+  const frameMs = frameTime(lm);
+  if(frameMs === null || now.getTime() - frameMs > STALE_MIN * 60000){
+    console.log('radar stale');
+    return {skipped:'stale'};
+  }
+  const grids = radarGrids(new Uint8Array(await res.arrayBuffer()));
+  if(!grids){ console.log('radar undecodable'); return {skipped:'decode'}; }
+
+  const run = {cache:new Map(), seen:new Set(), post:opts && opts.post};
+  let sent = 0, failed = 0;
+  for(const dev of devs){
+    try{
+      const rep = await runRadar(env, dev, grids, frameMs, now, run);
+      sent += rep.filter(x => x.result === 'sent').length;
+      failed += rep.filter(x => x.result === 'failed').length;
+    }catch(e){ console.log('radar device failed', e && e.name); }
+  }
+  if(lm) await env.KV.put('radar:lm', lm);
+  console.log('radar done, devices', devs.length, 'sent', sent, 'failed', failed);
+  return {devices:devs.length, sent, failed};
+};
+
 export const scheduled = async (event, env) => {
   const now = new Date();
   const run = {
@@ -108,7 +164,9 @@ export const scheduled = async (event, env) => {
 
 export default {
   fetch:handle,
-  scheduled(event, env, ctx){ return scheduled(event, env, ctx); }
+  scheduled(event, env, ctx){
+    return event && event.cron === RADAR_CRON ? scheduledRadar(event, env) : scheduled(event, env, ctx);
+  }
 };
 
 export {handle, MAX_BODY, MAX_DEVICES};
