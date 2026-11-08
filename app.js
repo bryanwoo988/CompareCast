@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.26.1';
+const APP_VERSION = '3.26.2';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.26.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.26.2', date:'2026-11-08',
+   zh:['「关于」的数据来源补上 MetMalaysia（雷暴警告、雷达）、data.gov.my、JPS（河流水位）和 OpenStreetMap（地块所在的区）'],
+   en:['The data sources in About now list MetMalaysia (thunderstorm warnings, radar), data.gov.my, JPS (river levels) and OpenStreetMap (each location\u2019s district)'],
+   ms:['Sumber data dalam Perihal kini menyenaraikan MetMalaysia (amaran ribut petir, radar), data.gov.my, JPS (paras sungai) dan OpenStreetMap (daerah setiap lokasi)']},
   {v:'3.26.1', date:'2026-11-08',
    zh:['修好：河水提醒读取 JPS 数据太耗时，可能让同一轮的定时提醒和雷暴警告一起发不出去；现在只读需要的部分'],
    en:['Fixed: reading the JPS river data took long enough that it could stop that round\u2019s reminders and storm warnings from going out; only the part needed is read now'],
@@ -4101,7 +4105,7 @@ ms:`<h4 class="info-h">Apa aplikasi ini buat</h4>
 <li>Aplikasi tidak menyimpan cache data cuaca. Jika sambungan terputus semasa ia dibuka, ia terus memaparkan data yang sudah dimuatkan berserta masa kemas kini; jika dibuka tanpa sambungan, tiada ramalan untuk dipaparkan.</li>
 </ul>`};
 const SOURCES = [
-  {n:'Open-Meteo', d:{zh:'预报 API · 8 个模式 · 城市地理编码',en:'Forecast API · 8 models · geocoding',ms:'API ramalan · 8 model · geokod'}, u:'https://open-meteo.com/'},
+  {n:'Open-Meteo', d:{zh:'预报 API · 8 个模式 · 城市地理编码 · 定时提醒和模式雷雨提醒用的预报',en:'Forecast API · 8 models · geocoding · the forecasts behind reminders and the model thunderstorm heads-up',ms:'API ramalan · 8 model · geokod · ramalan untuk peringatan dan isyarat ribut petir model'}, u:'https://open-meteo.com/'},
   {n:'ECMWF ERA5', d:{zh:'再分析资料 · 准度核对的对照基准',en:'Reanalysis · reference for the accuracy check',ms:'Analisis semula · rujukan semakan ketepatan'}, u:'https://climate.copernicus.eu/climate-reanalysis'},
   {n:'ECMWF IFS', d:{zh:'欧洲中期天气预报中心 · 开放数据 CC-BY 4.0',en:'ECMWF open data · CC-BY 4.0',ms:'Data terbuka ECMWF · CC-BY 4.0'}, u:'https://www.ecmwf.int/'},
   {n:'NOAA GFS', d:{zh:'美国国家海洋和大气管理局',en:'US National Oceanic and Atmospheric Administration',ms:'NOAA Amerika Syarikat'}, u:'https://www.noaa.gov/'},
@@ -4110,6 +4114,10 @@ const SOURCES = [
   {n:'Météo-France ARPEGE', d:{zh:'法国气象局',en:'Météo-France',ms:'Météo-France'}, u:'https://meteofrance.com/'},
   {n:'JMA', d:{zh:'日本气象厅',en:'Japan Meteorological Agency',ms:'Agensi Meteorologi Jepun'}, u:'https://www.jma.go.jp/'},
   {n:'UKMO', d:{zh:'英国气象局',en:'UK Met Office',ms:'Met Office UK'}, u:'https://www.metoffice.gov.uk/'},
+  {n:'MetMalaysia', d:{zh:'马来西亚气象局 · 雷暴警告 · 全国雷达拼图（12 个雷达，每 10 分钟一帧）',en:'Malaysian Meteorological Department · thunderstorm warnings · national radar composite (12 radars, a frame every 10 minutes)',ms:'Jabatan Meteorologi Malaysia · amaran ribut petir · komposit radar kebangsaan (12 radar, satu imej setiap 10 minit)'}, u:'https://www.met.gov.my/'},
+  {n:'data.gov.my', d:{zh:'马来西亚政府开放数据平台 · 提供 MetMalaysia 雷暴警告的接口',en:'Malaysian government open data portal · serves MetMalaysia\u2019s thunderstorm warnings',ms:'Portal data terbuka kerajaan Malaysia · menyediakan amaran ribut petir MetMalaysia'}, u:'https://data.gov.my/'},
+  {n:'JPS Public Infobanjir', d:{zh:'灌溉与排水局 · 全国河流水位站和警戒水位',en:'Department of Irrigation and Drainage · river-level stations and their warning levels',ms:'Jabatan Pengairan dan Saliran · stesen paras sungai dan paras amarannya'}, u:'https://publicinfobanjir.water.gov.my/'},
+  {n:'OpenStreetMap', d:{zh:'地块所在的州和区（Nominatim 查询）· © OpenStreetMap 贡献者',en:'The state and district of each location (Nominatim) · © OpenStreetMap contributors',ms:'Negeri dan daerah setiap lokasi (Nominatim) · © penyumbang OpenStreetMap'}, u:'https://www.openstreetmap.org/copyright'},
   {n:'Esri', d:{zh:'地图底图：World Imagery、World Street Map、Dark Gray Canvas、边界与地名 · Esri、Maxar、Earthstar Geographics 及 GIS 用户社群',en:'Basemaps: World Imagery, World Street Map, Dark Gray Canvas, Boundaries & Places · Esri, Maxar, Earthstar Geographics and the GIS user community',ms:'Peta asas: World Imagery, World Street Map, Dark Gray Canvas, Sempadan & Tempat · Esri, Maxar, Earthstar Geographics dan komuniti pengguna GIS'}, u:'https://www.esri.com/'}
 ];
 /* When this build went live: index.html's Last-Modified (set by GitHub Pages
