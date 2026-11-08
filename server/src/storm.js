@@ -23,7 +23,9 @@
    and would alert every day. The thresholds are a rule of thumb, and the
    message says how many models agreed so the reader can weigh it. */
 
-const WARN_API = 'https://api.data.gov.my/weather/warning/?contains=Thunderstorm@warning_issue__title_en&limit=50';
+/* every current warning: thunderstorm and continuous rain are picked out
+   here, and the feed only ever holds a handful */
+const WARN_API = 'https://api.data.gov.my/weather/warning/?limit=50';
 
 const STORM_MODELS = ['ecmwf_ifs025', 'gfs_seamless', 'icon_seamless', 'gem_seamless',
                       'meteofrance_seamless', 'jma_seamless', 'ukmo_seamless'];
@@ -45,7 +47,7 @@ const STATE_NAMES = {
 function norm(s){
   return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
     .replace(/\bw\.\s*p\.?/g, ' ').replace(/\bwp\b/g, ' ').replace(/wilayah persekutuan/g, ' ')
-    .replace(/federal territory( of)?/g, ' ').replace(/\b(bahagian|daerah|negeri)\b/g, ' ')
+    .replace(/federal territory( of)?/g, ' ').replace(/\b(bahagian|daerah)\b/g, ' ')
     .replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
@@ -53,21 +55,67 @@ const splitPlaces = s => String(s).split(/,|\s+dan\s+|\s+and\s+|&/i).map(norm).f
 
 /* The text of one warning as [{state, places}]. An empty places list means
    the whole state. */
+/* Split at top-level commas and "dan"/"and", never inside brackets. */
+function topLevel(str){
+  const out = [];
+  let depth = 0, cur = '';
+  for(let i = 0; i < str.length; i++){
+    const c = str[i];
+    if(c === '(') depth++;
+    if(c === ')') depth = Math.max(0, depth - 1);
+    if(depth === 0 && c === ','){ out.push(cur); cur = ''; continue; }
+    if(depth === 0){
+      const m = /^\s+(?:dan|and|&)\s+/i.exec(str.slice(i));
+      if(m){ out.push(cur); cur = ''; i += m[0].length - 1; continue; }
+    }
+    cur += c;
+  }
+  out.push(cur);
+  return out.map(x => x.trim()).filter(Boolean);
+}
+
+/* One "•"-separated piece of a warning:
+     "Pahang (Kuantan, Pekan dan Rompin)"   state, its districts
+     "Terengganu"                           the whole state
+     "Sarawak: Miri, Bintulu (Tatau), Kapit (Kapit)"
+                                            state, then divisions: a bare
+                                            division is all of it, one with a
+                                            bracket only the districts named
+   Places are the districts and whole divisions; a division that only
+   parents a bracket is not one. */
+function parseSegment(seg){
+  const str = String(seg || '').trim().replace(/\.\s*$/, '');
+  if(!str) return null;
+  const colon = str.indexOf(':'), paren = str.indexOf('(');
+  if(colon >= 0 && (paren < 0 || colon < paren)){
+    const places = [];
+    topLevel(str.slice(colon + 1)).forEach(item => {
+      const m = /^([^(]*?)\s*\((.*)\)\s*$/.exec(item);
+      if(m) splitPlaces(m[2]).forEach(x => places.push(x));
+      else places.push(norm(item));
+    });
+    return {state:norm(str.slice(0, colon)), places:places.filter(Boolean)};
+  }
+  const m = /^([^(]*?)\s*(?:\((.*)\))?\s*$/.exec(str);
+  if(!m) return null;
+  return {state:norm(m[1]), places:m[2] ? splitPlaces(m[2]) : []};
+}
+
+/* A warning's areas, from every section of its Malay text: a thunderstorm
+   warning has one ("dijangka di negeri …"), a continuous rain warning may
+   have several ("I) … dijangka berlaku di negeri … sehingga …  II) …"). */
 function parseAreas(text){
-  let s = String(text || '');
-  const lead = /dijangka\s+di\s+(?:negeri|kawasan)?\s*/i.exec(s);
-  if(lead) s = s.slice(lead.index + lead[0].length);
-  const tail = /\s+sehingga\s/i.exec(s);
-  if(tail) s = s.slice(0, tail.index);
-  return s.split('•').map(seg => {
-    const m = /^\s*([^(:]+?)\s*(?::\s*([^(]+?))?\s*(?:\((.*)\))?\s*\.?\s*$/.exec(seg);
-    if(!m) return null;
-    /* "Sabah: Kudat (Pitas dan Kudat)": the bracket lists the districts and
-       "Kudat" before it is only their division; without a bracket the
-       division is the area */
-    const places = m[3] ? splitPlaces(m[3]) : (m[2] ? splitPlaces(m[2]) : []);
-    return {state:norm(m[1]), places};
-  }).filter(x => x && (x.state || x.places.length));
+  const s = String(text || '');
+  const out = [];
+  const lead = /dijangka\s+(?:berlaku\s+)?di\s+(?:negeri|kawasan)?\s*/gi;
+  let m;
+  while((m = lead.exec(s))){
+    let part = s.slice(m.index + m[0].length);
+    const tail = /\s+(?:sehingga|dalam\s+tempoh)\s/i.exec(part);
+    if(tail) part = part.slice(0, tail.index);
+    part.split('•').map(parseSegment).forEach(x => { if(x && (x.state || x.places.length)) out.push(x); });
+  }
+  return out;
 }
 
 /* Does this warning cover a plot whose state and district were looked up? */
@@ -87,21 +135,45 @@ function plotInAreas(geo, areas){
 /* 'YYYY-MM-DDTHH:MM' — the warnings' own form, Malaysian wall-clock time */
 const minuteOf = s => (typeof s === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)) ? s.slice(0, 16) : null;
 
-/* The thunderstorm warnings in force or still to come, at `nowMyt`
-   ('YYYY-MM-DDTHH:MM', Malaysian time), each with its areas parsed. */
+/* A continuous rain warning's level, from its heading: Waspada (Alert),
+   Buruk (Bad weather), Bahaya (Danger). */
+function rainLevel(w){
+  const h = String(w.heading_bm || '') + ' ' + String(w.heading_en || '');
+  if(/bahaya|danger/i.test(h)) return 3;
+  if(/buruk|bad weather/i.test(h)) return 2;
+  return 1;
+}
+
+/* The thunderstorm and continuous rain warnings in force or still to come,
+   at `nowMyt` ('YYYY-MM-DDTHH:MM', Malaysian time), each with its kind
+   ('storm' or 'rain'), level and areas.
+
+   data.gov.my splits one continuous rain warning into a record per start
+   date without saying which section each belongs to; records with the same
+   issue time and heading are put back together, from the earliest start to
+   the latest end. */
 function liveWarnings(list, nowMyt){
   if(!Array.isArray(list)) return [];
-  return list.map(w => {
-    if(!w || typeof w !== 'object') return null;
-    const title = w.warning_issue && w.warning_issue.title_en;
-    if(!/thunderstorm/i.test(String(title || ''))) return null;
+  const out = [], merged = new Map();
+  for(const w of list){
+    if(!w || typeof w !== 'object') continue;
+    const title = String((w.warning_issue && w.warning_issue.title_en) || '');
+    const kind = /thunderstorm/i.test(title) ? 'storm' : /continuous rain/i.test(title) ? 'rain' : null;
+    if(!kind) continue;
     const from = minuteOf(w.valid_from), to = minuteOf(w.valid_to);
     const issued = minuteOf(w.warning_issue && w.warning_issue.issued);
-    if(!to || to <= nowMyt) return null;
+    if(!to || to <= nowMyt) continue;
     const areas = parseAreas(w.text_bm || w.text_en);
-    if(!areas.length) return null;
-    return {issued, from, to, areas};
-  }).filter(Boolean);
+    if(!areas.length) continue;
+    const item = {kind, level:kind === 'rain' ? rainLevel(w) : 1, issued, from, to, areas};
+    if(kind !== 'rain'){ out.push(item); continue; }
+    const key = `${issued}|${w.heading_bm || w.heading_en || ''}`;
+    const had = merged.get(key);
+    if(!had){ merged.set(key, item); out.push(item); continue; }
+    if(from && (!had.from || from < had.from)) had.from = from;
+    if(to > had.to) had.to = to;
+  }
+  return out;
 }
 
 /* How many of the storm models signal a storm in the hours starting at
@@ -130,5 +202,5 @@ function modelSignal(hourly, start){
 }
 const modelAlert = sig => !!sig && sig.count >= STORM_MIN_MODELS;
 
-export {WARN_API, STORM_MODELS, STORM_HOURS, STORM_MIN_MODELS, MODEL_COOLDOWN_S, STATE_NAMES,
+export {rainLevel, WARN_API, STORM_MODELS, STORM_HOURS, STORM_MIN_MODELS, MODEL_COOLDOWN_S, STATE_NAMES,
         norm, parseAreas, plotInAreas, liveWarnings, modelSignal, modelAlert};

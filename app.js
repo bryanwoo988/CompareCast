@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.27.0';
+const APP_VERSION = '3.28.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,16 @@ const APP_VERSION = '3.27.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.28.0', date:'2026-11-08', time:'18:32',
+   zh:['新增连续降雨警告：MetMalaysia 对地块所在的区发出连续降雨警告时通知你，写出等级（注意、恶劣天气、危险）和期限；等级升高或期限延长时再通知，原样重发的不再通知',
+       '通知变短了：标题直接写地块名，内容只写时间和区名，河水通知只留站名、距离和水位数字',
+       '修好：森美兰的地块收不到雷暴警告；砂拉越和沙巴有些县的雷暴警告配对不到'],
+   en:['New continuous rain warnings: when MetMalaysia issues one for a location\u2019s district you are told its level (Alert, Bad weather, Danger) and how long it lasts; again if the level rises or it is extended, not for an unchanged reissue',
+       'Shorter notifications: the location is in the title, the body has just the times and the district, and river alerts keep only the station, distance and levels',
+       'Fixed: locations in Negeri Sembilan never got thunderstorm warnings, and some districts in Sarawak and Sabah were not matched'],
+   ms:['Amaran hujan berterusan baharu: apabila MetMalaysia mengeluarkannya untuk daerah lokasi anda, anda diberitahu tahapnya (Waspada, Buruk, Bahaya) dan tempohnya; sekali lagi jika tahap naik atau dilanjutkan, bukan untuk keluaran semula yang sama',
+       'Makluman lebih ringkas: nama lokasi dalam tajuk, kandungan hanya masa dan daerah, dan amaran sungai hanya nama stesen, jarak dan paras',
+       'Dibaiki: lokasi di Negeri Sembilan tidak pernah menerima amaran ribut petir, dan sesetengah daerah di Sarawak dan Sabah tidak dipadankan']},
   {v:'3.27.0', date:'2026-11-08', time:'17:22',
    zh:['新的底部导航栏：地点 · 地图 · ＋ · 通知 · 设置',
        '新增「通知」：这台手机收到的每条通知都会留在这里 30 天（最多 100 条），未读的会显示数字；点一下可以打开那块地，或看完整内容',
@@ -434,8 +444,8 @@ zh:{
   stRadarNote:'雷达看到强降雨（每小时 >20 mm）在地块约 10 km 内，或预计一小时内移到这里时通知你，写明方向、距离和大约几点到。雷达看的是雨，不是闪电；雷达图本身晚约 11 分钟，位置误差约几公里。同一块地 2 小时内最多一次。只限马来西亚、新加坡、汶莱一带。',
   stFlood:'JPS 河水水位',
   stFloodNote:'地块 10 km 内的河流水位站达到「警告」或「危险」水位时通知你，写明站名、水位和警戒线。同一个站同一级一天只发一次，升到危险会再发。只限马来西亚。',
-  stOfficial:'MetMalaysia 官方雷暴警告',
-  stOfficialNote:'气象局对地块所在的区发出雷暴警告时通知你，写明从几点到几点有效、几点发布。只限马来西亚的地块。',
+  stOfficial:'MetMalaysia 官方警告：雷暴、连续降雨',
+  stOfficialNote:'气象局对地块所在的区发出雷暴警告或连续降雨警告时通知你，写明有效期限和发布时间；连续降雨警告会写出等级（注意、恶劣天气、危险），等级升高或期限延长时会再通知。只限马来西亚的地块。',
   stModel:'模式雷雨提醒',
   stModelNote:'7 个模式里至少 3 个显示未来 3 小时有雷雨，就通知你：直接预报雷暴，或大雨（每小时 ≥5 mm）加上大气不稳定（CAPE ≥1000）。这是模式推测，会有误报和漏报，不是官方警告；同一块地 3 小时内最多一次。',
   stPlots:'要提醒的地块', stLooking:'正在查询所在的区…', stNotMy:'不在马来西亚：只有模式提醒',
@@ -544,8 +554,8 @@ en:{
   stRadarNote:'Tells you when the radar shows heavy rain (over 20 mm an hour) within about 10 km of a location, or moving there within the hour, with its direction, distance and rough arrival time. Radar sees rain, not lightning; the image is about 11 minutes old when published and positions are off by a few km. At most once every 2 hours per location. Malaysia, Singapore and Brunei only.',
   stFlood:'JPS river levels',
   stFloodNote:'Tells you when a river station within 10 km of a location reaches its Warning or Danger level, with the station, the level and the threshold. Each station once per level per day, again if it rises to Danger. Malaysia only.',
-  stOfficial:'MetMalaysia thunderstorm warnings',
-  stOfficialNote:'Tells you when MetMalaysia issues a thunderstorm warning for a location\u2019s district, with the time it is in effect from and until, and when it was issued. Malaysian locations only.',
+  stOfficial:'MetMalaysia warnings: thunderstorm, continuous rain',
+  stOfficialNote:'Tells you when MetMalaysia issues a thunderstorm or continuous rain warning for a location\u2019s district, with how long it lasts and when it was issued; continuous rain warnings give their level (Alert, Bad weather, Danger) and come again if the level rises or the end moves later. Malaysian locations only.',
   stModel:'Model thunderstorm heads-up',
   stModelNote:'Tells you when at least 3 of the 7 models show thunderstorms in the next 3 hours: a thunderstorm forecast outright, or heavy rain (\u22655 mm in an hour) in an unstable atmosphere (CAPE \u22651000). This is a model estimate with false alarms and misses, not an official warning; at most once every 3 hours per location.',
   stPlots:'Locations to alert', stLooking:'Looking up the district\u2026', stNotMy:'Outside Malaysia: model heads-up only',
@@ -654,8 +664,8 @@ ms:{
   stRadarNote:'Memberitahu anda apabila radar menunjukkan hujan lebat (lebih 20 mm sejam) dalam lingkungan kira-kira 10 km dari lokasi, atau bergerak ke sana dalam masa sejam, dengan arah, jarak dan anggaran masa tiba. Radar melihat hujan, bukan kilat; imej berusia kira-kira 11 minit semasa diterbitkan dan kedudukan boleh tersasar beberapa km. Paling banyak sekali setiap 2 jam bagi setiap lokasi. Malaysia, Singapura dan Brunei sahaja.',
   stFlood:'Paras sungai JPS',
   stFloodNote:'Memberitahu anda apabila stesen paras sungai dalam lingkungan 10 km dari lokasi mencapai paras Amaran atau Bahaya, dengan nama stesen, paras dan had. Setiap stesen sekali bagi setiap tahap sehari, sekali lagi jika naik ke Bahaya. Malaysia sahaja.',
-  stOfficial:'Amaran ribut petir MetMalaysia',
-  stOfficialNote:'Memberitahu anda apabila MetMalaysia mengeluarkan amaran ribut petir untuk daerah sesuatu lokasi, dengan masa ia berkuat kuasa dari dan hingga, serta masa dikeluarkan. Lokasi di Malaysia sahaja.',
+  stOfficial:'Amaran MetMalaysia: ribut petir, hujan berterusan',
+  stOfficialNote:'Memberitahu anda apabila MetMalaysia mengeluarkan amaran ribut petir atau hujan berterusan untuk daerah sesuatu lokasi, dengan tempoh dan masa dikeluarkan; amaran hujan berterusan menyatakan tahapnya (Waspada, Buruk, Bahaya) dan dihantar semula jika tahap naik atau tempoh dilanjutkan. Lokasi di Malaysia sahaja.',
   stModel:'Isyarat ribut petir daripada model',
   stModelNote:'Memberitahu anda apabila sekurang-kurangnya 3 daripada 7 model menunjukkan ribut petir dalam 3 jam akan datang: ramalan ribut petir terus, atau hujan lebat (\u22655 mm sejam) dalam atmosfera tidak stabil (CAPE \u22651000). Ini anggaran model yang boleh tersilap atau terlepas, bukan amaran rasmi; paling banyak sekali setiap 3 jam bagi setiap lokasi.',
   stPlots:'Lokasi untuk diberi amaran', stLooking:'Mencari daerah\u2026', stNotMy:'Di luar Malaysia: isyarat model sahaja',

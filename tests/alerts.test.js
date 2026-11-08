@@ -109,12 +109,13 @@ test('预计到达时间已经过了的，不发「即将到达」', async () =>
 test('雷达通知文案：方向、距离、到达时间、雷达图时间都写出来', () => {
   const m = radarMessage('zh', [{id:'s', name:'Setia Alam', r:{kind:'coming', dir:'W', km:24, min:14}, at:'15:54'}], '15:40');
   assert.strictEqual(m.title, '⛈ 强降雨接近 · Setia Alam');
-  assert.strictEqual(m.body, '雷达：西方约 24 km 有强降雨（>20 mm/h），正往这边移动，约 15:54 到（15:40 雷达图）');
+  assert.strictEqual(m.body, '西方 24 km · 约 15:54 到 · 雷达 15:40');
   const n = radarMessage('en', [{id:'s', name:'Farm', r:{kind:'near', dir:'SE', km:6}}], '15:40');
-  assert.strictEqual(n.body, 'Radar: heavy rain (>20 mm/h) about 6 km to the southeast (radar 15:40)');
+  assert.strictEqual(n.title, '⛈ Heavy rain nearby · Farm');
+  assert.strictEqual(n.body, '6 km southeast · radar 15:40');
   const two = radarMessage('ms', [{id:'a', name:'A', r:{kind:'near', dir:'N', km:4}}, {id:'b', name:'B', r:{kind:'coming', dir:'E', km:20, min:10}, at:'16:00'}], '15:40');
-  assert.strictEqual(two.title, '⛈ Hujan lebat · 2 lokasi');
-  assert.strictEqual(two.body, 'A: kira-kira 4 km di utara, sudah dekat\nB: kira-kira 20 km di timur, tiba kira-kira 16:00\nRadar MetMalaysia 15:40');
+  assert.strictEqual(two.title, '⛈ Hujan lebat · A, B');
+  assert.strictEqual(two.body, 'A: 4 km utara · sudah dekat\nB: 20 km timur · tiba kira-kira 16:00\nradar 15:40');
 });
 
 /* ---- flood ---- */
@@ -133,14 +134,14 @@ test('淹水：附近的站到了警告水位，发一次；没有升级就不�
   const r1 = await runStorm(env, d, FNOW, frun(JPS));
   assert.strictEqual(r1.length, 1);
   assert.strictEqual(r1[0].kind, 'flood');
-  assert.strictEqual(r1[0].title, '🌊 河水达到警告水位 · Setia Alam');
-  assert.strictEqual(r1[0].body, 'Sg. Binjai di Pekan Meru（约 4 km）：4.08 m，超过「警告」线 4.00 m，下降中（JPS 16:15）');
+  assert.strictEqual(r1[0].title, '🌊 河水警告 · Setia Alam');
+  assert.strictEqual(r1[0].body, 'Sg. Binjai, Pekan Meru · 4 km\n4.08 m（警告 4.00 m） · 下降中 · 16:15');
   assert.strictEqual((await runStorm(env, d, FNOW, frun(JPS))).length, 0, '同一个站同一级不重发');
 
   const worse = [Object.assign({}, JPS[0], {n:'Danger', m:'4.60', o:'4.5'})];
   const r3 = await runStorm(env, d, FNOW, frun(worse));
   assert.strictEqual(r3.length, 1, '升到危险要再发');
-  assert.strictEqual(r3[0].title, '🌊 河水达到危险水位 · Setia Alam');
+  assert.strictEqual(r3[0].title, '🌊 河水危险 · Setia Alam');
 });
 
 test('淹水：没开就不读 JPS', async () => {
@@ -153,6 +154,6 @@ test('淹水：没开就不读 JPS', async () => {
 test('淹水文案：英文和马来文', () => {
   const s = {name:'Sg. X', km:3.6, level:4.6, thr:4.5, severity:'Danger', trend:'Rising', time:'2026-11-08T16:15'};
   assert.strictEqual(floodMessage('en', [{id:'a', name:'Farm', stations:[s]}]).body,
-    'Sg. X (about 4 km): 4.60 m, above the Danger level of 4.50 m, rising (JPS 16:15)');
-  assert.strictEqual(floodMessage('ms', [{id:'a', name:'Ladang', stations:[s]}]).title, '🌊 Paras sungai Bahaya · Ladang');
+    'Sg. X · 4 km\n4.60 m (Danger 4.50 m) · rising · 16:15');
+  assert.strictEqual(floodMessage('ms', [{id:'a', name:'Ladang', stations:[s]}]).title, '🌊 Bahaya sungai · Ladang');
 });

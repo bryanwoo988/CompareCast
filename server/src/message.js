@@ -156,180 +156,182 @@ function messageFor(lang, win, stats, hits, rules, units, blockName){
   return messageForWindow(lang, win, [{name:blockName, stats, hits}], rules, units);
 }
 
-/* ---- storm alerts ---- */
+/* ---- alert notifications: warnings, model, radar, rivers ----
 
-const SL = {
+   Short on purpose. A lock-screen banner shows a title cut at about 30
+   characters and three or four lines of body, so: the location in the
+   title, no source names (the wording tells an official warning from a
+   model guess, and About lists the sources), districts without their
+   states, and numbers rather than sentences. */
+
+const AL = {
   zh:{
-    official:'⚡ MetMalaysia 雷暴警告', model:'⛈ 可能有雷雨', plots:n => `${n} 个地块`,
-    today:'今天', tomorrow:'明天', yesterday:'昨天',
-    nowUntil:t => `现在至 ${t} 有效`, span:(a, b) => `${a} – ${b} 有效`, issued:t => `（${t} 发布）`,
-    agree:(c, n) => `${c}/${n} 个模式显示未来 3 小时有雷雨`, from:t => `，约 ${t} 起`,
-    line:(name, c, n) => `${name}：${c}/${n} 个模式`, note:'模式预测，不是官方警告',
-    sep:' · ', list:'、', open:'（', close:'）'
+    storm:'⚡ 雷暴警告', model:'⛈ 可能有雷雨', rain:lv => `🌧 连续降雨（${lv}）`,
+    rainLv:{1:'注意', 2:'恶劣天气', 3:'危险'},
+    coming:'⛈ 强降雨接近', near:'⛈ 强降雨就在附近', heavy:'⛈ 强降雨',
+    river:{Warning:'🌊 河水警告', Danger:'🌊 河水危险'}, rivers:'🌊 河水警报',
+    plots:n => `${n} 个地块`, list:'、', sep:' · ',
+    today:'今天', tomorrow:'明天', yesterday:'昨天', wd:['周日', '周一', '周二', '周三', '周四', '周五', '周六'], dated:(date, wd) => `${date} ${wd}`,
+    until:t => `至 ${t}`, extended:t => `延长至 ${t}`, span:(a, b) => `${a} – ${b}`, issued:t => `（${t} 发布）`,
+    agree:(c, n) => `${c}/${n} 个模式`, from:t => `约 ${t} 起`, guess:'模式推测',
+    dir:{N:'北方', NE:'东北方', E:'东方', SE:'东南方', S:'南方', SW:'西南方', W:'西方', NW:'西北方'},
+    far:(dir, km) => `${dir} ${km} km`, at:t => `约 ${t} 到`, radar:t => `雷达 ${t}`, here:'已在附近',
+    sev:{Warning:'警告', Danger:'危险'}, trend:{Rising:'上涨中', Receding:'下降中', 'No Change':'持平'},
+    named:(name, rest) => `${name}：${rest}`, level:(v, sev, thr) => `${v} m（${sev} ${thr} m）`
   },
   en:{
-    official:'⚡ MetMalaysia thunderstorm warning', model:'⛈ Thunderstorms possible', plots:n => `${n} locations`,
-    today:'today', tomorrow:'tomorrow', yesterday:'yesterday',
-    nowUntil:t => `In effect now until ${t}`, span:(a, b) => `In effect ${a} – ${b}`, issued:t => ` (issued ${t})`,
-    agree:(c, n) => `${c}/${n} models show thunderstorms in the next 3 hours`, from:t => `, from about ${t}`,
-    line:(name, c, n) => `${name}: ${c}/${n} models`, note:'model forecast, not an official warning',
-    sep:' · ', list:', ', open:' (', close:')'
+    storm:'⚡ Thunderstorm warning', model:'⛈ Thunderstorms possible', rain:lv => `🌧 Continuous rain (${lv})`,
+    rainLv:{1:'Alert', 2:'Bad weather', 3:'Danger'},
+    coming:'⛈ Heavy rain approaching', near:'⛈ Heavy rain nearby', heavy:'⛈ Heavy rain',
+    river:{Warning:'🌊 River warning', Danger:'🌊 River danger'}, rivers:'🌊 River alert',
+    plots:n => `${n} locations`, list:', ', sep:' · ',
+    today:'today', tomorrow:'tomorrow', yesterday:'yesterday', wd:['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], dated:(date, wd) => `${wd} ${date}`,
+    until:t => `Until ${t}`, extended:t => `Extended until ${t}`, span:(a, b) => `${a} – ${b}`, issued:t => ` (issued ${t})`,
+    agree:(c, n) => `${c}/${n} models`, from:t => `from about ${t}`, guess:'model estimate',
+    dir:{N:'north', NE:'northeast', E:'east', SE:'southeast', S:'south', SW:'southwest', W:'west', NW:'northwest'},
+    far:(dir, km) => `${km} km ${dir}`, at:t => `arriving about ${t}`, radar:t => `radar ${t}`, here:'already close',
+    sev:{Warning:'Warning', Danger:'Danger'}, trend:{Rising:'rising', Receding:'falling', 'No Change':'steady'},
+    named:(name, rest) => `${name}: ${rest}`, level:(v, sev, thr) => `${v} m (${sev} ${thr} m)`
   },
   ms:{
-    official:'⚡ Amaran ribut petir MetMalaysia', model:'⛈ Kemungkinan ribut petir', plots:n => `${n} lokasi`,
-    today:'hari ini', tomorrow:'esok', yesterday:'semalam',
-    nowUntil:t => `Berkuat kuasa sekarang hingga ${t}`, span:(a, b) => `Berkuat kuasa ${a} – ${b}`, issued:t => ` (dikeluarkan ${t})`,
-    agree:(c, n) => `${c}/${n} model menunjukkan ribut petir dalam 3 jam akan datang`, from:t => `, mulai kira-kira ${t}`,
-    line:(name, c, n) => `${name}: ${c}/${n} model`, note:'ramalan model, bukan amaran rasmi',
-    sep:' · ', list:', ', open:' (', close:')'
+    storm:'⚡ Amaran ribut petir', model:'⛈ Kemungkinan ribut petir', rain:lv => `🌧 Hujan berterusan (${lv})`,
+    rainLv:{1:'Waspada', 2:'Buruk', 3:'Bahaya'},
+    coming:'⛈ Hujan lebat menghampiri', near:'⛈ Hujan lebat berhampiran', heavy:'⛈ Hujan lebat',
+    river:{Warning:'🌊 Amaran sungai', Danger:'🌊 Bahaya sungai'}, rivers:'🌊 Amaran sungai',
+    plots:n => `${n} lokasi`, list:', ', sep:' · ',
+    today:'hari ini', tomorrow:'esok', yesterday:'semalam', wd:['Ahd', 'Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab'], dated:(date, wd) => `${wd} ${date}`,
+    until:t => `Hingga ${t}`, extended:t => `Dilanjutkan hingga ${t}`, span:(a, b) => `${a} – ${b}`, issued:t => ` (dikeluarkan ${t})`,
+    agree:(c, n) => `${c}/${n} model`, from:t => `mulai kira-kira ${t}`, guess:'anggaran model',
+    dir:{N:'utara', NE:'timur laut', E:'timur', SE:'tenggara', S:'selatan', SW:'barat daya', W:'barat', NW:'barat laut'},
+    far:(dir, km) => `${km} km ${dir}`, at:t => `tiba kira-kira ${t}`, radar:t => `radar ${t}`, here:'sudah dekat',
+    sev:{Warning:'Amaran', Danger:'Bahaya'}, trend:{Rising:'naik', Receding:'turun', 'No Change':'tidak berubah'},
+    named:(name, rest) => `${name}: ${rest}`, level:(v, sev, thr) => `${v} m (${sev} ${thr} m)`
   }
 };
+const lang_ = lang => AL[lang] || AL.en;
+
+/* The plots' names for a title, or how many there are when the names would
+   push the alert's own words off the banner. */
+const TITLE_NAMES_MAX = 28;
+function titleFor(d, head, names){
+  const joined = names.join(d.list);
+  return head + d.sep + (names.length === 1 || joined.length <= TITLE_NAMES_MAX ? joined : d.plots(names.length));
+}
 
 const dayShift = (dayISO, n) => { const x = new Date(dayISO + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 
 /* 'YYYY-MM-DDTHH:MM' as the reader would say it relative to now: the bare
    time when `bare` and it is today, otherwise with today / tomorrow /
-   yesterday, or the date */
+   yesterday, or the date. An end of 23:59 is a whole day: the date and the
+   weekday, no time. */
 function when(d, t, nowDay, bare){
   const day = t.slice(0, 10), hm = t.slice(11, 16);
-  if(day === nowDay) return bare ? hm : `${d.today} ${hm}`;
-  if(day === dayShift(nowDay, 1)) return `${d.tomorrow} ${hm}`;
+  const allDay = hm === '23:59';
+  if(day === nowDay) return allDay ? d.today : (bare ? hm : `${d.today} ${hm}`);
+  if(day === dayShift(nowDay, 1)) return allDay ? d.tomorrow : `${d.tomorrow} ${hm}`;
   if(day === dayShift(nowDay, -1)) return `${d.yesterday} ${hm}`;
-  return `${day.slice(8, 10)}/${day.slice(5, 7)} ${hm}`;
+  const date = `${day.slice(8, 10)}/${day.slice(5, 7)}`;
+  if(allDay) return d.dated(date, d.wd[new Date(day + 'T12:00:00Z').getUTCDay()]);
+  return `${date} ${hm}`;
 }
 
-/* "现在至 19:00 有效（16:20 发布）" or "17:00 – 19:00 有效（16:20 发布）":
-   start and end both said, the start as "now" once it has passed, and the
-   issue time so a late or long-lingering banner can be judged for freshness */
-function validity(d, w, now){
+/* "至 21:00（17:15 发布）" or "17:00 – 19:00（16:20 发布）": both ends, the
+   start left out once it has passed, and the issue time so a late or
+   long-lingering banner can be judged for freshness */
+function validity(d, w, now, extended){
   const nowDay = now.slice(0, 10);
   const started = !w.from || w.from <= now;
   /* a day word on one side means a day word on both, so "今天 22:00 – 明天 01:00"
      never reads as "22:00 – 明天 01:00" */
   const bare = w.to.slice(0, 10) === nowDay && (started || w.from.slice(0, 10) === nowDay);
-  const span = started ? d.nowUntil(when(d, w.to, nowDay, bare))
-                       : d.span(when(d, w.from, nowDay, bare), when(d, w.to, nowDay, bare));
-  return span + (w.issued ? d.issued(when(d, w.issued, nowDay, true)) : '');
+  const end = when(d, w.to, nowDay, bare);
+  const span = started ? (extended ? d.extended(end) : d.until(end)) : d.span(when(d, w.from, nowDay, bare), end);
+  const out = span + (w.issued ? d.issued(when(d, w.issued, nowDay, true)) : '');
+  return out.charAt(0).toUpperCase() + out.slice(1);
 }
 
-const placeOf = g => [g && g.district, g && g.state].filter(Boolean).join(', ');
+/* the district, or the state where there is none (Kuala Lumpur) */
+const placeOf = g => (g && (g.district || g.state)) || '';
+const places = plots => [...new Set(plots.map(p => placeOf(p.geo)).filter(Boolean))];
 
-/* One official warning, every matched plot in one message. `plots` are
-   {id, name, geo}; `now` is Malaysian time, 'YYYY-MM-DDTHH:MM'. */
-function stormOfficialMessage(lang, w, plots, now){
-  const d = SL[lang] || SL.en;
+/* One official warning — a thunderstorm warning, or a continuous rain
+   warning when w.kind is 'rain' — every matched plot in one message.
+   `plots` are {id, name, geo, extended}; `now` is Malaysian time. */
+function warningMessage(lang, w, plots, now){
+  const d = lang_(lang);
   if(!w || !Array.isArray(plots) || !plots.length) return null;
-  const span = validity(d, w, now);
-  const ids = plots.map(p => p.id);
-  if(plots.length === 1){
-    const place = placeOf(plots[0].geo);
-    return {title:d.official + d.sep + plots[0].name, body:(place ? place + d.sep : '') + span, ids};
-  }
-  const named = plots.map(p => { const pl = placeOf(p.geo); return p.name + (pl ? d.open + pl + d.close : ''); });
-  return {title:d.official + d.sep + d.plots(plots.length), body:span + '\n' + named.join(d.list), ids,
-          detail:plots.map(p => ({id:p.id, name:p.name, text:(placeOf(p.geo) ? placeOf(p.geo) + d.sep : '') + span}))};
+  const head = w.kind === 'rain' ? d.rain(d.rainLv[w.level] || d.rainLv[1]) : d.storm;
+  const span = validity(d, w, now, plots.every(p => p.extended));
+  const where = places(plots);
+  const msg = {title:titleFor(d, head, plots.map(p => p.name)), body:span + (where.length ? '\n' + where.join(d.sep) : ''),
+               ids:plots.map(p => p.id)};
+  if(plots.length > 1) msg.detail = plots.map(p => ({id:p.id, name:p.name, text:(placeOf(p.geo) ? placeOf(p.geo) + d.sep : '') + span}));
+  return msg;
 }
+/* the thunderstorm-only name the tests and the cron grew up with */
+const stormOfficialMessage = (lang, w, plots, now) => warningMessage(lang, Object.assign({kind:'storm'}, w), plots, now);
 
 /* The model heads-up for the plots that crossed the bar this hour. `plots`
    are {id, name, sig} with sig from modelSignal(). */
 function stormModelMessage(lang, plots){
-  const d = SL[lang] || SL.en;
+  const d = lang_(lang);
   if(!Array.isArray(plots) || !plots.length) return null;
-  const ids = plots.map(p => p.id);
-  const from = s => (s.first ? d.from(s.first.slice(11, 16)) : '');
-  if(plots.length === 1){
-    const s = plots[0].sig;
-    return {title:d.model + d.sep + plots[0].name, body:d.agree(s.count, s.total) + from(s) + d.sep + d.note, ids};
-  }
   const sorted = plots.slice().sort((a, b) => b.sig.count - a.sig.count);
-  return {title:d.model + d.sep + d.plots(plots.length),
-          body:sorted.map(p => d.line(p.name, p.sig.count, p.sig.total) + from(p.sig)).join('\n') + '\n' + d.note, ids,
-          detail:sorted.map(p => ({id:p.id, name:p.name, text:d.agree(p.sig.count, p.sig.total) + from(p.sig)}))};
-}
-
-/* ---- radar and flood alerts ---- */
-
-const RL = {
-  zh:{
-    coming:'⛈ 强降雨接近', near:'⛈ 强降雨就在附近', many:'⛈ 强降雨',
-    dir:{N:'北', NE:'东北', E:'东', SE:'东南', S:'南', SW:'西南', W:'西', NW:'西北'},
-    comingBody:(dir, km, at, frame) => `雷达：${dir}方约 ${km} km 有强降雨（>20 mm/h），正往这边移动，约 ${at} 到（${frame} 雷达图）`,
-    nearBody:(dir, km, frame) => `雷达：${dir}方约 ${km} km 有强降雨（>20 mm/h）（${frame} 雷达图）`,
-    comingLine:(name, dir, km, at) => `${name}：${dir}方约 ${km} km，约 ${at} 到`,
-    nearLine:(name, dir, km) => `${name}：${dir}方约 ${km} km，已在附近`,
-    source:frame => `MetMalaysia 雷达 ${frame}`,
-    river:sev => `🌊 河水达到${sev}水位`, rivers:'🌊 河水警报', sev:{Warning:'警告', Danger:'危险'},
-    trend:{Rising:'上涨中', Receding:'下降中', 'No Change':'持平'},
-    station:(st, km, level, sev, thr, trend, t) => `${st}（约 ${km} km）：${level} m，超过「${sev}」线 ${thr} m${trend ? '，' + trend : ''}（JPS ${t}）`,
-    plotLine:(name, st, km, sev, level) => `${name}：${st}（约 ${km} km）${sev} ${level} m`,
-    plots:n => `${n} 个地块`, sep:' · '
-  },
-  en:{
-    coming:'⛈ Heavy rain approaching', near:'⛈ Heavy rain nearby', many:'⛈ Heavy rain',
-    dir:{N:'north', NE:'northeast', E:'east', SE:'southeast', S:'south', SW:'southwest', W:'west', NW:'northwest'},
-    comingBody:(dir, km, at, frame) => `Radar: heavy rain (>20 mm/h) about ${km} km to the ${dir}, moving this way, arriving about ${at} (radar ${frame})`,
-    nearBody:(dir, km, frame) => `Radar: heavy rain (>20 mm/h) about ${km} km to the ${dir} (radar ${frame})`,
-    comingLine:(name, dir, km, at) => `${name}: about ${km} km ${dir}, arriving about ${at}`,
-    nearLine:(name, dir, km) => `${name}: about ${km} km ${dir}, already close`,
-    source:frame => `MetMalaysia radar ${frame}`,
-    river:sev => `🌊 River at ${sev} level`, rivers:'🌊 River alert', sev:{Warning:'Warning', Danger:'Danger'},
-    trend:{Rising:'rising', Receding:'falling', 'No Change':'steady'},
-    station:(st, km, level, sev, thr, trend, t) => `${st} (about ${km} km): ${level} m, above the ${sev} level of ${thr} m${trend ? ', ' + trend : ''} (JPS ${t})`,
-    plotLine:(name, st, km, sev, level) => `${name}: ${st} (about ${km} km) ${sev} ${level} m`,
-    plots:n => `${n} locations`, sep:' · '
-  },
-  ms:{
-    coming:'⛈ Hujan lebat menghampiri', near:'⛈ Hujan lebat berhampiran', many:'⛈ Hujan lebat',
-    dir:{N:'utara', NE:'timur laut', E:'timur', SE:'tenggara', S:'selatan', SW:'barat daya', W:'barat', NW:'barat laut'},
-    comingBody:(dir, km, at, frame) => `Radar: hujan lebat (>20 mm/j) kira-kira ${km} km di ${dir}, bergerak ke arah ini, dijangka tiba kira-kira ${at} (radar ${frame})`,
-    nearBody:(dir, km, frame) => `Radar: hujan lebat (>20 mm/j) kira-kira ${km} km di ${dir} (radar ${frame})`,
-    comingLine:(name, dir, km, at) => `${name}: kira-kira ${km} km di ${dir}, tiba kira-kira ${at}`,
-    nearLine:(name, dir, km) => `${name}: kira-kira ${km} km di ${dir}, sudah dekat`,
-    source:frame => `Radar MetMalaysia ${frame}`,
-    river:sev => `🌊 Paras sungai ${sev}`, rivers:'🌊 Amaran sungai', sev:{Warning:'Amaran', Danger:'Bahaya'},
-    trend:{Rising:'sedang naik', Receding:'sedang turun', 'No Change':'tidak berubah'},
-    station:(st, km, level, sev, thr, trend, t) => `${st} (kira-kira ${km} km): ${level} m, melepasi paras ${sev} ${thr} m${trend ? ', ' + trend : ''} (JPS ${t})`,
-    plotLine:(name, st, km, sev, level) => `${name}: ${st} (kira-kira ${km} km) ${sev} ${level} m`,
-    plots:n => `${n} lokasi`, sep:' · '
+  const line = s => [d.agree(s.count, s.total), s.first ? d.from(s.first.slice(11, 16)) : ''].filter(Boolean).join(d.sep);
+  const msg = {title:titleFor(d, d.model, sorted.map(p => p.name)), ids:sorted.map(p => p.id)};
+  if(sorted.length === 1) msg.body = line(sorted[0].sig) + d.sep + d.guess;
+  else {
+    msg.body = sorted.map(p => d.named(p.name, line(p.sig))).join('\n') + '\n' + d.guess;
+    msg.detail = sorted.map(p => ({id:p.id, name:p.name, text:line(p.sig)}));
   }
-};
+  return msg;
+}
 
 /* Plots the radar flagged this run: {id, name, r, at} with r from
    radarAt() and `at` the arrival as 'HH:MM' for one on its way. `frame`
    is the radar frame time, 'HH:MM', so the reader can judge how fresh it is. */
 function radarMessage(lang, plots, frame){
-  const d = RL[lang] || RL.en;
+  const d = lang_(lang);
   if(!Array.isArray(plots) || !plots.length) return null;
-  const ids = plots.map(p => p.id);
-  const dir = r => d.dir[r.dir] || r.dir;
-  if(plots.length === 1){
-    const p = plots[0], r = p.r;
-    return r.kind === 'near'
-      ? {title:d.near + d.sep + p.name, body:d.nearBody(dir(r), r.km, frame), ids}
-      : {title:d.coming + d.sep + p.name, body:d.comingBody(dir(r), r.km, p.at, frame), ids};
+  const line = p => [d.far(d.dir[p.r.dir] || p.r.dir, p.r.km), p.r.kind === 'near' ? d.here : d.at(p.at)].join(d.sep);
+  const allNear = plots.every(p => p.r.kind === 'near');
+  const head = plots.length > 1 ? d.heavy : (allNear ? d.near : d.coming);
+  const msg = {title:titleFor(d, head, plots.map(p => p.name)), ids:plots.map(p => p.id)};
+  if(plots.length === 1) msg.body = (plots[0].r.kind === 'near' ? d.far(d.dir[plots[0].r.dir] || plots[0].r.dir, plots[0].r.km) : line(plots[0])) + d.sep + d.radar(frame);
+  else {
+    msg.body = plots.map(p => d.named(p.name, line(p))).join('\n') + '\n' + d.radar(frame);
+    msg.detail = plots.map(p => ({id:p.id, name:p.name, text:line(p)}));
   }
-  const line = p => (p.r.kind === 'near' ? d.nearLine(p.name, dir(p.r), p.r.km) : d.comingLine(p.name, dir(p.r), p.r.km, p.at));
-  return {title:d.many + d.sep + d.plots(plots.length), body:plots.map(line).join('\n') + '\n' + d.source(frame), ids,
-          detail:plots.map(p => ({id:p.id, name:p.name, text:line(p)}))};
+  return msg;
 }
 
 const fmtM = v => (Math.round(v * 100) / 100).toFixed(2);
+/* "Sg. Binjai di Pekan Meru" → "Sg. Binjai, Pekan Meru": the river, then
+   where on it */
+const stationName = s => String(s || '').replace(/\s+di\s+/i, ', ');
 
 /* Plots with a river station at Warning or Danger: {id, name, stations},
    stations from floodNear(), worst first. */
 function floodMessage(lang, plots){
-  const d = RL[lang] || RL.en;
+  const d = lang_(lang);
   if(!Array.isArray(plots) || !plots.length) return null;
-  const ids = plots.map(p => p.id);
   const sev = s => d.sev[s.severity] || s.severity;
-  const full = s => d.station(s.name, Math.max(1, Math.round(s.km)), fmtM(s.level), sev(s), fmtM(s.thr), d.trend[s.trend] || '', s.time.slice(11, 16));
+  const km = s => Math.max(1, Math.round(s.km));
+  const full = s => `${stationName(s.name)}${d.sep}${km(s)} km\n` +
+    [d.level(fmtM(s.level), sev(s), fmtM(s.thr)),
+     d.trend[s.trend], s.time.slice(11, 16)].filter(Boolean).join(d.sep);
+  const worst = plots.some(p => p.stations[0].severity === 'Danger') ? 'Danger' : 'Warning';
+  const msg = {ids:plots.map(p => p.id)};
   if(plots.length === 1){
-    const p = plots[0];
-    return {title:d.river(sev(p.stations[0])) + d.sep + p.name, body:p.stations.slice(0, 3).map(full).join('\n'), ids};
+    msg.title = titleFor(d, d.river[plots[0].stations[0].severity] || d.rivers, [plots[0].name]);
+    msg.body = plots[0].stations.slice(0, 2).map(full).join('\n');
+  } else {
+    msg.title = titleFor(d, d.river[worst] || d.rivers, plots.map(p => p.name));
+    msg.body = plots.map(p => { const s = p.stations[0];
+      return d.named(p.name, [stationName(s.name), `${km(s)} km`, `${sev(s)} ${fmtM(s.level)} m`].join(d.sep)); }).join('\n');
+    msg.detail = plots.map(p => ({id:p.id, name:p.name, text:p.stations.slice(0, 3).map(full).join('\n')}));
   }
-  const short = p => { const s = p.stations[0]; return d.plotLine(p.name, s.name, Math.max(1, Math.round(s.km)), sev(s), fmtM(s.level)); };
-  return {title:d.rivers + d.sep + d.plots(plots.length), body:plots.map(short).join('\n'), ids,
-          detail:plots.map(p => ({id:p.id, name:p.name, text:p.stations.slice(0, 3).map(full).join('\n')}))};
+  return msg;
 }
 
-export {messageFor, messageForWindow, stormOfficialMessage, stormModelMessage, radarMessage, floodMessage};
+export {messageFor, messageForWindow, warningMessage, stormOfficialMessage, stormModelMessage, radarMessage, floodMessage};
