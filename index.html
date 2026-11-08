@@ -82,11 +82,43 @@ input{font-family:inherit}
 .seg button.on{background:#fff;color:#141b3d}
 .seg svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 
+/* ---------------- bottom navigation ---------------- */
+:root{--dock-h:64px}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:650;display:flex;align-items:stretch;
+  padding:6px 6px calc(6px + var(--safe-b));background:#121838;border-top:1px solid rgba(255,255,255,.08)}
+.dock button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  padding:6px 0 4px;font-size:11.5px;font-weight:600;color:var(--dim);border-radius:14px}
+.dock button.on{color:#fff}
+.dock svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.dock .dock-add{flex:0 0 72px}
+.dock .dock-add .plus{width:50px;height:50px;border-radius:50%;background:#fff;color:#141b3d;display:grid;place-items:center;
+  font-size:30px;font-weight:400;line-height:1;box-shadow:0 6px 18px rgba(0,0,0,.35);transform:translateY(-6px)}
+.dock .dock-add:active .plus{transform:translateY(-6px) scale(.92)}
+.dock-ic{position:relative;display:block;height:24px}
+.dock-badge{position:absolute;top:-5px;left:15px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#ff453a;
+  color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center}
+/* the inbox */
+.ib-item{display:block;width:100%;text-align:left;padding:13px 2px;border-top:1px solid rgba(255,255,255,.08)}
+.ib-item:first-child{border-top:0}
+.ib-item .ib-top{display:flex;gap:10px;align-items:baseline}
+.ib-item b{flex:1;min-width:0;font-size:15.5px;font-weight:600;line-height:1.3}
+.ib-item time{flex:0 0 auto;font-size:12.5px;color:var(--dim)}
+.ib-item p{margin:4px 0 0;font-size:14px;line-height:1.45;color:#c9d0ea;white-space:pre-line;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.ib-item.unread b::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#0a84ff;margin:0 7px 2px 0}
+.ib-empty{padding:30px 6px;text-align:center;color:var(--dim);font-size:14.5px;line-height:1.6}
+.done.ghost{background:none;color:var(--dim)}
+/* the language choice in settings */
+.lang-row{display:flex;gap:8px;margin-bottom:10px}
+.lang-row button{flex:1;padding:11px 0;border-radius:12px;background:rgba(255,255,255,.08);color:#9aa4c8;font-size:15px;font-weight:600}
+.lang-row button.on{background:#fff;color:#141b3d}
+
 /* ---- map page only: every rule below is scoped to body.map-mode so the
    saved-locations page keeps its layout to the pixel ---- */
 body.map-mode{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
 body.map-mode main{flex:1;min-height:0;display:flex}
 body.map-mode #pane-map.on{flex:1;min-height:0;padding:0}
+body.map-mode main{margin-bottom:calc(var(--dock-h) + var(--safe-b))}
 body.map-mode .map-wrap{height:100%}
 body.map-mode .hdr{padding:calc(var(--safe-t) + 9px) 18px 9px}
 body.map-mode .mark{width:40px;height:40px;flex:0 0 40px;border-radius:10px}
@@ -99,7 +131,7 @@ body.map-mode .brand p{margin:0;font-size:17px;font-weight:600;color:var(--txt);
 body.map-mode .round{width:36px;height:36px}
 body.map-mode .seg{margin-top:9px}
 body.map-mode .seg button{padding:8px 0;font-size:15px}
-.pane{display:none;padding:18px 18px calc(40px + var(--safe-b))}
+.pane{display:none;padding:18px 18px calc(var(--dock-h) + 40px + var(--safe-b))}
 .pane.on{display:block}
 #pane-map{padding:0}
 
@@ -179,10 +211,16 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
 .nrow .go{color:var(--dim);font-size:20px}
 .nrow[disabled]{opacity:.5}
 .nbody{white-space:pre-line;font-size:15px;line-height:1.6;margin:0 2px 12px}
-.upd-bar{position:fixed;left:12px;right:12px;bottom:calc(14px + var(--safe-b));z-index:960;display:flex;align-items:center;gap:10px;
+.upd-bar{position:fixed;left:12px;right:12px;bottom:calc(var(--dock-h) + 14px + var(--safe-b));z-index:960;display:flex;align-items:center;gap:10px;
   padding:10px 10px 10px 16px;border-radius:18px;background:#f4f6ff;color:#141b3d;font-size:14.5px;font-weight:600;
-  box-shadow:0 10px 30px rgba(0,0,0,.35);transform:translateY(160%);transition:transform .35s cubic-bezier(.2,.8,.3,1)}
-.upd-bar.on{transform:none}
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  /* hidden for real, not just moved: sliding it 160% down used to leave its
+     top edge peeking above the home indicator, and above the dock it would
+     sit on the buttons and take their taps */
+  opacity:0;visibility:hidden;pointer-events:none;transform:translateY(24px);
+  transition:transform .35s cubic-bezier(.2,.8,.3,1),opacity .25s,visibility 0s linear .35s}
+.upd-bar.on{opacity:1;visibility:visible;pointer-events:auto;transform:none;
+  transition:transform .35s cubic-bezier(.2,.8,.3,1),opacity .25s,visibility 0s}
 .upd-bar span{flex:1;min-width:0}
 .upd-go{min-height:40px;padding:0 16px;border-radius:13px;background:#141b3d;color:#fff;font-weight:600;font-size:14px}
 .upd-x{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:none}
@@ -563,8 +601,10 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 .scrim.on{opacity:1;pointer-events:auto}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:901;max-height:92dvh;display:flex;flex-direction:column;
   border-radius:26px 26px 0 0;background:linear-gradient(180deg,#1a2249,#1b2450 40%,#212b5c);
-  transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);box-shadow:0 -12px 40px rgba(0,0,0,.45)}
-.sheet.on{transform:translateY(0)}
+  transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1),box-shadow .32s}
+/* the shadow only while open: nine closed sheets parked below the screen
+   each cast it upwards, and stacked they darkened the bottom of every page */
+.sheet.on{transform:translateY(0);box-shadow:0 -12px 40px rgba(0,0,0,.45)}
 .grab{width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);margin:9px auto 0;flex:0 0 auto}
 .sheet-hdr{display:flex;align-items:center;padding:12px 18px 14px;flex:0 0 auto}
 .sheet-hdr h3{flex:1;margin:0;text-align:center;font-size:18px;font-weight:600}
@@ -638,7 +678,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 .menu.on{transform:scale(1);opacity:1;pointer-events:auto}
 .menu button{display:flex;width:100%;align-items:center;gap:10px;padding:12px 14px;border-radius:11px;font-size:15.5px;text-align:left}
 .menu button.on{background:rgba(255,255,255,.12);font-weight:600}
-.toast{position:fixed;left:50%;bottom:calc(34px + var(--safe-b));transform:translateX(-50%) translateY(14px);z-index:950;
+.toast{position:fixed;left:50%;bottom:calc(var(--dock-h) + 18px + var(--safe-b));transform:translateX(-50%) translateY(14px);z-index:950;
   padding:13px 22px;border-radius:22px;background:rgba(16,23,54,.95);font-size:14.5px;opacity:0;pointer-events:none;transition:.24s;
   box-shadow:0 8px 26px rgba(0,0,0,.45);max-width:86vw;text-align:center}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -665,31 +705,14 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
   <div class="hdr-row">
     <img class="mark" src="icon-192.png" alt="" aria-hidden="true">
     <div class="brand"><h1 id="app-name">天气预测</h1><p id="app-sub">我的地点</p></div>
-    <div class="hdr-btns">
-      <button class="round" id="btn-lang" aria-label="Language">中</button>
-      <button class="round" id="btn-info" aria-label="Info">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5.2M12 7.7v.1"/></svg></button>
-      <button class="round" id="btn-set" aria-label="Settings">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.2 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.2a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.1 1.1z"/></svg></button>
-    </div>
-  </div>
-  <div class="seg">
-    <button id="tab-saved" class="on">
-      <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg><span data-t="tabSaved">地点</span></button>
-    <button id="tab-map">
-      <svg viewBox="0 0 24 24"><path d="m9 4-6 2.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4zM9 4v13M15 6.5v13"/></svg><span data-t="tabMap">地图</span></button>
   </div>
 </header>
 
-<div class="menu" id="lang-menu">
-  <button data-lang="zh">中文</button><button data-lang="en">English</button><button data-lang="ms">Bahasa Melayu</button>
-</div>
 
 <main>
   <section class="pane on" id="pane-saved">
     <p class="list-hint" id="list-hint"></p>
     <div id="loc-list"></div>
-    <button class="add" id="btn-add"><span class="plus">+</span><span data-t="addLoc">添加地点</span></button>
   </section>
   <section class="pane" id="pane-map">
     <div class="map-wrap">
@@ -763,7 +786,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
     <button class="fl-opt" data-firstlang="zh">中文</button>
     <button class="fl-opt" data-firstlang="en">English</button>
     <button class="fl-opt" data-firstlang="ms">Bahasa Melayu</button>
-    <p class="fl-note">之后可在右上角更改 · Change it later from the top bar · Boleh ditukar kemudian di bahagian atas</p>
+    <p class="fl-note">之后可在「设置」里更改 · Change it later in Settings · Boleh ditukar kemudian dalam Tetapan</p>
   </div>
 </div>
 
@@ -841,6 +864,27 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
   <div class="sheet-body" id="info-body"></div>
 </div>
 
+<!-- bottom navigation: covered by full pages (.page) and sheets, which sit above it -->
+<nav class="dock" id="dock" aria-label="Navigation">
+  <button id="tab-saved" class="on">
+    <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg><span data-t="tabSaved">地点</span></button>
+  <button id="tab-map">
+    <svg viewBox="0 0 24 24"><path d="m9 4-6 2.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4zM9 4v13M15 6.5v13"/></svg><span data-t="tabMap">地图</span></button>
+  <button id="btn-add" class="dock-add" aria-label="Add location"><span class="plus">+</span></button>
+  <button id="btn-inbox">
+    <span class="dock-ic"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><b class="dock-badge hide" id="inbox-badge"></b></span><span data-t="tabInbox">通知</span></button>
+  <button id="btn-set">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.2 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.2a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.1 1.1z"/></svg><span data-t="settings">设置</span></button>
+</nav>
+
+<!-- past notifications, kept on this phone (inbox.js) -->
+<div class="sheet" id="sheet-inbox">
+  <div class="grab"></div>
+  <div class="sheet-hdr"><button class="done ghost" id="inbox-clear" data-t="inboxClear">清除</button><h3 data-t="inboxTitle">通知记录</h3>
+    <button class="done" data-close data-t="done">完成</button></div>
+  <div class="sheet-body" id="inbox-body"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -852,7 +896,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
    seen, so every file always matches the page, and nothing needs a version
    number bumped by hand. Loaded in order, app.js last. */
 (function(){
-  const APP_SCRIPTS = ['daylogic.js', 'maplogic.js', 'listlogic.js', 'notifylogic.js', 'summary.js',
+  const APP_SCRIPTS = ['daylogic.js', 'maplogic.js', 'listlogic.js', 'notifylogic.js', 'inbox.js', 'summary.js',
                      'layout.js', 'reqlogic.js', 'updatelogic.js', 'app.js'];
   var r = encodeURIComponent(document.lastModified || '');
   APP_SCRIPTS.forEach(function(src){
