@@ -12,10 +12,13 @@ id = "5bb11669556f4f9399cf8313db72e82d"
 # in the 15 minutes that just passed), MetMalaysia warnings and the hourly
 # model check. Seven minutes later each quarter hour: JPS river levels, on a
 # schedule of their own so each keeps the free plan's 10 ms (index.js).
-# Every five minutes: the radar, which needs the Workers Paid plan's CPU
-# allowance to decode; left out of the deployed config until then.
+#
+# The radar runs on "*/5 * * * *" (RADAR_CRON in index.js). It is not
+# scheduled: decoding the radar image needs more CPU than the free plan
+# allows, and it is not in use yet. To turn it on, move to Workers Paid and
+# add "*/5 * * * *" to this list.
 [triggers]
-crons = ["*/15 * * * *", "7-59/15 * * * *", "*/5 * * * *"]
+crons = ["*/15 * * * *", "7-59/15 * * * *"]
 
 [vars]
 ORIGIN = "https://bryanwoo988.github.io"
