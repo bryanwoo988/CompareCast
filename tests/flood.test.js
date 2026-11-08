@@ -38,3 +38,12 @@ test('10 km 内才算，危险排在警告前面', () => {
 test('不是数组就当没有', () => {
   assert.deepStrictEqual(floodStations(null, NOW), []);
 });
+
+test('直接从文字里挑出警告和危险的站，结果跟完整解析一样', () => {
+  const {floodStationsFromText} = require('../server/src/flood.js');
+  const list = [row({a:'1'}), row({a:'2', n:'Normal'}), row({a:'3', n:'Danger'}), row({a:'4', n:'Danger', o:'0'})];
+  const text = JSON.stringify(list);
+  assert.deepStrictEqual(floodStationsFromText(text, NOW).map(x => x.id).sort(), floodStations(list, NOW).map(x => x.id).sort());
+  assert.deepStrictEqual(floodStationsFromText(null, NOW), []);
+  assert.deepStrictEqual(floodStationsFromText('<html>error</html>', NOW), []);
+});

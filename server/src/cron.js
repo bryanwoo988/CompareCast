@@ -6,7 +6,7 @@ import {minutesOf, dueWindows, occurrence, windowIndices, aggregate, breaches} f
 import {messageForWindow, stormOfficialMessage, stormModelMessage, radarMessage, floodMessage} from './message.js';
 import {WARN_API, STORM_MODELS, MODEL_COOLDOWN_S, liveWarnings, plotInAreas, modelSignal, modelAlert} from './storm.js';
 import {RADAR_COOLDOWN_S, inMap, radarAt} from './radar.js';
-import {FLOOD_URL, floodStations, floodNear} from './flood.js';
+import {FLOOD_URL, floodStations, floodStationsFromText, floodNear} from './flood.js';
 import {sentKey, sendOne, readLedger, writeLedger} from './send.js';
 import {modelsParam, forModel} from './models.js';
 
@@ -166,12 +166,15 @@ function warnings(run){
   return run.warnings;
 }
 
-function floodList(run){
-  if(!run.floodList) run.floodList = Promise.resolve()
-    .then(() => run.fetchJson(FLOOD_URL))
-    .then(j => (Array.isArray(j) ? j : null))
-    .catch(() => null);
-  return run.floodList;
+/* the stations at Warning or Danger, read once per run for every device;
+   from the raw text where the run can fetch text (see flood.js for why) */
+function floodLive(run, nowMyt){
+  if(!run.floodLive) run.floodLive = Promise.resolve()
+    .then(() => (run.fetchText
+      ? run.fetchText(FLOOD_URL).then(t => floodStationsFromText(t, nowMyt))
+      : run.fetchJson(FLOOD_URL).then(j => floodStations(j, nowMyt))))
+    .catch(() => []);
+  return run.floodLive;
 }
 
 function stormForecast(run, lat, lon, tz){
@@ -234,7 +237,7 @@ async function runStorm(env, dev, now, run){
   }
 
   if(st.flood){
-    const live = floodStations(await floodList(run), nowMyt);
+    const live = await floodLive(run, nowMyt);
     const due = [], marks = [];
     for(const b of plots){
       const near = floodNear(live, b.lat, b.lon);

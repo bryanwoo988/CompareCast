@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.26.0';
+const APP_VERSION = '3.26.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.26.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.26.1', date:'2026-11-08',
+   zh:['修好：河水提醒读取 JPS 数据太耗时，可能让同一轮的定时提醒和雷暴警告一起发不出去；现在只读需要的部分'],
+   en:['Fixed: reading the JPS river data took long enough that it could stop that round\u2019s reminders and storm warnings from going out; only the part needed is read now'],
+   ms:['Dibaiki: membaca data sungai JPS mengambil masa terlalu lama sehingga boleh menghalang peringatan dan amaran ribut pusingan itu daripada dihantar; kini hanya bahagian yang diperlukan dibaca']},
   {v:'3.26.0', date:'2026-11-08',
    zh:['新增雷达提醒：MetMalaysia 雷达看到强降雨（每小时 >20 mm）往你的地块移过来时通知你，写明从哪个方向来、多远、大约几点到',
        '新增河水提醒：地块 10 km 内的 JPS 水位站达到「警告」或「危险」水位时通知你',
