@@ -206,7 +206,11 @@ async function deliver(env, dev, msg, tag, run){
 async function runStorm(env, dev, now, run){
   const report = [];
   const st = dev && dev.notify && dev.notify.storm;
-  if(!st || (!st.official && !st.model && !st.flood) || !Array.isArray(dev.blocks)) return report;
+  /* run.parts narrows a run to some of the checks (index.js runs rivers on
+     a schedule of their own); without it, as in the tests, every check runs */
+  const part = k => !run.parts || !!run.parts[k];
+  const on = {official:st && st.official && part('official'), model:st && st.model && part('model'), flood:st && st.flood && part('flood')};
+  if(!st || (!on.official && !on.model && !on.flood) || !Array.isArray(dev.blocks)) return report;
   const plots = dev.blocks.filter(b => b && b.storm);
   if(!plots.length) return report;
   const myt = localNow(STORM_TZ, now);
@@ -214,7 +218,7 @@ async function runStorm(env, dev, now, run){
   /* plots under an official warning get no model heads-up on top of it */
   const covered = new Set();
 
-  if(st.official){
+  if(on.official){
     for(const w of liveWarnings(await warnings(run), nowMyt)){
       const hit = plots.filter(b => plotInAreas(b.geo, w.areas));
       if(!hit.length) continue;
@@ -241,7 +245,7 @@ async function runStorm(env, dev, now, run){
     }
   }
 
-  if(st.flood){
+  if(on.flood){
     const live = await floodLive(run, nowMyt);
     const due = [], marks = [];
     for(const b of plots){
@@ -268,7 +272,7 @@ async function runStorm(env, dev, now, run){
     }
   }
 
-  if(st.model && run.modelHour){
+  if(on.model && run.modelHour){
     const due = [];
     for(const b of plots){
       if(covered.has(b.id)) continue;

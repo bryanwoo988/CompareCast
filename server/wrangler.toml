@@ -9,11 +9,13 @@ binding = "KV"
 id = "5bb11669556f4f9399cf8313db72e82d"
 
 # every quarter hour: reminders (a window is "due" if its notify time falls
-# in the 15 minutes that just passed), MetMalaysia warnings, JPS river levels
-# and the hourly model check. Every five minutes: the radar (index.js),
-# which needs the Workers Paid plan's CPU allowance to decode.
+# in the 15 minutes that just passed), MetMalaysia warnings and the hourly
+# model check. Seven minutes later each quarter hour: JPS river levels, on a
+# schedule of their own so each keeps the free plan's 10 ms (index.js).
+# Every five minutes: the radar, which needs the Workers Paid plan's CPU
+# allowance to decode; left out of the deployed config until then.
 [triggers]
-crons = ["*/15 * * * *", "*/5 * * * *"]
+crons = ["*/15 * * * *", "7-59/15 * * * *", "*/5 * * * *"]
 
 [vars]
 ORIGIN = "https://bryanwoo988.github.io"

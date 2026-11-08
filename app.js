@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.28.1';
+const APP_VERSION = '3.28.2';
 
 /* What changed, per release.
 
@@ -16,6 +16,19 @@ const APP_VERSION = '3.28.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.28.2', date:'2026-11-08', time:'19:44',
+   zh:['修好：预报服务限流时，App 会立刻加倍重新请求（对比图甚至一次多发 8 个），让限流更严重；现在只有真正需要时才重试',
+       '预报服务限流时，会照实说明并在限流结束后自动重新载入，不再误导你去检查网络',
+       '修好：地图载入失败时，标题还停在「我的地点」',
+       '服务器把河水检查分到另一个时段跑，每一轮都留出更多余量，通知更不容易因为超时而发不出去'],
+   en:['Fixed: when the forecast service was limiting requests, the app immediately asked again (eight times over for the compare chart), making it worse; it now retries only when that can help',
+       'When the forecast service is limiting requests the app now says so and reloads by itself once the limit is over, instead of telling you to check your connection',
+       'Fixed: if the map failed to load, the title still said My Locations',
+       'The server now checks river levels in a round of their own, leaving more headroom in each round so notifications are less likely to be held up'],
+   ms:['Dibaiki: apabila perkhidmatan ramalan mengehadkan permintaan, aplikasi terus meminta semula (lapan kali ganda untuk carta perbandingan) dan memburukkannya; kini ia hanya mencuba semula apabila berguna',
+       'Apabila perkhidmatan ramalan mengehadkan permintaan, aplikasi kini memberitahu dengan jelas dan memuat semula sendiri selepas had tamat, bukan menyuruh anda menyemak sambungan',
+       'Dibaiki: jika peta gagal dimuatkan, tajuk masih menunjukkan Lokasi Saya',
+       'Pelayan kini menyemak paras sungai dalam pusingan tersendiri, memberi lebih ruang dalam setiap pusingan supaya makluman kurang berkemungkinan tertangguh']},
   {v:'3.28.1', date:'2026-11-08', time:'19:05',
    zh:['修好：从地图页打开提醒、设置或地块详情时，地图的版权标示（Leaflet、Esri）会浮在页面上'],
    en:['Fixed: opening Reminders, Settings or a location from the map left the map\u2019s credit line (Leaflet, Esri) floating over the page'],
@@ -498,7 +511,7 @@ zh:{
   accCons:'与共识的偏离', accConsD:'每个模式跟所有模式平均值的平均差距（未来 48 小时气温）。偏离小只代表跟大多数一致，不代表更准。',
   accBest:'提前 1 天误差最小', accMae:'误差 · 提前 1 天 / 3 天',
   accMissing:(s)=>`没有足够的过去预报可比，不在榜上：${s}`,
-  editName:'重命名', rename:'新名称', rmLoc:'删除这个地点', failLoad:'读不到预报。检查网络后重试。',
+  editName:'重命名', rename:'新名称', rmLoc:'删除这个地点', failLoad:'读不到预报，请稍后再试。', failBusy:'预报服务暂时限制了这个网络的请求（同一网络的用户太多），稍后会自动重新载入。',
   retry:'重试', offline:'目前离线，显示的是上次读到的数据。', noNet:'目前离线，连上网络后再试。',
   unitSection:'单位', tempU:'温度', windU:'风速', rainU:'降雨',
   defModel:'新地点默认模式', defModelD:'加新地点时先用这个模式。之后每个地点都能单独改。',
@@ -608,7 +621,7 @@ en:{
   accCons:'Distance from consensus', accConsD:'Average gap between each model and the mean of all models, over the next 48 hours of temperature. A small gap only means it agrees with the majority.',
   accBest:'Smallest 1-day-ahead error', accMae:'Error · 1 day / 3 days ahead',
   accMissing:(s)=>`Not enough past forecasts to score, left out: ${s}`,
-  editName:'Rename', rename:'New name', rmLoc:'Remove this location', failLoad:'Could not load the forecast. Check your connection and try again.',
+  editName:'Rename', rename:'New name', rmLoc:'Remove this location', failLoad:'Could not load the forecast. Please try again shortly.', failBusy:'The forecast service is limiting requests from this network for now (too many on the same network); the app will reload by itself.',
   retry:'Retry', offline:'Offline — showing the last data that loaded.', noNet:'You are offline. Try again once you are back online.',
   unitSection:'Units', tempU:'Temperature', windU:'Wind', rainU:'Precipitation',
   defModel:'Default model for new locations', defModelD:'Used when you add a location. You can still change it per location.',
@@ -718,7 +731,7 @@ ms:{
   accCons:'Jarak dari konsensus', accConsD:'Purata beza antara setiap model dengan purata semua model, untuk suhu 48 jam akan datang. Jurang kecil hanya bermakna ia sepakat dengan majoriti.',
   accBest:'Ralat 1 hari terkecil', accMae:'Ralat · 1 hari / 3 hari lebih awal',
   accMissing:(s)=>`Tiada cukup ramalan lalu untuk dinilai, tidak disenaraikan: ${s}`,
-  editName:'Tukar nama', rename:'Nama baharu', rmLoc:'Buang lokasi ini', failLoad:'Gagal memuatkan ramalan. Semak sambungan dan cuba lagi.',
+  editName:'Tukar nama', rename:'Nama baharu', rmLoc:'Buang lokasi ini', failLoad:'Gagal memuatkan ramalan. Sila cuba sebentar lagi.', failBusy:'Perkhidmatan ramalan sedang mengehadkan permintaan dari rangkaian ini (terlalu ramai dalam rangkaian yang sama); aplikasi akan memuat semula sendiri.',
   retry:'Cuba lagi', offline:'Di luar talian — data terakhir dipaparkan.', noNet:'Anda di luar talian. Cuba lagi bila ada sambungan.',
   unitSection:'Unit', tempU:'Suhu', windU:'Angin', rainU:'Hujan',
   defModel:'Model asal untuk lokasi baharu', defModelD:'Digunakan bila anda tambah lokasi. Boleh tukar untuk setiap lokasi.',
@@ -937,11 +950,29 @@ const API     = 'https://api.open-meteo.com/v1/forecast';
 const GEO     = 'https://geocoding-api.open-meteo.com/v1/search';
 const ARCHIVE = 'https://archive-api.open-meteo.com/v1/archive';
 
-async function jget(url, ms){
+/* Open-Meteo's free tier limits each network address (per minute, hour and
+   day) and answers 429 with how long to wait. Phones on a carrier share
+   addresses, so this can happen to someone who has done nothing wrong. A
+   wait of a few seconds is waited out once; a longer one is remembered, said
+   on screen as what it is, and the cards reload when it is over. */
+let busyUntil = 0;
+const RETRY_WAIT_MAX_S = 8;
+const failText = () => !navigator.onLine ? t('noNet') : (Date.now() < busyUntil ? t('failBusy') : t('failLoad'));
+async function jget(url, ms, retried){
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), ms || 15000);
   try{
     const r = await fetch(url, {signal:ctrl.signal, cache:'no-store'});
+    if(r.status === 429){
+      const wait = parseInt(r.headers.get('Retry-After') || '', 10);
+      const s = Number.isFinite(wait) && wait > 0 ? wait : 60;
+      if(!retried && s <= RETRY_WAIT_MAX_S){
+        clearTimeout(timer);
+        await new Promise(res => setTimeout(res, s * 1000));
+        return jget(url, ms, true);
+      }
+      busyUntil = Math.max(busyUntil, Date.now() + Math.min(s, 6 * 3600) * 1000);
+    }
     if(!r.ok) throw new Error('HTTP ' + r.status);
     const j = await r.json();
     /* when it was fetched: nothing on screen used to say, so a day-old number
@@ -951,8 +982,10 @@ async function jget(url, ms){
   } finally { clearTimeout(timer); }
 }
 /* Open-Meteo answers 400 when a model cannot produce a requested variable.
-   Only that case is worth retrying with fewer variables. */
-const isBadRequest = e => /HTTP 4\d\d/.test(String(e && e.message));
+   Only that case is worth retrying with fewer variables. It used to match
+   every 4xx, so a rate limit (429) was answered with a second request at
+   once — and the compare chart with eight. */
+const isBadRequest = e => /HTTP 400\b/.test(String(e && e.message));
 function pick(obj, name, model, single){
   if(!obj) return null;
   if(single && obj[name] !== undefined) return obj[name];
@@ -1041,6 +1074,9 @@ async function getCompare(loc, models){
   }, unitParams());
   try{ return await jget(API + '?' + new URLSearchParams(mk(models)), 25000); }
   catch(e){
+    /* one model at a time only when one of them refused a variable; offline
+       or rate-limited, eight more requests would fail the same way */
+    if(!isBadRequest(e)) throw e;
     const rs = await Promise.allSettled(models.map(id => jget(API + '?' + new URLSearchParams(mk([id])), 20000)));
     return mergeModels(rs, models);
   }
@@ -1128,7 +1164,7 @@ function cardHTML(l){
             <span><i>${t('humid')}</i> ${nz(rh) ? Math.round(rh) + '%' : '—'}</span>`;
     if(isStale(d)) cls += ' stale';
   } else if(d === null){
-    temp = `<b>—</b><span>${navigator.onLine ? t('failLoad') : t('noNet')}</span>`; meta = '';
+    temp = `<b>—</b><span>${failText()}</span>`; meta = '';
   } else {
     temp = `<b class="skel">28°</b><span class="skel">${t('loading')}</span>`;
     meta = `<span class="skel">${t('loading')}</span>`;
@@ -1198,6 +1234,14 @@ async function loadCard(l){
   if(ok) cache[l.id] = r;
   else if(!cache[l.id]) cache[l.id] = null;
   updateCard(l.id); updatePin(l.id);
+  if(!ok && Date.now() < busyUntil) reloadWhenFree();
+}
+/* one timer for every card, set for when the rate limit lifts (a minute at
+   least, so a limit without a stated end is not hammered) */
+let freeTimer = null;
+function reloadWhenFree(){
+  if(freeTimer) return;
+  freeTimer = setTimeout(() => { freeTimer = null; loadAll(); }, Math.max(60000, busyUntil - Date.now() + 2000));
 }
 function loadAll(){ S.locations.forEach(loadCard); }
 
@@ -1686,7 +1730,7 @@ function placeSearch(key, q, on){
         at:`${(+r.latitude).toFixed(3)}°, ${(+r.longitude).toFixed(3)}°`})));
     }catch(e){
       if(!fresh()) return;
-      on.fail(navigator.onLine ? t('failLoad') : t('noNet'));
+      on.fail(failText());
     }
   }, 350);
 }
@@ -2109,8 +2153,8 @@ async function loadDetail(opts){
     if(!current()) return;
     if(cache[loc.id] === undefined){ cache[loc.id] = null; updateCard(loc.id); }
     if(quiet){ paintHead(); return; }
-    $('#d-body').innerHTML = `<div class="big-msg"><b>${t('failLoad')}</b>
-      <p>${navigator.onLine ? '' : t('noNet')}</p><button class="retry" id="d-retry">${t('retry')}</button></div>`;
+    $('#d-body').innerHTML = `<div class="big-msg"><b>${failText()}</b>
+      <button class="retry" id="d-retry">${t('retry')}</button></div>`;
     const r = $('#d-retry'); if(r) r.addEventListener('click', () => loadDetail());
   }finally{
     if(current()) D.busy = false;
@@ -4255,8 +4299,10 @@ function setTab(which){
   $('#tab-map').classList.toggle('on', !s);
   $('#pane-saved').classList.toggle('on', s);
   $('#pane-map').classList.toggle('on', !s);
-  updateSub();
+  /* the mode first: the subtitle reads it, and used to read the old one,
+     so a map that failed to load was left titled "My Locations" */
   document.body.classList.toggle('map-mode', !s);
+  updateSub();
   if(s && P.on) exitPlace();
   if(!s) openMap();
 }
