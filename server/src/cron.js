@@ -3,7 +3,8 @@
    Kept apart from the HTTP entry point so it can be driven end to end with
    KV, Open-Meteo and the push service all stood in (tests/cron.test.js). */
 import {minutesOf, dueWindows, occurrence, windowIndices, aggregate, breaches} from '../../notifylogic.js';
-import {messageForWindow, warningMessage, stormModelMessage, radarMessage, floodMessage} from './message.js';
+import {messageForWindow, warningMessage, stormModelMessage, radarMessage, floodMessage, updateMessage} from './message.js';
+import {cmpVersion} from '../../notifylogic.js';
 import {WARN_API, STORM_MODELS, MODEL_COOLDOWN_S, liveWarnings, plotInAreas, modelSignal, modelAlert} from './storm.js';
 import {RADAR_COOLDOWN_S, inMap, radarAt} from './radar.js';
 import {FLOOD_URL, floodStations, floodStationsFromText, floodNear} from './flood.js';
@@ -194,6 +195,7 @@ function stormForecast(run, lat, lon, tz){
 
 /* finish a storm message the way reminders are finished, and send it */
 async function deliver(env, dev, msg, tag, run){
+  if(!Array.isArray(msg.ids)) msg.ids = [];
   msg.tag = tag;
   let loc;
   if(msg.ids.length === 1) loc = msg.loc = msg.ids[0];
@@ -364,4 +366,43 @@ async function runRadar(env, dev, grids, frameMs, now, run){
   return report;
 }
 
-export {runDevice, runStorm, runRadar, localNow, DUE_GRACE_MIN};
+/* ---- a new version of the app ----
+   version.json on the site (built from app.js's release notes by
+   tools/version-json.js) names the newest version and the last few notes.
+   Each phone is told about versions newer than both the one it last
+   reported running (sent with every sync) and the last one it was told
+   about. A phone that has already opened the new version hears nothing.
+   One that reported no version (synced before this existed) hears about
+   the newest only, not the whole history. */
+const VERSION_URL = 'https://bryanwoo988.github.io/CompareCast/version.json';
+const VRE = /^\d+\.\d+\.\d+$/;
+
+function appReleases(run){
+  if(!run.appReleases) run.appReleases = Promise.resolve()
+    .then(() => run.fetchJson(VERSION_URL + '?t=' + Math.floor(Date.now() / 600000)))
+    .then(j => (j && Array.isArray(j.releases) ? j.releases : [])
+      .filter(r => r && VRE.test(String(r.v)))
+      .sort((a, b) => cmpVersion(b.v, a.v)))
+    .catch(() => []);
+  return run.appReleases;
+}
+
+async function runAppUpdate(env, dev, now, run){
+  if(!dev || !dev.notify || dev.notify.app === false) return [];
+  const rel = await appReleases(run);
+  if(!rel.length) return [];
+  const key = `upd:${dev.id}`;
+  const told = await env.KV.get(key);
+  const known = [dev.appv, told].filter(v => typeof v === 'string' && VRE.test(v))
+    .sort((a, b) => cmpVersion(b, a))[0];
+  const entries = known ? rel.filter(r => cmpVersion(r.v, known) > 0) : rel.slice(0, 1);
+  if(!entries.length) return [];
+  const msg = updateMessage(dev.lang, entries);
+  const r = await deliver(env, dev, msg, `pw:app:${entries[0].v}`, run);
+  /* kept half a year: long enough that a phone left unopened is never told
+     the same version twice */
+  if(r.result === 'sent') await env.KV.put(key, entries[0].v, {expirationTtl:180 * 86400});
+  return [Object.assign({kind:'app', v:entries[0].v}, r)];
+}
+
+export {runDevice, runStorm, runRadar, runAppUpdate, VERSION_URL, localNow, DUE_GRACE_MIN};

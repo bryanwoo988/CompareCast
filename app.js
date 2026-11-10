@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.28.2';
+const APP_VERSION = '3.29.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,13 @@ const APP_VERSION = '3.28.2';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.29.0', date:'2026-11-11', time:'07:34',
+   zh:['新版本推出时会通知你，写出版本号和改了什么；点开通知就会更新',
+       '开关在「通知提醒」最下面；如果你已经打开过新版本，就不会再收到这条通知'],
+   en:['You are now notified when a new version comes out, with its number and what changed; tap the notice to update',
+       'The switch is at the bottom of Reminders; if you have already opened the new version, you are not told'],
+   ms:['Anda kini dimaklumkan apabila versi baharu keluar, dengan nombor versi dan perubahannya; ketik makluman untuk mengemas kini',
+       'Suisnya di bahagian bawah Peringatan; jika anda sudah membuka versi baharu itu, anda tidak dimaklumkan']},
   {v:'3.28.2', date:'2026-11-08', time:'19:44',
    zh:['修好：预报服务限流时，App 会立刻加倍重新请求（对比图甚至一次多发 8 个），让限流更严重；现在只有真正需要时才重试',
        '预报服务限流时，会照实说明并在限流结束后自动重新载入，不再误导你去检查网络',
@@ -456,6 +463,8 @@ zh:{
   ntFrom:'起', ntTo:'止', ntAt:'提醒时间', ntCross:'此时段跨天',
   ntTzNote:(z)=>`时间按地块所在时区计算（${z}）`,
   ntModelNote:'提醒里的温度、雨量和风，用的是每个地块自己选的模式；降雨机率来自 Best Match，跟详情页一样。',
+  upTitle:'🆕 新版本通知', upSwitch:'App 有新版本时通知我',
+  upNote:'每次推出新版本都会通知你，写出版本号和改了什么；点开通知就会更新。如果你已经打开过新版本，就不会再通知。',
   stTitle:'⚠️ 恶劣天气提醒', stIntro:'跟上面的时段无关，随时在检查：官方警告和河水每 15 分钟，雷达每 5 分钟，模式每小时。',
   stRadar:'MetMalaysia 雷达：强降雨接近',
   stRadarNote:'雷达看到强降雨（每小时 >20 mm）在地块约 10 km 内，或预计一小时内移到这里时通知你，写明方向、距离和大约几点到。雷达看的是雨，不是闪电；雷达图本身晚约 11 分钟，位置误差约几公里。同一块地 2 小时内最多一次。只限马来西亚、新加坡、汶莱一带。',
@@ -566,6 +575,8 @@ en:{
   ntFrom:'From', ntTo:'To', ntAt:'Notify at', ntCross:'This window crosses midnight',
   ntTzNote:(z)=>`Times are in each location's own time zone (${z})`,
   ntModelNote:'Reminder temperatures, rainfall and wind use each location\u2019s own model; chance of rain comes from Best Match, as on the detail page.',
+  upTitle:'🆕 New version notices', upSwitch:'Tell me when a new version is out',
+  upNote:'You are told each time a new version comes out, with its number and what changed; tap the notice to update. If you have already opened the new version, you are not told.',
   stTitle:'⚠️ Severe weather alerts', stIntro:'Separate from the time windows above and checked all day: official warnings and rivers every 15 minutes, radar every 5 minutes, models every hour.',
   stRadar:'MetMalaysia radar: heavy rain approaching',
   stRadarNote:'Tells you when the radar shows heavy rain (over 20 mm an hour) within about 10 km of a location, or moving there within the hour, with its direction, distance and rough arrival time. Radar sees rain, not lightning; the image is about 11 minutes old when published and positions are off by a few km. At most once every 2 hours per location. Malaysia, Singapore and Brunei only.',
@@ -676,6 +687,8 @@ ms:{
   ntFrom:'Dari', ntTo:'Hingga', ntAt:'Beritahu pada', ntCross:'Tempoh ini melepasi tengah malam',
   ntTzNote:(z)=>`Masa mengikut zon waktu lokasi itu sendiri (${z})`,
   ntModelNote:'Suhu, hujan dan angin dalam peringatan menggunakan model setiap lokasi; kebarangkalian hujan dari Best Match, sama seperti halaman butiran.',
+  upTitle:'🆕 Makluman versi baharu', upSwitch:'Beritahu saya apabila versi baharu keluar',
+  upNote:'Anda diberitahu setiap kali versi baharu keluar, dengan nombor versi dan perubahannya; ketik makluman untuk mengemas kini. Jika anda sudah membuka versi baharu itu, anda tidak diberitahu.',
   stTitle:'⚠️ Amaran cuaca buruk', stIntro:'Berasingan daripada tempoh masa di atas dan disemak sepanjang hari: amaran rasmi dan sungai setiap 15 minit, radar setiap 5 minit, model setiap jam.',
   stRadar:'Radar MetMalaysia: hujan lebat menghampiri',
   stRadarNote:'Memberitahu anda apabila radar menunjukkan hujan lebat (lebih 20 mm sejam) dalam lingkungan kira-kira 10 km dari lokasi, atau bergerak ke sana dalam masa sejam, dengan arah, jarak dan anggaran masa tiba. Radar melihat hujan, bukan kilat; imej berusia kira-kira 11 minit semasa diterbitkan dan kedudukan boleh tersasar beberapa km. Paling banyak sekali setiap 2 jam bagi setiap lokasi. Malaysia, Singapura dan Brunei sahaja.',
@@ -858,7 +871,9 @@ const NOTIFY_DEFAULTS = {
     gust:    {on:false, v:35}
   },
   /* which storm sources to use; each plot still has to be ticked (l.storm) */
-  storm:{official:true, model:true, radar:true, flood:true}
+  storm:{official:true, model:true, radar:true, flood:true},
+  /* a push when a new version of the app is out */
+  app:true
 };
 const NOTIFY_RULES = ['rainProb','rainSum','tMax','tMin','wind','gust'];
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -902,6 +917,7 @@ function normalizeNotify(){
     radar:typeof st.radar === 'boolean' ? st.radar : NOTIFY_DEFAULTS.storm.radar,
     flood:typeof st.flood === 'boolean' ? st.flood : NOTIFY_DEFAULTS.storm.flood
   };
+  N.app = typeof N.app === 'boolean' ? N.app : NOTIFY_DEFAULTS.app;
 
   /* a window that no longer exists must not keep a location subscribed to it */
   const ids = N.windows.map(w => w.id);
@@ -3656,7 +3672,10 @@ function paintNotify(){
       ${renderWindows()}</div>
     <div class="glass"><h4>${t('ntRules')}</h4>${renderRules()}</div>
     <div class="glass"><h4>${t('ntBlocks')}</h4>${renderMatrix()}</div>
-    <div class="glass"><h4>${t('stTitle')}</h4>${renderStorm()}</div>`;
+    <div class="glass"><h4>${t('stTitle')}</h4>${renderStorm()}</div>
+    <div class="glass"><h4>${t('upTitle')}</h4>
+      <div class="nt-rule"><span id="up-sw">${sw(N.app)}</span><span class="rn">${t('upSwitch')}</span></div>
+      <p class="nt-note" style="margin:4px 0 0">${t('upNote')}</p></div>`;
   bindNotify();
   lookupGeo();
 }
@@ -3721,6 +3740,7 @@ function bindNotify(){
     redraw();
   }));
 
+  $('#up-sw').addEventListener('click', () => { S.notify.app = !S.notify.app; redraw(); });
   $$('#nt-body [data-ss]').forEach(el2 => el2.addEventListener('click', () => {
     const k = el2.dataset.ss;
     S.notify.storm[k] = !S.notify.storm[k];
@@ -3927,7 +3947,9 @@ async function syncPush(){
      windows were all off got the whole registration rejected while the old
      schedule stayed live on the server. */
   const blocks = effectiveBlocks(S.locations, S.notify.windows, S.notify.storm);
-  if(!blocks.length){
+  /* with no plot to report on, a phone still registers if it wants to hear
+     about new versions */
+  if(!blocks.length && !S.notify.app){
     try{ await withdrawDevice(); }
     catch(e){
       lastSyncError = (e && e.message) || 'withdraw';
@@ -3958,7 +3980,9 @@ async function syncPush(){
       lang:S.lang,
       units:S.units,
       sub:{endpoint:sub.endpoint, keys:{p256dh:keys.p256dh, auth:keys.auth}},
-      notify:{windows:S.notify.windows, rules:S.notify.rules, storm:S.notify.storm},
+      notify:{windows:S.notify.windows, rules:S.notify.rules, storm:S.notify.storm, app:S.notify.app},
+      /* the version running here, so the server does not announce it */
+      appv:APP_VERSION,
       /* the plot's own zone, so "6am" means 6am at the field — right even if
          the phone is somewhere else. Falls back to the device's zone only
          when the forecast for that plot has not loaded yet. */
@@ -3983,7 +4007,7 @@ async function syncPush(){
     }
     lastSyncError = '';
     syncRetries = 0;
-    return done('synced');
+    return done(blocks.length ? 'synced' : 'noblocks');
   }catch(e){
     retrySync();
     lastSyncError = (e && (e.name + ': ' + e.message)) || 'network';

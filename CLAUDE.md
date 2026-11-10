@@ -7,6 +7,10 @@ words for users, in every language the app supports. After the update the app
 shows these notes once ("what's new" sheet: version, date and time, changes), and the
 About/Settings screen shows the current version and the full history.
 
+Then run `node tools/version-json.js` to rebuild `version.json` from those notes
+(tests/releases.test.js fails if it is stale). The push worker reads it from the
+site and sends every phone a "new version is out" notice with the changes.
+
 Version numbers: bug fixes bump the last digit, new features the middle one.
 
 Shared standard for all of Bryan Woo's apps (including new ones):

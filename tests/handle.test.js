@@ -66,12 +66,13 @@ test('注销删除设备', async () => {
 /* A02: switching off every window a plot used made the POST fail validation
    (noBlocks), and the old record — with the old schedule — stayed and kept
    sending. An empty effective schedule now withdraws the record. */
-test('生效的地块为零时，服务器删掉旧记录', async () => {
+test('生效的地块为零、新版本通知也关了时，服务器删掉旧记录', async () => {
   const env = mkEnv();
   await handle(post(BODY('abcdefgh1234')), env);
   assert.ok(env.store.has('dev:abcdefgh1234'));
   const off = BODY('abcdefgh1234');
   off.notify.windows[0].on = false;
+  off.notify.app = false;
   const r = await handle(post(off), env);
   assert.strictEqual(r.status, 400);
   assert.ok(!env.store.has('dev:abcdefgh1234'), '旧排程还留着，会继续发');

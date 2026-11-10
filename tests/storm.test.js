@@ -163,7 +163,7 @@ test('只开了雷暴提醒的地块也要收下', () => {
 });
 
 test('雷暴提醒两种都关了，这种地块就没东西可发', () => {
-  const r = validateSub(body({notify:{windows:WINS, rules:{}, storm:{official:false, model:false}}}));
+  const r = validateSub(body({notify:{windows:WINS, rules:{}, storm:{official:false, model:false}, app:false}}));
   assert.strictEqual(r.ok, false);
   assert.strictEqual(r.error, 'noBlocks');
 });

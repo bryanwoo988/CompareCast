@@ -1,0 +1,153 @@
+{
+ "v": "3.29.0",
+ "releases": [
+  {
+   "v": "3.29.0",
+   "date": "2026-11-11",
+   "time": "07:34",
+   "zh": [
+    "新版本推出时会通知你，写出版本号和改了什么；点开通知就会更新",
+    "开关在「通知提醒」最下面；如果你已经打开过新版本，就不会再收到这条通知"
+   ],
+   "en": [
+    "You are now notified when a new version comes out, with its number and what changed; tap the notice to update",
+    "The switch is at the bottom of Reminders; if you have already opened the new version, you are not told"
+   ],
+   "ms": [
+    "Anda kini dimaklumkan apabila versi baharu keluar, dengan nombor versi dan perubahannya; ketik makluman untuk mengemas kini",
+    "Suisnya di bahagian bawah Peringatan; jika anda sudah membuka versi baharu itu, anda tidak dimaklumkan"
+   ]
+  },
+  {
+   "v": "3.28.2",
+   "date": "2026-11-08",
+   "time": "19:44",
+   "zh": [
+    "修好：预报服务限流时，App 会立刻加倍重新请求（对比图甚至一次多发 8 个），让限流更严重；现在只有真正需要时才重试",
+    "预报服务限流时，会照实说明并在限流结束后自动重新载入，不再误导你去检查网络",
+    "修好：地图载入失败时，标题还停在「我的地点」",
+    "服务器把河水检查分到另一个时段跑，每一轮都留出更多余量，通知更不容易因为超时而发不出去"
+   ],
+   "en": [
+    "Fixed: when the forecast service was limiting requests, the app immediately asked again (eight times over for the compare chart), making it worse; it now retries only when that can help",
+    "When the forecast service is limiting requests the app now says so and reloads by itself once the limit is over, instead of telling you to check your connection",
+    "Fixed: if the map failed to load, the title still said My Locations",
+    "The server now checks river levels in a round of their own, leaving more headroom in each round so notifications are less likely to be held up"
+   ],
+   "ms": [
+    "Dibaiki: apabila perkhidmatan ramalan mengehadkan permintaan, aplikasi terus meminta semula (lapan kali ganda untuk carta perbandingan) dan memburukkannya; kini ia hanya mencuba semula apabila berguna",
+    "Apabila perkhidmatan ramalan mengehadkan permintaan, aplikasi kini memberitahu dengan jelas dan memuat semula sendiri selepas had tamat, bukan menyuruh anda menyemak sambungan",
+    "Dibaiki: jika peta gagal dimuatkan, tajuk masih menunjukkan Lokasi Saya",
+    "Pelayan kini menyemak paras sungai dalam pusingan tersendiri, memberi lebih ruang dalam setiap pusingan supaya makluman kurang berkemungkinan tertangguh"
+   ]
+  },
+  {
+   "v": "3.28.1",
+   "date": "2026-11-08",
+   "time": "19:05",
+   "zh": [
+    "修好：从地图页打开提醒、设置或地块详情时，地图的版权标示（Leaflet、Esri）会浮在页面上"
+   ],
+   "en": [
+    "Fixed: opening Reminders, Settings or a location from the map left the map’s credit line (Leaflet, Esri) floating over the page"
+   ],
+   "ms": [
+    "Dibaiki: membuka Peringatan, Tetapan atau sesuatu lokasi dari peta meninggalkan baris kredit peta (Leaflet, Esri) terapung di atas halaman"
+   ]
+  },
+  {
+   "v": "3.28.0",
+   "date": "2026-11-08",
+   "time": "18:32",
+   "zh": [
+    "新增连续降雨警告：MetMalaysia 对地块所在的区发出连续降雨警告时通知你，写出等级（注意、恶劣天气、危险）和期限；等级升高或期限延长时再通知，原样重发的不再通知",
+    "通知变短了：标题直接写地块名，内容只写时间和区名，河水通知只留站名、距离和水位数字",
+    "修好：森美兰的地块收不到雷暴警告；砂拉越和沙巴有些县的雷暴警告配对不到"
+   ],
+   "en": [
+    "New continuous rain warnings: when MetMalaysia issues one for a location’s district you are told its level (Alert, Bad weather, Danger) and how long it lasts; again if the level rises or it is extended, not for an unchanged reissue",
+    "Shorter notifications: the location is in the title, the body has just the times and the district, and river alerts keep only the station, distance and levels",
+    "Fixed: locations in Negeri Sembilan never got thunderstorm warnings, and some districts in Sarawak and Sabah were not matched"
+   ],
+   "ms": [
+    "Amaran hujan berterusan baharu: apabila MetMalaysia mengeluarkannya untuk daerah lokasi anda, anda diberitahu tahapnya (Waspada, Buruk, Bahaya) dan tempohnya; sekali lagi jika tahap naik atau dilanjutkan, bukan untuk keluaran semula yang sama",
+    "Makluman lebih ringkas: nama lokasi dalam tajuk, kandungan hanya masa dan daerah, dan amaran sungai hanya nama stesen, jarak dan paras",
+    "Dibaiki: lokasi di Negeri Sembilan tidak pernah menerima amaran ribut petir, dan sesetengah daerah di Sarawak dan Sabah tidak dipadankan"
+   ]
+  },
+  {
+   "v": "3.27.0",
+   "date": "2026-11-08",
+   "time": "17:22",
+   "zh": [
+    "新的底部导航栏：地点 · 地图 · ＋ · 通知 · 设置",
+    "新增「通知」：这台手机收到的每条通知都会留在这里 30 天（最多 100 条），未读的会显示数字；点一下可以打开那块地，或看完整内容",
+    "语言和使用说明搬进「设置」",
+    "更新记录现在写出每一版的日期和时间（马来西亚时间）",
+    "修好：每一页底部都有一道渐暗，最下面还露出一截白色横条"
+   ],
+   "en": [
+    "New navigation bar at the bottom: Saved · Map · + · Alerts · Settings",
+    "New Alerts tab: every notification this phone receives stays there for 30 days (100 at most), with a count of unread ones; tap one to open its location or read it in full",
+    "Language and Help have moved into Settings",
+    "The update history now shows the date and time of each version (Malaysian time)",
+    "Fixed: the bottom of every page was shaded dark, with the edge of a white bar showing below it"
+   ],
+   "ms": [
+    "Bar navigasi baharu di bawah: Lokasi · Peta · + · Makluman · Tetapan",
+    "Tab Makluman baharu: setiap makluman yang diterima telefon ini disimpan di sana selama 30 hari (paling banyak 100), dengan bilangan yang belum dibaca; ketik untuk membuka lokasinya atau membacanya sepenuhnya",
+    "Bahasa dan Panduan kini dalam Tetapan",
+    "Sejarah kemas kini kini menunjukkan tarikh dan masa setiap versi (waktu Malaysia)",
+    "Dibaiki: bahagian bawah setiap halaman berlorek gelap, dengan hujung bar putih kelihatan di bawahnya"
+   ]
+  },
+  {
+   "v": "3.26.2",
+   "date": "2026-11-08",
+   "time": "16:54",
+   "zh": [
+    "「关于」的数据来源补上 MetMalaysia（雷暴警告、雷达）、data.gov.my、JPS（河流水位）和 OpenStreetMap（地块所在的区）"
+   ],
+   "en": [
+    "The data sources in About now list MetMalaysia (thunderstorm warnings, radar), data.gov.my, JPS (river levels) and OpenStreetMap (each location’s district)"
+   ],
+   "ms": [
+    "Sumber data dalam Perihal kini menyenaraikan MetMalaysia (amaran ribut petir, radar), data.gov.my, JPS (paras sungai) dan OpenStreetMap (daerah setiap lokasi)"
+   ]
+  },
+  {
+   "v": "3.26.1",
+   "date": "2026-11-08",
+   "time": "16:42",
+   "zh": [
+    "修好：河水提醒读取 JPS 数据太耗时，可能让同一轮的定时提醒和雷暴警告一起发不出去；现在只读需要的部分"
+   ],
+   "en": [
+    "Fixed: reading the JPS river data took long enough that it could stop that round’s reminders and storm warnings from going out; only the part needed is read now"
+   ],
+   "ms": [
+    "Dibaiki: membaca data sungai JPS mengambil masa terlalu lama sehingga boleh menghalang peringatan dan amaran ribut pusingan itu daripada dihantar; kini hanya bahagian yang diperlukan dibaca"
+   ]
+  },
+  {
+   "v": "3.26.0",
+   "date": "2026-11-08",
+   "time": "16:40",
+   "zh": [
+    "新增雷达提醒：MetMalaysia 雷达看到强降雨（每小时 >20 mm）往你的地块移过来时通知你，写明从哪个方向来、多远、大约几点到",
+    "新增河水提醒：地块 10 km 内的 JPS 水位站达到「警告」或「危险」水位时通知你",
+    "「雷暴提醒」改名为「恶劣天气提醒」，四种来源各有开关，地块的开关共用"
+   ],
+   "en": [
+    "New radar alerts: when MetMalaysia’s radar shows heavy rain (over 20 mm an hour) moving towards a location, you are told which direction it is coming from, how far it is and roughly when it will arrive",
+    "New river alerts: when a JPS river station within 10 km of a location reaches its Warning or Danger level",
+    "“Storm alerts” is now “Severe weather alerts”, with a switch for each of the four sources and one switch per location for all of them"
+   ],
+   "ms": [
+    "Amaran radar baharu: apabila radar MetMalaysia menunjukkan hujan lebat (lebih 20 mm sejam) bergerak ke arah lokasi anda, anda diberitahu dari arah mana, sejauh mana dan anggaran masa tiba",
+    "Amaran sungai baharu: apabila stesen sungai JPS dalam lingkungan 10 km dari lokasi mencapai paras Amaran atau Bahaya",
+    "“Amaran ribut” kini “Amaran cuaca buruk”, dengan suis bagi setiap empat sumber dan satu suis bagi setiap lokasi untuk semuanya"
+   ]
+  }
+ ]
+}

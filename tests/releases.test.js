@@ -57,3 +57,13 @@ test('已看版本比全部都新时也不报错', () => {
 test('没有已看版本时返回全部——由调用方决定要不要显示', () => {
   assert.strictEqual(notesSince(R, null).length, 3);
 });
+
+/* The push worker announces new versions from version.json. It is built from
+   RELEASES by tools/version-json.js; a stale one would announce the wrong
+   version, or the right one with last week's notes. */
+test('version.json 跟更新说明一致（改了说明就跑 node tools/version-json.js）', () => {
+  const {build} = require('../tools/version-json.js');
+  const onDisk = fs.readFileSync(__dirname + '/../version.json', 'utf8');
+  assert.strictEqual(onDisk, build(app), 'version.json 过期了：跑 node tools/version-json.js');
+  assert.strictEqual(JSON.parse(onDisk).v, appVer);
+});
