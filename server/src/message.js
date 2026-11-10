@@ -334,4 +334,26 @@ function floodMessage(lang, plots){
   return msg;
 }
 
-export {messageFor, messageForWindow, warningMessage, stormOfficialMessage, stormModelMessage, radarMessage, floodMessage};
+/* ---- a new version of the app ----
+   `entries` are the release notes this phone has not been told about,
+   newest first. The title is the newest version; the body is what changed,
+   a few lines at most, then how to get it. A phone only updates when the
+   app is opened, so this says the version is out, not that it is installed. */
+const UL = {
+  zh:{title:v => `🆕 新版本 ${v} 已推出`, tap:'点开即可更新'},
+  en:{title:v => `🆕 Version ${v} is out`, tap:'Tap to update'},
+  ms:{title:v => `🆕 Versi ${v} kini tersedia`, tap:'Ketik untuk kemas kini'}
+};
+const UPDATE_LINES = 3, UPDATE_LINE_MAX = 80;
+const clip = (x, n) => (x.length > n ? x.slice(0, n - 1).trimEnd() + '…' : x);
+function updateMessage(lang, entries){
+  if(!Array.isArray(entries) || !entries.length) return null;
+  const d = UL[lang] ? lang : 'en';
+  const lines = [];
+  entries.forEach(r => (Array.isArray(r[d]) ? r[d] : r.en || []).forEach(x => {
+    if(typeof x === 'string' && lines.length < UPDATE_LINES) lines.push('• ' + clip(x, UPDATE_LINE_MAX));
+  }));
+  return {title:UL[d].title(entries[0].v), body:lines.concat(UL[d].tap).join('\n'), ids:[], kind:'app'};
+}
+
+export {updateMessage, messageFor, messageForWindow, warningMessage, stormOfficialMessage, stormModelMessage, radarMessage, floodMessage};

@@ -67,8 +67,17 @@ test('过滤后为空的地块整条剔除', () => {
   assert.strictEqual(r.value.blocks.length, 1);
   assert.strictEqual(r.value.blocks[0].id, 'l2');
 });
-test('没有任何有效地块时被拒', () => {
-  assert.strictEqual(validateSub(ok({blocks:[{id:'l1', name:'A', lat:1, lon:2, windows:['evening']}]})).ok, false);
+test('没有任何有效地块、也不要新版本通知时被拒', () => {
+  const r = validateSub(ok({notify:Object.assign({}, NOTIFY, {app:false}), blocks:[{id:'l1', name:'A', lat:1, lon:2, windows:['evening']}]}));
+  assert.strictEqual(r.ok, false);
+  assert.strictEqual(r.error, 'noBlocks');
+});
+test('只要新版本通知（没有地块）也能登记；版本号要合法', () => {
+  const r = validateSub(ok({appv:'3.29.0', blocks:[]}));
+  assert.ok(r.ok, r.error);
+  assert.strictEqual(r.value.notify.app, true);
+  assert.strictEqual(r.value.appv, '3.29.0');
+  assert.strictEqual(validateSub(ok({appv:'3.29<script>'})).value.appv, undefined);
 });
 test('语言非法时回落到 en', () => {
   assert.strictEqual(validateSub(ok({lang:'xx'})).value.lang, 'en');

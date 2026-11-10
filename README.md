@@ -86,6 +86,7 @@ node --test tests/*.test.js
 | Leaflet 1.9.4 | `cdnjs.cloudflare.com` | 打开地图时才载入，带完整性校验（SRI） |
 | 雷暴提醒：官方警告 | `api.data.gov.my/weather/warning/` | MetMalaysia 雷暴警告，服务器每 15 分钟读一次 |
 | 雷达提醒 | `api.met.gov.my/static/images/radar-latest.gif` | MetMalaysia 12 雷达拼图，每 10 分钟一帧，服务器每 5 分钟检查一次 |
+| 新版本通知 | `bryanwoo988.github.io/CompareCast/version.json` | 由 `tools/version-json.js` 从 `app.js` 的更新说明生成，服务器每 15 分钟读一次 |
 | 河水提醒 | `publicinfobanjir.water.gov.my/.../latestreadingstrendabc.json` | JPS 全国水位站（JPS 地图本身用的数据），服务器每 15 分钟读一次 |
 | 雷暴提醒：地块所在的区 | `nominatim.openstreetmap.org/reverse` | 由 App 查，每块地一次，用马来文（跟 MetMalaysia 的拼法一致） |
 

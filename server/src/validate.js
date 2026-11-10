@@ -148,14 +148,19 @@ function validateSub(body){
     if(bs){ out.storm = true; out.geo = cleanGeo(b.geo); }
     blocks.push(out);
   }
-  if(!blocks.length) return bad('noBlocks');
+  /* new-version notices need no plot: a phone that wants only those still
+     registers */
+  const appNotice = notify.app !== false;
+  if(!blocks.length && !appNotice) return bad('noBlocks');
 
   return {ok:true, value:{
     id:body.id, tz:body.tz,
     lang:LANGS.includes(body.lang) ? body.lang : 'en',
     units:cleanUnits(body.units),
     sub:{endpoint:sub.endpoint, keys:{p256dh:keys.p256dh, auth:keys.auth}},
-    notify:{windows, rules:cleanRules(notify.rules), storm},
+    notify:{windows, rules:cleanRules(notify.rules), storm, app:appNotice},
+    /* the version the phone runs, so it is not told about one it has */
+    appv:typeof body.appv === 'string' && /^\d+\.\d+\.\d+$/.test(body.appv) ? body.appv : undefined,
     blocks,
     at:Date.now()
   }};

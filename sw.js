@@ -169,6 +169,7 @@ self.addEventListener('push', e => {
            detail: Array.isArray(d.detail) ? d.detail : null,
            more: typeof d.more === 'number' ? d.more : 0,
            at: Date.now(),
+           kind: typeof d.kind === 'string' ? d.kind : '',
            inbox: entry ? entry.id : ''}
   })]));
 });
@@ -178,9 +179,12 @@ self.addEventListener('notificationclick', e => {
   const data = e.notification.data || {}, loc = data.loc || '';
   /* tapped is read */
   if(data.inbox && typeof inboxMarkRead === 'function') e.waitUntil(inboxMarkRead(data.inbox).catch(() => {}));
+  /* A new-version notice just opens the app: opening it is what updates
+     it, and the app then shows what changed itself. */
+  const appOnly = data.kind === 'app';
   /* A reminder about several plots opens a page listing all of them in full:
      the banner only ever shows its first few lines, whatever the phone. */
-  const notice = loc ? null : {title:e.notification.title, body:e.notification.body,
+  const notice = (loc || appOnly) ? null : {title:e.notification.title, body:e.notification.body,
                                detail:data.detail || null, more:data.more || 0, at:data.at || Date.now()};
   e.waitUntil((async () => {
     const all = await self.clients.matchAll({type:'window', includeUncontrolled:true});
@@ -188,11 +192,12 @@ self.addEventListener('notificationclick', e => {
       if(!('focus' in c)) continue;
       await c.focus();
       if(loc) c.postMessage({type:'open-loc', loc});
-      else c.postMessage({type:'open-notice', notice});
+      else if(notice) c.postMessage({type:'open-notice', notice});
       return;
     }
     if(!self.clients.openWindow) return;
     if(loc) return self.clients.openWindow('./?loc=' + encodeURIComponent(loc));
+    if(appOnly) return self.clients.openWindow('./');
     /* too long for a URL: parked where the opening window picks it up */
     try{
       const c = await caches.open(NOTICE_CACHE);

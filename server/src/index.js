@@ -4,7 +4,7 @@
    quarter hour send the reminders that have come due (cron.js). Request bodies
    carry the user's plot coordinates, so nothing here logs them. */
 import {validateSub} from './validate.js';
-import {runDevice, runStorm, runRadar} from './cron.js';
+import {runDevice, runStorm, runRadar, runAppUpdate} from './cron.js';
 import {RADAR_URL, STALE_MIN, frameTime, radarGrids} from './radar.js';
 
 /* the radar has its own, faster schedule (wrangler.toml) */
@@ -165,6 +165,10 @@ export const scheduled = async (event, env, ctx, opts) => {
         const sr = await runStorm(env, dev, now, run);
         storms += sr.filter(x => x.result === 'sent').length;
         failed += sr.filter(x => x.result === 'failed').length;
+        if(sr.some(x => x.result === 'expired') || floodOnly) continue;
+        const ur = await runAppUpdate(env, dev, now, run);
+        sent += ur.filter(x => x.result === 'sent').length;
+        failed += ur.filter(x => x.result === 'failed').length;
       }catch(e){ console.log('device failed', e && e.name); }
     }
     cursor = page.list_complete ? null : page.cursor;
