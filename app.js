@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.29.0';
+const APP_VERSION = '3.29.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.29.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.29.1', date:'2026-11-11', time:'07:49',
+   zh:['「关于」新增隐私说明：写明存在手机里的是什么、同步到服务器的是什么、不存什么，以及关掉提醒后怎么处理'],
+   en:['About now has a privacy note: what stays on the phone, what is synced to the server, what is not kept, and what happens when Reminders are turned off'],
+   ms:['Perihal kini mempunyai nota privasi: apa yang kekal dalam telefon, apa yang disegerakkan ke pelayan, apa yang tidak disimpan, dan apa yang berlaku apabila Peringatan dimatikan']},
   {v:'3.29.0', date:'2026-11-11', time:'07:34',
    zh:['新版本推出时会通知你，写出版本号和改了什么；点开通知就会更新',
        '开关在「通知提醒」最下面；如果你已经打开过新版本，就不会再收到这条通知'],
@@ -527,6 +531,12 @@ zh:{
   cmpSection:'对比哪些模式', cmpD:'勾选的模式会出现在每个地点的对比图和准度核对里。',
   about:'关于', version:'版本',
   relAll:'更新记录', relTitle:'这一版有什么变化', relDone:'知道了', dataSrc:'数据来源', savedOk:'已保存', deleted:'已删除',
+  privTitle:'隐私',
+  privItems:['你的地点、设定和通知记录，平时都只存在这台手机里。没有账号，也不收集姓名、电邮或电话。',
+    '只有开启「通知提醒」后，才会把下面这些同步到推送服务器（Cloudflare）：手机的推送地址（由 Apple 或 Google 提供）、你勾选的地块的名称、坐标和所在的区、提醒设定、语言、单位和 App 版本号。用一个随机编号识别。',
+    '服务器不存通知的内容，也不存你的位置记录。',
+    '查天气时，手机会把地点的坐标发给 Open-Meteo，查所在的区时发给 OpenStreetMap，地图图块来自 Esri；服务器检查警报时也会用坐标向 Open-Meteo 取预报。',
+    '关掉「启用提醒」，服务器会删除你的记录；用来避免重复通知的少量标记（只含随机编号）会自动过期，最长半年。'],
   tabInbox:'通知', inboxTitle:'通知记录', inboxClear:'清除', inboxEmpty:'还没有通知。\n从 3.27.0 起，这台手机收到的每条通知都会留在这里 30 天（最多 100 条）。',
   inboxNote:'只存在这台手机里；删掉 App 或清除 Safari 网站数据会一并清空。', inboxCleared:'通知记录已清除',
   langSection:'语言', aboutEntry:'使用说明与关于', yesterday:'昨天'
@@ -639,6 +649,12 @@ en:{
   cmpSection:'Models to compare', cmpD:'Ticked models appear in the compare chart and the accuracy check.',
   about:'About', version:'Version',
   relAll:'What\'s new', relTitle:'What changed', relDone:'Got it', dataSrc:'Data sources', savedOk:'Saved', deleted:'Removed',
+  privTitle:'Privacy',
+  privItems:['Your locations, settings and notification history normally stay on this phone only. There is no account, and no name, email or phone number is collected.',
+    'Only once you turn on Reminders are these synced to the push server (Cloudflare): the phone\u2019s push address (issued by Apple or Google), the name, coordinates and district of each location you ticked, your reminder settings, language, units and the app version. A random ID identifies the phone.',
+    'The server does not keep the contents of notifications, and does not keep a history of your positions.',
+    'To get the weather the phone sends a location\u2019s coordinates to Open-Meteo, and to OpenStreetMap to find its district; map tiles come from Esri. The server also uses the coordinates to ask Open-Meteo for forecasts when it checks for alerts.',
+    'Turning Reminders off deletes your record from the server; the few markers that stop repeat notices (a random ID only) expire by themselves, after six months at most.'],
   tabInbox:'Alerts', inboxTitle:'Past notifications', inboxClear:'Clear', inboxEmpty:'No notifications yet.\nFrom 3.27.0 on, every notification this phone receives stays here for 30 days (100 at most).',
   inboxNote:'Kept on this phone only; deleting the app or clearing Safari\u2019s website data empties it.', inboxCleared:'Notifications cleared',
   langSection:'Language', aboutEntry:'Help & about', yesterday:'Yesterday'
@@ -751,6 +767,12 @@ ms:{
   cmpSection:'Model untuk dibanding', cmpD:'Model bertanda muncul dalam carta banding dan semakan ketepatan.',
   about:'Perihal', version:'Versi',
   relAll:'Apa yang baharu', relTitle:'Apa yang berubah', relDone:'Faham', dataSrc:'Sumber data', savedOk:'Disimpan', deleted:'Dibuang',
+  privTitle:'Privasi',
+  privItems:['Lokasi, tetapan dan sejarah makluman anda biasanya hanya disimpan dalam telefon ini. Tiada akaun, dan tiada nama, e-mel atau nombor telefon dikumpulkan.',
+    'Hanya apabila anda menghidupkan Peringatan, perkara berikut disegerakkan ke pelayan tolakan (Cloudflare): alamat tolakan telefon (dikeluarkan oleh Apple atau Google), nama, koordinat dan daerah setiap lokasi yang ditanda, tetapan peringatan, bahasa, unit dan versi aplikasi. ID rawak mengenal pasti telefon.',
+    'Pelayan tidak menyimpan kandungan makluman, dan tidak menyimpan sejarah kedudukan anda.',
+    'Untuk mendapatkan cuaca, telefon menghantar koordinat lokasi ke Open-Meteo, dan ke OpenStreetMap untuk mencari daerahnya; jubin peta datang dari Esri. Pelayan juga menggunakan koordinat untuk meminta ramalan daripada Open-Meteo semasa menyemak amaran.',
+    'Mematikan Peringatan memadam rekod anda daripada pelayan; beberapa penanda yang menghalang makluman berulang (ID rawak sahaja) tamat sendiri, selepas enam bulan paling lama.'],
   tabInbox:'Makluman', inboxTitle:'Makluman lepas', inboxClear:'Kosongkan', inboxEmpty:'Belum ada makluman.\nMulai 3.27.0, setiap makluman yang diterima telefon ini disimpan di sini selama 30 hari (paling banyak 100).',
   inboxNote:'Disimpan dalam telefon ini sahaja; memadam aplikasi atau mengosongkan data laman web Safari akan mengosongkannya.', inboxCleared:'Makluman dikosongkan',
   langSection:'Bahasa', aboutEntry:'Panduan & perihal', yesterday:'Semalam'
@@ -4255,6 +4277,9 @@ function drawInfo(){
     <div class="group" style="margin-top:22px"><h4>${t('dataSrc')}</h4>
       ${SOURCES.map(s => `<a class="src" href="${s.u}" target="_blank" rel="noopener">
         <span style="flex:1"><b>${s.n}</b><small>${s.d[S.lang]}</small></span><span class="go">↗</span></a>`).join('')}
+    </div>
+    <div class="group"><h4>${t('privTitle')}</h4>
+      ${t('privItems').map(x => `<p style="margin-bottom:9px">${esc(x)}</p>`).join('')}
     </div>
     <div class="group"><h4>${t('about')}</h4>
       <p style="margin-bottom:4px">${t('app')} · ${t('version')} ${APP_VERSION} · ${builtAt() || RELEASES[0].date} · <a href="#" id="rel-all">${t('relAll')}</a></p>

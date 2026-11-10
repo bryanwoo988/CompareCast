@@ -1,6 +1,20 @@
 {
- "v": "3.29.0",
+ "v": "3.29.1",
  "releases": [
+  {
+   "v": "3.29.1",
+   "date": "2026-11-11",
+   "time": "07:49",
+   "zh": [
+    "「关于」新增隐私说明：写明存在手机里的是什么、同步到服务器的是什么、不存什么，以及关掉提醒后怎么处理"
+   ],
+   "en": [
+    "About now has a privacy note: what stays on the phone, what is synced to the server, what is not kept, and what happens when Reminders are turned off"
+   ],
+   "ms": [
+    "Perihal kini mempunyai nota privasi: apa yang kekal dalam telefon, apa yang disegerakkan ke pelayan, apa yang tidak disimpan, dan apa yang berlaku apabila Peringatan dimatikan"
+   ]
+  },
   {
    "v": "3.29.0",
    "date": "2026-11-11",
@@ -127,26 +141,6 @@
    ],
    "ms": [
     "Dibaiki: membaca data sungai JPS mengambil masa terlalu lama sehingga boleh menghalang peringatan dan amaran ribut pusingan itu daripada dihantar; kini hanya bahagian yang diperlukan dibaca"
-   ]
-  },
-  {
-   "v": "3.26.0",
-   "date": "2026-11-08",
-   "time": "16:40",
-   "zh": [
-    "新增雷达提醒：MetMalaysia 雷达看到强降雨（每小时 >20 mm）往你的地块移过来时通知你，写明从哪个方向来、多远、大约几点到",
-    "新增河水提醒：地块 10 km 内的 JPS 水位站达到「警告」或「危险」水位时通知你",
-    "「雷暴提醒」改名为「恶劣天气提醒」，四种来源各有开关，地块的开关共用"
-   ],
-   "en": [
-    "New radar alerts: when MetMalaysia’s radar shows heavy rain (over 20 mm an hour) moving towards a location, you are told which direction it is coming from, how far it is and roughly when it will arrive",
-    "New river alerts: when a JPS river station within 10 km of a location reaches its Warning or Danger level",
-    "“Storm alerts” is now “Severe weather alerts”, with a switch for each of the four sources and one switch per location for all of them"
-   ],
-   "ms": [
-    "Amaran radar baharu: apabila radar MetMalaysia menunjukkan hujan lebat (lebih 20 mm sejam) bergerak ke arah lokasi anda, anda diberitahu dari arah mana, sejauh mana dan anggaran masa tiba",
-    "Amaran sungai baharu: apabila stesen sungai JPS dalam lingkungan 10 km dari lokasi mencapai paras Amaran atau Bahaya",
-    "“Amaran ribut” kini “Amaran cuaca buruk”, dengan suis bagi setiap empat sumber dan satu suis bagi setiap lokasi untuk semuanya"
    ]
   }
  ]
