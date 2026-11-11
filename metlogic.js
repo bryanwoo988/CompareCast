@@ -40,6 +40,10 @@ var MET_DISTRICTS = [
  'Telupid', 'Temerloh', 'Tenom', 'Timur Laut', 'Tongod', 'Tuaran', 'Tumpat', 'Yan'
 ];
 
+/* Sabah's and Sarawak's divisions, which MetMalaysia also forecasts for */
+var MET_DIVISIONS = ['Betong', 'Bintulu', 'Kapit', 'Kuching', 'Kudat', 'Labuan', 'Limbang', 'Miri', 'Mukah',
+  'Pantai Barat', 'Pedalaman', 'Samarahan', 'Sandakan', 'Sarikei', 'Serian', 'Sibu', 'Sri Aman', 'Tawau'];
+
 /* OpenStreetMap name → MetMalaysia's, where they differ */
 var MET_ALIAS = {'cameron highlands':'Tanah Tinggi Cameron', 'larut matang dan selama':'Larut, Matang Dan Selama',
   'larut matang selama':'Larut, Matang Dan Selama'};
@@ -57,23 +61,27 @@ function metNorm(s){
     .replace(/\b(daerah|bahagian)\b/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
-/* Where to look a plot up, best first: [{name, type:'Ds'|'St'}]. Empty for
-   a plot outside Malaysia or one not looked up yet. */
+/* Where to look a plot up, best first: its district, then (Sabah and
+   Sarawak) its division, then its state: [{name, type:'Ds'|'Dv'|'St'}].
+   Empty for a plot outside Malaysia or one not looked up yet. */
 function metPlaces(geo){
   if(!geo || typeof geo.iso !== 'string' || !MET_STATE[geo.iso]) return [];
-  var out = [], want = [];
-  if(MET_ISO_DISTRICT[geo.iso]) want.push(MET_ISO_DISTRICT[geo.iso]);
-  [geo.district, geo.division].forEach(function(n){ if(n) want.push(n); });
-  for(var i = 0; i < want.length; i++){
-    var k = metNorm(want[i]), name = MET_ALIAS[k] || null;
-    if(!name) for(var j = 0; j < MET_DISTRICTS.length; j++) if(metNorm(MET_DISTRICTS[j]) === k){ name = MET_DISTRICTS[j]; break; }
-    if(name && !out.some(function(x){ return x.name === name; })) out.push({name:name, type:'Ds'});
-  }
+  var out = [];
+  var find = function(list, n){
+    var k = metNorm(n);
+    if(!k) return null;
+    for(var j = 0; j < list.length; j++) if(metNorm(list[j]) === k) return list[j];
+    return null;
+  };
+  var ds = MET_ISO_DISTRICT[geo.iso] || MET_ALIAS[metNorm(geo.district)] || find(MET_DISTRICTS, geo.district);
+  if(ds) out.push({name:ds, type:'Ds'});
+  var dv = find(MET_DIVISIONS, geo.division);
+  if(dv) out.push({name:dv, type:'Dv'});
   out.push({name:MET_STATE[geo.iso], type:'St'});
   return out;
 }
 
-var metUrl = function(name){ return MET_FC_API + '?filter=' + encodeURIComponent(name) + '@location__location_name&sort=date'; };
+var metUrl = function(name){ return MET_FC_API + '?filter=' + encodeURIComponent(name) + '@location__location_name&sort=date&limit=100'; };
 
 /* The reply → days of the one place of `type`, oldest first, from `today`
    (YYYY-MM-DD) on. A name can be both a district and a town (Bentong), so
@@ -148,5 +156,5 @@ function metWhen(s, lang){
   return parts.map(function(x){ return w[x]; }).join(w.and);
 }
 
-if(typeof module !== 'undefined') module.exports = {MET_FC_API, MET_DISTRICTS, MET_STATE, metNorm, metPlaces, metUrl,
+if(typeof module !== 'undefined') module.exports = {MET_FC_API, MET_DISTRICTS, MET_DIVISIONS, MET_STATE, metNorm, metPlaces, metUrl,
   metDays, metKind, metPhrase, metWhen};

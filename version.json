@@ -1,6 +1,23 @@
 {
- "v": "3.31.0",
+ "v": "3.31.1",
  "releases": [
+  {
+   "v": "3.31.1",
+   "date": "2026-11-12",
+   "time": "07:42",
+   "zh": [
+    "逐小时列表不再自己跳回「现在」：打开页面后马上滑动，之前会被后到的数据拉回去",
+    "气象局官方预报更稳：没网络时查不到县，恢复网络后 1 分钟就会重试（之前要等 6 小时）；刷新失败时保留原来的预报；沙巴、砂拉越对不上县时改用省（Bahagian）预报"
+   ],
+   "en": [
+    "The hourly strip no longer jumps back to “now” by itself: scrolling it right after opening a page used to be undone when more data arrived",
+    "MetMalaysia forecast is steadier: a district lookup that failed offline is retried after a minute (it used to wait six hours); a failed refresh keeps the forecast already shown; in Sabah and Sarawak an unmatched district falls back to the division forecast"
+   ],
+   "ms": [
+    "Jalur setiap jam tidak lagi melompat sendiri ke “sekarang”: menatalnya sejurus selepas membuka halaman dahulu dibatalkan apabila data lain tiba",
+    "Ramalan MetMalaysia lebih stabil: carian daerah yang gagal semasa luar talian dicuba semula selepas seminit (dahulu enam jam); muat semula yang gagal mengekalkan ramalan sedia ada; di Sabah dan Sarawak, daerah yang tidak sepadan menggunakan ramalan bahagian"
+   ]
+  },
   {
    "v": "3.31.0",
    "date": "2026-11-11",
@@ -103,29 +120,6 @@
    "ms": [
     "Anda kini dimaklumkan apabila versi baharu keluar, dengan nombor versi dan perubahannya; ketik makluman untuk mengemas kini",
     "Suisnya di bahagian bawah Peringatan; jika anda sudah membuka versi baharu itu, anda tidak dimaklumkan"
-   ]
-  },
-  {
-   "v": "3.28.2",
-   "date": "2026-11-08",
-   "time": "19:44",
-   "zh": [
-    "修好：预报服务限流时，App 会立刻加倍重新请求（对比图甚至一次多发 8 个），让限流更严重；现在只有真正需要时才重试",
-    "预报服务限流时，会照实说明并在限流结束后自动重新载入，不再误导你去检查网络",
-    "修好：地图载入失败时，标题还停在「我的地点」",
-    "服务器把河水检查分到另一个时段跑，每一轮都留出更多余量，通知更不容易因为超时而发不出去"
-   ],
-   "en": [
-    "Fixed: when the forecast service was limiting requests, the app immediately asked again (eight times over for the compare chart), making it worse; it now retries only when that can help",
-    "When the forecast service is limiting requests the app now says so and reloads by itself once the limit is over, instead of telling you to check your connection",
-    "Fixed: if the map failed to load, the title still said My Locations",
-    "The server now checks river levels in a round of their own, leaving more headroom in each round so notifications are less likely to be held up"
-   ],
-   "ms": [
-    "Dibaiki: apabila perkhidmatan ramalan mengehadkan permintaan, aplikasi terus meminta semula (lapan kali ganda untuk carta perbandingan) dan memburukkannya; kini ia hanya mencuba semula apabila berguna",
-    "Apabila perkhidmatan ramalan mengehadkan permintaan, aplikasi kini memberitahu dengan jelas dan memuat semula sendiri selepas had tamat, bukan menyuruh anda menyemak sambungan",
-    "Dibaiki: jika peta gagal dimuatkan, tajuk masih menunjukkan Lokasi Saya",
-    "Pelayan kini menyemak paras sungai dalam pusingan tersendiri, memberi lebih ruang dalam setiap pusingan supaya makluman kurang berkemungkinan tertangguh"
    ]
   }
  ]

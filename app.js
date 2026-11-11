@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.31.0';
+const APP_VERSION = '3.31.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,13 @@ const APP_VERSION = '3.31.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.31.1', date:'2026-11-12', time:'07:42',
+   zh:['逐小时列表不再自己跳回「现在」：打开页面后马上滑动，之前会被后到的数据拉回去',
+       '气象局官方预报更稳：没网络时查不到县，恢复网络后 1 分钟就会重试（之前要等 6 小时）；刷新失败时保留原来的预报；沙巴、砂拉越对不上县时改用省（Bahagian）预报'],
+   en:['The hourly strip no longer jumps back to \u201cnow\u201d by itself: scrolling it right after opening a page used to be undone when more data arrived',
+       'MetMalaysia forecast is steadier: a district lookup that failed offline is retried after a minute (it used to wait six hours); a failed refresh keeps the forecast already shown; in Sabah and Sarawak an unmatched district falls back to the division forecast'],
+   ms:['Jalur setiap jam tidak lagi melompat sendiri ke \u201csekarang\u201d: menatalnya sejurus selepas membuka halaman dahulu dibatalkan apabila data lain tiba',
+       'Ramalan MetMalaysia lebih stabil: carian daerah yang gagal semasa luar talian dicuba semula selepas seminit (dahulu enam jam); muat semula yang gagal mengekalkan ramalan sedia ada; di Sabah dan Sarawak, daerah yang tidak sepadan menggunakan ramalan bahagian']},
   {v:'3.31.0', date:'2026-11-11', time:'15:04',
    zh:['地点详情页新增「气象局官方预报」：MetMalaysia 对这个县未来 7 天的早／午／晚预报和最高／最低温，可以跟各个模型对照'],
    en:['Each place\u2019s page now shows MetMalaysia\u2019s own 7-day forecast for its district: morning, afternoon and night, with the low and high, to compare with the models'],
@@ -476,7 +483,7 @@ zh:{
   lySummary:'一句白话结论', lyTenday:'十天', lyCards:'数据卡片', lyCells:'当天数据格',
   lyChartT:'气温对比图', lyChartP:'降雨机率图', lyAccuracy:'准确度', lyOfficial:'气象局官方预报',
   ofTitle:'气象局官方预报', ofAm:'早', ofPm:'午', ofNight:'晚', ofLoading:'正在读取气象局预报…',
-  ofFail:'暂时读不到气象局预报。', ofState:'找不到这个地点的县，显示的是全州预报。',
+  ofFail:'暂时读不到气象局预报。', ofState:'找不到这个地点的县，显示的是范围更大的预报（右上角写着是哪里）。',
   ofNote:'MetMalaysia 的县级文字预报（经 data.gov.my），每天更新。说的是整个县，不是这块地；跟上面的模型对照着看。',
   lyChipNote:'模式选择在这张卡里。藏起来之后，改对比模式要来设置这边。',
   lyReset:'恢复默认排版', lyHidden:'已隐藏', lyAllHidden:'中间的区块全部藏起来了，详情页只剩顶部和底部。',
@@ -604,7 +611,7 @@ en:{
   lySummary:'Plain-language line', lyTenday:'Ten days', lyCards:'Data cards', lyCells:'Day figures',
   lyChartT:'Temperature comparison', lyChartP:'Rain chance chart', lyAccuracy:'Accuracy', lyOfficial:'MetMalaysia forecast',
   ofTitle:'MetMalaysia forecast', ofAm:'AM', ofPm:'PM', ofNight:'Night', ofLoading:'Reading MetMalaysia\u2019s forecast…',
-  ofFail:'MetMalaysia\u2019s forecast cannot be read right now.', ofState:'This place\u2019s district was not found, so this is the forecast for the whole state.',
+  ofFail:'MetMalaysia\u2019s forecast cannot be read right now.', ofState:'This place\u2019s district was not found, so this is the forecast for a wider area (named at the top right).',
   ofNote:'MetMalaysia\u2019s written forecast for the district (via data.gov.my), updated daily. It covers the whole district, not this plot; read it alongside the models above.',
   lyChipNote:'The model picker lives in this card. Hide it and models are changed from settings instead.',
   lyReset:'Restore the default order', lyHidden:'Hidden', lyAllHidden:'Every middle section is hidden; the detail page is just the header and the footer.',
@@ -732,7 +739,7 @@ ms:{
   lySummary:'Ayat ringkas', lyTenday:'Sepuluh hari', lyCards:'Kad data', lyCells:'Angka hari itu',
   lyChartT:'Graf perbandingan suhu', lyChartP:'Graf kebarangkalian hujan', lyAccuracy:'Ketepatan', lyOfficial:'Ramalan MetMalaysia',
   ofTitle:'Ramalan MetMalaysia', ofAm:'Pagi', ofPm:'Ptg', ofNight:'Mlm', ofLoading:'Membaca ramalan MetMalaysia…',
-  ofFail:'Ramalan MetMalaysia tidak dapat dibaca sekarang.', ofState:'Daerah tempat ini tidak ditemui, jadi ini ramalan untuk seluruh negeri.',
+  ofFail:'Ramalan MetMalaysia tidak dapat dibaca sekarang.', ofState:'Daerah tempat ini tidak ditemui, jadi ini ramalan untuk kawasan yang lebih luas (dinamakan di penjuru kanan atas).',
   ofNote:'Ramalan bertulis MetMalaysia untuk daerah (melalui data.gov.my), dikemas kini setiap hari. Ia meliputi seluruh daerah, bukan plot ini; bandingkan dengan model di atas.',
   lyChipNote:'Pemilih model ada dalam kad ini. Jika disembunyikan, model ditukar dari tetapan.',
   lyReset:'Pulihkan susunan asal', lyHidden:'Disembunyikan', lyAllHidden:'Semua bahagian tengah disembunyikan; halaman butiran tinggal bahagian atas dan bawah.',
@@ -2345,7 +2352,7 @@ let detailSeq = 0;
 function openDetail(id){
   const loc = S.locations.find(x => x.id === id); if(!loc) return;
   /* a new location always opens on today; D.day survives everything else */
-  D = {loc, main:null, cmp:null, cmpIds:null, ext:null, acc:null, off:null, day:0, hvar:'temp', busy:false, seq:++detailSeq};
+  D = {loc, main:null, cmp:null, cmpIds:null, ext:null, acc:null, off:offNow(loc), day:0, hvar:'temp', busy:false, seq:++detailSeq};
   paintHead();
   const page = $('#detail');
   page.scrollTop = 0;
@@ -2425,7 +2432,12 @@ async function loadDetail(opts){
     cache[loc.id] = main;
     paintHead(); updateCard(loc.id); updatePin(loc.id);
     paintDetail();
-    getOfficial(loc).then(r => { if(!current() || r === D.off) return; D.off = r; paintDetail(); });
+    getOfficial(loc).then(r => {
+      if(!current() || r === D.off) return;
+      /* a refresh that failed keeps the forecast already on screen */
+      if(r === 'fail' && D.off && typeof D.off === 'object') return;
+      D.off = r; paintOfficial();
+    });
     getExtras(loc).then(r => { if(!current()) return; D.ext = r; paintDetail(); })
                   .catch(() => { if(current() && !quiet){ D.ext = 'fail'; paintDetail(); } });
     fetchCompare();
@@ -3036,13 +3048,28 @@ async function fetchJson(url, ms){
 
 /* the plot's district, looked up now if it never was (the storm alerts look
    up only the plots they watch) */
+const GEO_RETRY_OPEN_MS = 60 * 1000;
 async function geoFor(l){
-  if(!needsGeo(l)) return l.geo;
+  /* the storm alerts wait six hours before retrying a failed lookup, which
+     runs unasked; here someone is looking at the page, so a minute */
+  const stale = l.geo && l.geo.fail && l.geo.lat === l.lat && l.geo.lon === l.lon
+    && Date.now() - (l.geo.at || 0) > GEO_RETRY_OPEN_MS;
+  if(!needsGeo(l) && !stale) return l.geo;
   let j = null;
   try{ j = await fetchJson(`${GEO_REV}?format=jsonv2&zoom=10&accept-language=ms&lat=${l.lat}&lon=${l.lon}`, 12000); }catch(e){}
   l.geo = geoFrom(j, l);
   save();
+  /* a plot the storm alerts watch: the server is waiting for its district */
+  if(l.storm && !l.geo.fail){ paintStormPlots(); resyncReminders(); }
   return l.geo;
+}
+
+/* what can be shown before anything is fetched: a forecast still fresh, or
+   the knowledge that the plot is outside Malaysia (no card, not a spinner) */
+function offNow(l){
+  const hit = offCache[l.id];
+  if(hit && hit.key === l.lat + ',' + l.lon && Date.now() - hit.at < OFF_TTL) return hit.v;
+  return (l.geo && l.geo.none && l.geo.lat === l.lat && l.geo.lon === l.lon) ? 'none' : null;
 }
 
 /* → {place, state, days} | 'none' (not in Malaysia) | 'fail'. Opening a
@@ -3067,7 +3094,7 @@ async function loadOfficial(l, key){
     for(const pl of places){
       const days = metDays(await fetchJson(metUrl(pl.name), 15000), pl.type, myToday());
       if(days.length){
-        const v = {place:pl.name, state:pl.type === 'St', days};
+        const v = {place:pl.name, state:pl.type !== 'Ds', days};
         offCache[l.id] = {key, at:Date.now(), v};
         return v;
       }
@@ -3078,14 +3105,24 @@ async function loadOfficial(l, key){
 
 const OFF_ICON = {none:'part', cloud:'cloud', rain:'rain', storm:'storm'};
 const offT = v => nz(v) ? fT(S.units.temp === 'fahrenheit' ? v * 9 / 5 + 32 : v) : '—';
-function renderOfficial(){
+/* The card alone is redrawn when its data lands: repainting the whole page
+   would throw the hour strip back to "now" under a finger. */
+function paintOfficial(){
+  const el = $('#d-official');
+  if(el) el.innerHTML = officialCard(); else paintDetail();
+}
+const renderOfficial = () => `<div id="d-official">${officialCard()}</div>`;
+function officialCard(){
   const o = D.off;
   if(o === 'none') return '';
   const head = `<h4>${t('ofTitle')}${o && o.place ? `<span class="r">${esc(o.place)}</span>` : ''}</h4>`;
   if(!o) return `<div class="glass">${head}<p class="note" style="margin:0">${t('ofLoading')}</p></div>`;
   if(o === 'fail') return `<div class="glass">${head}<p class="note" style="margin:0">${t('ofFail')}</p></div>`;
   const today = myToday();
-  const rows = o.days.map(d => {
+  /* read before midnight, looked at after: yesterday is no longer a forecast */
+  const days = o.days.filter(d => d.date >= today);
+  if(!days.length) return `<div class="glass">${head}<p class="note" style="margin:0">${t('ofFail')}</p></div>`;
+  const rows = days.map(d => {
     const dt = new Date(d.date + 'T12:00:00');
     const name = d.date === today ? t('today') : dt.toLocaleDateString(locale(), {weekday:'short'});
     const when = metWhen(d.when, S.lang);
@@ -3123,6 +3160,10 @@ function paintDetail(){
      used to wipe a name being typed into the rename box */
   const ri = $('#d-rename'), typing = !!ri && document.activeElement === ri;
   const caret = typing ? [ri.selectionStart, ri.selectionEnd] : null;
+  /* likewise the hour strip: a reply landing a second after the page opened
+     used to throw it back to "now" from wherever it had been dragged */
+  const hsKey = D.loc.id + '|' + D.day, hs0 = $('#d-body .hstrip');
+  const hsKeep = hs0 && hs0.dataset.k === hsKey ? hs0.scrollLeft : null;
   /* the day strip is fixed at the top: it and the ten-day list are the only
      two ways to change the selected day, and it is the one that cannot be
      hidden, so the page can never strand you on today */
@@ -3147,7 +3188,11 @@ function paintDetail(){
   /* the strip starts at 00:00 so the whole day is there, but on today that
      would open on the small hours — put the current hour in the middle */
   const hs = $('#d-body .hstrip'), nc = $('#d-body .hcol.nowcol');
-  if(hs && nc) hs.scrollLeft = Math.max(0, nc.offsetLeft - (hs.clientWidth - nc.clientWidth) / 2);
+  if(hs){
+    hs.dataset.k = hsKey;
+    if(hsKeep !== null) hs.scrollLeft = hsKeep;
+    else if(nc) hs.scrollLeft = Math.max(0, nc.offsetLeft - (hs.clientWidth - nc.clientWidth) / 2);
+  }
   paintAccuracyCard();
   const rn = $('#d-rename');
   rn.addEventListener('input', () => { D.renameDraft = rn.value; });
