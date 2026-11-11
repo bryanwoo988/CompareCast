@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.30.0';
+const APP_VERSION = '3.30.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.30.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.30.1', date:'2026-11-11', time:'13:53',
+   zh:['天气图层写清楚了：雷达看的是正在下的雨，卫星看的是云；选单、时间轴和图例都有说明，最新一帧会标「最新」'],
+   en:['The weather layers now say what they show: radar is rain falling now, satellite is cloud; the menu, timeline and legend explain it, and the newest frame is marked \u201clatest\u201d'],
+   ms:['Lapisan cuaca kini menerangkan apa yang ditunjukkan: radar ialah hujan yang sedang turun, satelit ialah awan; menu, garis masa dan petunjuk menerangkannya, dan imej terbaharu ditanda \u201cterkini\u201d']},
   {v:'3.30.0', date:'2026-11-11', time:'13:36',
    zh:['地图新增「天气图层」（左下角按钮）：MetMalaysia 雷达看过去 1 小时的雨区，日本气象厅 Himawari 卫星看过去 3 小时的云（红外或可见光）',
        '按 ▶ 播放动画，看雨和云往哪里移动；图层默认关着，用到时才下载'],
@@ -543,9 +547,11 @@ zh:{
   about:'关于', version:'版本',
   relAll:'更新记录', relTitle:'这一版有什么变化', relDone:'知道了', dataSrc:'数据来源', savedOk:'已保存', deleted:'已删除',
   ovLayer:'天气图层', ovOff:'关', ovRadar:'雷达', ovIr:'卫星 · 红外', ovVis:'卫星 · 可见光',
-  ovMenuNote:'雷达：MetMalaysia，过去 1 小时。卫星：日本气象厅 Himawari，过去 3 小时；可见光只在白天有画面。',
+  ovMenuNote:'来源：雷达 MetMalaysia；卫星 日本气象厅 Himawari。',
+  ovSub:{radar:'正在下的雨 · 过去 1 小时', ir:'云，日夜都看得到 · 过去 3 小时', vis:'云，只有白天 · 过去 3 小时'},
+  ovWhat:{radar:'雷达：正在下的雨', ir:'卫星红外：云（越白越高越冷）', vis:'卫星可见光：云（只有白天）'}, ovNewest:'最新',
   ovLoading:'正在载入图层…', ovFail:'读不到这个图层，稍后再试。', ovAgo:m => m < 1 ? '刚刚' : `${m} 分钟前`,
-  ovRain:'小雨', ovHeavy:'大雨', ovWarm:'暖 · 低云', ovCold:'冷 · 高云（可能有雷雨）', ovDark:'暗 · 无云', ovBright:'亮 · 厚云',
+  ovRain:'小雨', ovHeavy:'暴雨', ovWarm:'晴或低云', ovCold:'高云，可能有雷雨', ovDark:'晴', ovBright:'厚云',
   ovPlay:'播放', ovPause:'暂停',
   privTitle:'隐私',
   privItems:['你的地点、设定和通知记录，平时都只存在这台手机里。没有账号，也不收集姓名、电邮或电话。',
@@ -666,9 +672,11 @@ en:{
   about:'About', version:'Version',
   relAll:'What\'s new', relTitle:'What changed', relDone:'Got it', dataSrc:'Data sources', savedOk:'Saved', deleted:'Removed',
   ovLayer:'Weather layer', ovOff:'Off', ovRadar:'Radar', ovIr:'Satellite · infrared', ovVis:'Satellite · visible',
-  ovMenuNote:'Radar: MetMalaysia, the last hour. Satellite: JMA Himawari, the last 3 hours; visible shows only in daylight.',
+  ovMenuNote:'Sources: radar from MetMalaysia; satellite from JMA Himawari.',
+  ovSub:{radar:'rain falling now · last hour', ir:'cloud, day and night · last 3 hours', vis:'cloud, daylight only · last 3 hours'},
+  ovWhat:{radar:'Radar: rain falling now', ir:'Satellite infrared: cloud (whiter = higher, colder)', vis:'Satellite visible: cloud (daylight only)'}, ovNewest:'latest',
   ovLoading:'Loading the layer\u2026', ovFail:'Could not load this layer. Try again shortly.', ovAgo:m => m < 1 ? 'just now' : `${m} min ago`,
-  ovRain:'light', ovHeavy:'heavy', ovWarm:'warm · low cloud', ovCold:'cold · high cloud (storms likely)', ovDark:'dark · clear', ovBright:'bright · thick cloud',
+  ovRain:'light rain', ovHeavy:'downpour', ovWarm:'clear or low cloud', ovCold:'high cloud, storms likely', ovDark:'clear', ovBright:'thick cloud',
   ovPlay:'Play', ovPause:'Pause',
   privTitle:'Privacy',
   privItems:['Your locations, settings and notification history normally stay on this phone only. There is no account, and no name, email or phone number is collected.',
@@ -789,9 +797,11 @@ ms:{
   about:'Perihal', version:'Versi',
   relAll:'Apa yang baharu', relTitle:'Apa yang berubah', relDone:'Faham', dataSrc:'Sumber data', savedOk:'Disimpan', deleted:'Dibuang',
   ovLayer:'Lapisan cuaca', ovOff:'Tutup', ovRadar:'Radar', ovIr:'Satelit · inframerah', ovVis:'Satelit · cahaya nampak',
-  ovMenuNote:'Radar: MetMalaysia, sejam lepas. Satelit: Himawari JMA, 3 jam lepas; cahaya nampak hanya pada siang hari.',
+  ovMenuNote:'Sumber: radar dari MetMalaysia; satelit dari Himawari JMA.',
+  ovSub:{radar:'hujan yang sedang turun · sejam lepas', ir:'awan, siang dan malam · 3 jam lepas', vis:'awan, siang sahaja · 3 jam lepas'},
+  ovWhat:{radar:'Radar: hujan yang sedang turun', ir:'Satelit inframerah: awan (lebih putih = lebih tinggi, lebih sejuk)', vis:'Satelit cahaya nampak: awan (siang sahaja)'}, ovNewest:'terkini',
   ovLoading:'Memuatkan lapisan\u2026', ovFail:'Lapisan ini tidak dapat dimuatkan. Cuba sebentar lagi.', ovAgo:m => m < 1 ? 'baru sahaja' : `${m} minit lalu`,
-  ovRain:'ringan', ovHeavy:'lebat', ovWarm:'panas · awan rendah', ovCold:'sejuk · awan tinggi (mungkin ribut)', ovDark:'gelap · cerah', ovBright:'terang · awan tebal',
+  ovRain:'hujan renyai', ovHeavy:'hujan sangat lebat', ovWarm:'cerah atau awan rendah', ovCold:'awan tinggi, mungkin ribut', ovDark:'cerah', ovBright:'awan tebal',
   ovPlay:'Main', ovPause:'Jeda',
   privTitle:'Privasi',
   privItems:['Lokasi, tetapan dan sejarah makluman anda biasanya hanya disimpan dalam telefon ini. Tiada akaun, dan tiada nama, e-mel atau nombor telefon dikumpulkan.',
@@ -1752,7 +1762,8 @@ function drawOvlButton(){
   if(!btn || !menu) return;
   btn.classList.toggle('on', OVL.kind !== 'off');
   btn.innerHTML = OVL_ICON + `<span>${OVL.kind === 'off' ? t('ovLayer') : t(OVL_NAME[OVL.kind])}</span>`;
-  menu.innerHTML = OVL_KINDS.map(k => `<button data-ovl="${k}" class="${OVL.kind === k ? 'on' : ''}">${t(OVL_NAME[k])}</button>`).join('')
+  menu.innerHTML = OVL_KINDS.map(k => `<button data-ovl="${k}" class="${OVL.kind === k ? 'on' : ''}">${t(OVL_NAME[k])}`
+      + (k === 'off' ? '' : `<span class="ovl-sub">${t('ovSub')[k]}</span>`) + `</button>`).join('')
     + `<small>${t('ovMenuNote')}</small>`;
   btn.onclick = e => { e.stopPropagation(); menu.classList.toggle('on'); };
   menu.querySelectorAll('[data-ovl]').forEach(b => b.addEventListener('click', e => {
@@ -1855,7 +1866,9 @@ function paintOvlWhen(){
   const f = OVL.frames[OVL.i], el2 = $('#ovl-when');
   if(!f || !el2) return;
   const d = new Date(f.ms), p = x => String(x).padStart(2, '0');
-  el2.innerHTML = `${esc(t('ovAgo')(Math.max(0, Math.round((Date.now() - f.ms) / 60000))))} · <b>${p(d.getHours())}:${p(d.getMinutes())}</b>`;
+  const newest = OVL.i === OVL.frames.length - 1;
+  el2.innerHTML = `${esc(t('ovAgo')(Math.max(0, Math.round((Date.now() - f.ms) / 60000))))} · <b>${p(d.getHours())}:${p(d.getMinutes())}</b>`
+    + (newest ? ` <span class="ovl-new">${esc(t('ovNewest'))}</span>` : '');
   const rg = $('#ovl-range'); if(rg) rg.value = String(OVL.i);
 }
 
@@ -1873,7 +1886,8 @@ const PLAY_SVG = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>';
 const PAUSE_SVG = '<svg viewBox="0 0 24 24"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>';
 function drawOvlBar(){
   const bar = $('#ovl-bar'); if(!bar) return;
-  bar.innerHTML = `<p class="ovl-when" id="ovl-when"></p>
+  bar.innerHTML = `<p class="ovl-what">${esc(t('ovWhat')[OVL.kind] || '')}</p>
+    <p class="ovl-when" id="ovl-when"></p>
     <div class="ovl-row">
       <button class="ovl-play" id="ovl-play" aria-label="${t('ovPlay')}">${PLAY_SVG}</button>
       <input class="ovl-range" id="ovl-range" type="range" min="0" max="${OVL.frames.length - 1}" step="1" value="${OVL.i}">
