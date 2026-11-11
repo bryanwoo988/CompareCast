@@ -30,9 +30,21 @@ test('an unknown district falls back to the state; outside Malaysia gets nothing
   assert.deepStrictEqual(m.metPlaces(null), []);
 });
 
+test('Sabah and Sarawak: district, then division, then state', () => {
+  /* what OpenStreetMap returns for a plot in Tongod */
+  assert.deepStrictEqual(m.metPlaces({iso:'MY-12', state:'Sabah', district:'Tongod', division:'Bahagian Sandakan'}),
+    [{name:'Tongod', type:'Ds'}, {name:'Sandakan', type:'Dv'}, {name:'Sabah', type:'St'}]);
+  /* an unmatched district is not replaced by a district that shares the division's name */
+  assert.deepStrictEqual(m.metPlaces({iso:'MY-12', district:'Nowhere', division:'Bahagian Pantai Barat'}),
+    [{name:'Pantai Barat', type:'Dv'}, {name:'Sabah', type:'St'}]);
+  /* a division is never read as a district */
+  assert.deepStrictEqual(m.metPlaces({iso:'MY-13', district:'', division:'Kuching'}),
+    [{name:'Kuching', type:'Dv'}, {name:'Sarawak', type:'St'}]);
+});
+
 test('the request filters by the exact name, sorted by date', () => {
   assert.strictEqual(m.metUrl('Larut, Matang Dan Selama'),
-    'https://api.data.gov.my/weather/forecast/?filter=Larut%2C%20Matang%20Dan%20Selama@location__location_name&sort=date');
+    'https://api.data.gov.my/weather/forecast/?filter=Larut%2C%20Matang%20Dan%20Selama@location__location_name&sort=date&limit=100');
 });
 
 const rec = (id, date, extra) => Object.assign({location:{location_id:id, location_name:'Bentong'}, date,
