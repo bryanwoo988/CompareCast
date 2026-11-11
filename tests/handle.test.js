@@ -77,3 +77,34 @@ test('生效的地块为零、新版本通知也关了时，服务器删掉旧�
   assert.strictEqual(r.status, 400);
   assert.ok(!env.store.has('dev:abcdefgh1234'), '旧排程还留着，会继续发');
 });
+
+/* GET /radar: MetMalaysia's image passed through for the app's map layer */
+test('雷达转送：原封不动转给 App，允许 App 的网站读取，并带上 Last-Modified', async () => {
+  const gif = Uint8Array.from([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);
+  let asked;
+  const get = async (url, init) => { asked = {url, init}; return new Response(gif, {status:200, headers:{'Last-Modified':'Wed, 11 Nov 2026 05:21:06 GMT'}}); };
+  const r = await handle(new Request('https://x.workers.dev/radar', {headers:{Origin:'https://bryanwoo988.github.io'}}), mkEnv(), get);
+  assert.strictEqual(r.status, 200);
+  assert.ok(asked.url.startsWith('https://api.met.gov.my/'));
+  assert.strictEqual(r.headers.get('Access-Control-Allow-Origin'), 'https://bryanwoo988.github.io');
+  assert.strictEqual(r.headers.get('Access-Control-Expose-Headers'), 'Last-Modified');
+  assert.strictEqual(r.headers.get('Last-Modified'), 'Wed, 11 Nov 2026 05:21:06 GMT');
+  assert.deepStrictEqual(new Uint8Array(await r.arrayBuffer()), gif);
+});
+
+test('雷达转送：别的网站拒绝；只接受 GET；上游出错回 502', async () => {
+  const ok = async () => new Response('x', {status:200});
+  assert.strictEqual((await handle(new Request('https://x.workers.dev/radar', {headers:{Origin:'https://evil.example'}}), mkEnv(), ok)).status, 403);
+  assert.strictEqual((await handle(new Request('https://x.workers.dev/radar', {method:'POST', body:'{}'}), mkEnv(), ok)).status, 405);
+  assert.strictEqual((await handle(new Request('https://x.workers.dev/radar'), mkEnv(), async () => new Response('', {status:500}))).status, 502);
+});
+
+test('正式入口不会把 Cloudflare 的 ctx 当成下载函数', async () => {
+  const worker = require('../server/src/index.js').default;
+  const real = globalThis.fetch;
+  globalThis.fetch = async () => new Response('GIF89a', {status:200});
+  try{
+    const r = await worker.fetch(new Request('https://x.workers.dev/radar'), mkEnv(), {waitUntil(){}, passThroughOnException(){}});
+    assert.strictEqual(r.status, 200);
+  }finally{ globalThis.fetch = real; }
+});

@@ -26,7 +26,7 @@ const MAX_DEVICES = 50;
 
 const cors = env => ({
   'Access-Control-Allow-Origin': env.ORIGIN,
-  'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Max-Age': '86400'
 });
@@ -43,7 +43,26 @@ async function readBody(request){
   try{ return {body:JSON.parse(text)}; }catch(e){ return {error:'json'}; }
 }
 
-async function handle(request, env){
+/* MetMalaysia's radar composite for the app's map layer. MetMalaysia does
+   not let other sites read the image, and the app has to read its pixels
+   to clear everything but the rain, so it comes through here: passed on as
+   it arrives (no decoding, so next to no CPU), with the app's origin
+   allowed and Last-Modified readable, which dates the frames. Cloudflare
+   keeps a copy for two minutes, so MetMalaysia sees one request however
+   many phones open the map. */
+async function radarProxy(env, get){
+  let res;
+  try{ res = await (get || fetch)(RADAR_URL, {cf:{cacheTtl:120, cacheEverything:true}, signal:AbortSignal.timeout(20000)}); }
+  catch(e){ return reply(env, 502, {error:'upstream'}); }
+  if(!res.ok) return reply(env, 502, {error:'upstream'});
+  const headers = Object.assign({'Content-Type':'image/gif', 'Cache-Control':'public, max-age=120',
+    'Access-Control-Expose-Headers':'Last-Modified'}, cors(env));
+  const lm = res.headers.get('Last-Modified');
+  if(lm) headers['Last-Modified'] = lm;
+  return new Response(res.body, {status:200, headers});
+}
+
+async function handle(request, env, get){
   const origin = request.headers.get('Origin');
   /* same-origin tools and curl send no Origin; a browser from anywhere else
      is refused outright rather than relying on the browser to enforce it */
@@ -52,6 +71,10 @@ async function handle(request, env){
   if(request.method === 'OPTIONS') return new Response(null, {status:204, headers:cors(env)});
 
   const url = new URL(request.url);
+  if(url.pathname === '/radar'){
+    if(request.method !== 'GET') return reply(env, 405, {error:'method'});
+    return radarProxy(env, get);
+  }
   if(url.pathname !== '/sub') return reply(env, 404, {error:'not found'});
   if(request.method !== 'POST' && request.method !== 'DELETE') return reply(env, 405, {error:'method'});
 
@@ -178,7 +201,9 @@ export const scheduled = async (event, env, ctx, opts) => {
 };
 
 export default {
-  fetch:handle,
+  /* only the request and env: Cloudflare's third argument is its context
+     object, and handle's third is the tests' stand-in for fetch */
+  fetch:(request, env) => handle(request, env),
   scheduled(event, env, ctx){
     return event && event.cron === RADAR_CRON ? scheduledRadar(event, env) : scheduled(event, env, ctx);
   }
