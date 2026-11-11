@@ -84,6 +84,7 @@ node --test tests/*.test.js
 | 准度：对照基准 | `archive-api.open-meteo.com/v1/archive`（`models=era5`） | ECMWF ERA5 再分析 |
 | 地图底图（三种） | `server.arcgisonline.com` | Esri，免 key |
 | Leaflet 1.9.4 | `cdnjs.cloudflare.com` | 打开地图时才载入，带完整性校验（SRI） |
+| 详情页：气象局官方预报 | `api.data.gov.my/weather/forecast/` | MetMalaysia 县级 7 天文字预报（早／午／晚、最低／最高温），手机直接读，每块地缓存 3 小时；县名从 OpenStreetMap 查，对不上就用州预报 |
 | 雷暴提醒：官方警告 | `api.data.gov.my/weather/warning/` | MetMalaysia 雷暴警告，服务器每 15 分钟读一次 |
 | 雷达提醒 | `api.met.gov.my/static/images/radar-latest.gif` | MetMalaysia 12 雷达拼图，每 10 分钟一帧，服务器每 5 分钟检查一次 |
 | 地图雷达图层 | 经推送服务器 `/radar` 转送 `api.met.gov.my/static/images/radar-latest.gif` | MetMalaysia 不允许其他网站直接读取，所以由服务器原样转送（Cloudflare 缓存 2 分钟）；手机解码，只留下雨区 |

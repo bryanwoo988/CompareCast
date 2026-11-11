@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.30.2';
+const APP_VERSION = '3.31.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.30.2';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.31.0', date:'2026-11-11', time:'15:04',
+   zh:['地点详情页新增「气象局官方预报」：MetMalaysia 对这个县未来 7 天的早／午／晚预报和最高／最低温，可以跟各个模型对照'],
+   en:['Each place\u2019s page now shows MetMalaysia\u2019s own 7-day forecast for its district: morning, afternoon and night, with the low and high, to compare with the models'],
+   ms:['Halaman setiap tempat kini menunjukkan ramalan 7 hari MetMalaysia untuk daerahnya: pagi, petang dan malam, dengan suhu terendah dan tertinggi, untuk dibandingkan dengan model']},
   {v:'3.30.2', date:'2026-11-11', time:'14:01',
    zh:['修好：地图最下面一小截被底部导航栏盖住，来源说明的第二行看不到；来源说明也缩短成一行'],
    en:['Fixed: the bottom of the map sat just under the navigation bar, hiding the second line of the credits; the credits are also shorter now'],
@@ -470,7 +474,10 @@ zh:{
   condT:'实况', vRain:'降雨', vWind:'风速', sInten:'强度', sChance:'降雨机率',
   lyEntry:'详情页排版', lyDesc:'长按一行拖动排序，右边的开关决定显示或隐藏。顶部的温度和日期条固定不动。',
   lySummary:'一句白话结论', lyTenday:'十天', lyCards:'数据卡片', lyCells:'当天数据格',
-  lyChartT:'气温对比图', lyChartP:'降雨机率图', lyAccuracy:'准确度',
+  lyChartT:'气温对比图', lyChartP:'降雨机率图', lyAccuracy:'准确度', lyOfficial:'气象局官方预报',
+  ofTitle:'气象局官方预报', ofAm:'早', ofPm:'午', ofNight:'晚', ofLoading:'正在读取气象局预报…',
+  ofFail:'暂时读不到气象局预报。', ofState:'找不到这个地点的县，显示的是全州预报。',
+  ofNote:'MetMalaysia 的县级文字预报（经 data.gov.my），每天更新。说的是整个县，不是这块地；跟上面的模型对照着看。',
   lyChipNote:'模式选择在这张卡里。藏起来之后，改对比模式要来设置这边。',
   lyReset:'恢复默认排版', lyHidden:'已隐藏', lyAllHidden:'中间的区块全部藏起来了，详情页只剩顶部和底部。',
   lyOn:'显示', lyOff:'隐藏',
@@ -595,7 +602,10 @@ en:{
   condT:'Conditions', vRain:'Precipitation', vWind:'Wind', sInten:'Intensity', sChance:'Chance of rain',
   lyEntry:'Detail page layout', lyDesc:'Press and hold a row to drag it. The switch on the right shows or hides that section. The temperature header and the date strip stay at the top.',
   lySummary:'Plain-language line', lyTenday:'Ten days', lyCards:'Data cards', lyCells:'Day figures',
-  lyChartT:'Temperature comparison', lyChartP:'Rain chance chart', lyAccuracy:'Accuracy',
+  lyChartT:'Temperature comparison', lyChartP:'Rain chance chart', lyAccuracy:'Accuracy', lyOfficial:'MetMalaysia forecast',
+  ofTitle:'MetMalaysia forecast', ofAm:'AM', ofPm:'PM', ofNight:'Night', ofLoading:'Reading MetMalaysia\u2019s forecast…',
+  ofFail:'MetMalaysia\u2019s forecast cannot be read right now.', ofState:'This place\u2019s district was not found, so this is the forecast for the whole state.',
+  ofNote:'MetMalaysia\u2019s written forecast for the district (via data.gov.my), updated daily. It covers the whole district, not this plot; read it alongside the models above.',
   lyChipNote:'The model picker lives in this card. Hide it and models are changed from settings instead.',
   lyReset:'Restore the default order', lyHidden:'Hidden', lyAllHidden:'Every middle section is hidden; the detail page is just the header and the footer.',
   lyOn:'Shown', lyOff:'Hidden',
@@ -720,7 +730,10 @@ ms:{
   condT:'Keadaan', vRain:'Hujan', vWind:'Angin', sInten:'Keamatan', sChance:'Kebarangkalian hujan',
   lyEntry:'Susunan halaman butiran', lyDesc:'Tekan dan tahan satu baris untuk seretnya. Suis di sebelah kanan menunjuk atau menyembunyikan bahagian itu. Suhu di atas dan jalur tarikh kekal di tempatnya.',
   lySummary:'Ayat ringkas', lyTenday:'Sepuluh hari', lyCards:'Kad data', lyCells:'Angka hari itu',
-  lyChartT:'Graf perbandingan suhu', lyChartP:'Graf kebarangkalian hujan', lyAccuracy:'Ketepatan',
+  lyChartT:'Graf perbandingan suhu', lyChartP:'Graf kebarangkalian hujan', lyAccuracy:'Ketepatan', lyOfficial:'Ramalan MetMalaysia',
+  ofTitle:'Ramalan MetMalaysia', ofAm:'Pagi', ofPm:'Ptg', ofNight:'Mlm', ofLoading:'Membaca ramalan MetMalaysia…',
+  ofFail:'Ramalan MetMalaysia tidak dapat dibaca sekarang.', ofState:'Daerah tempat ini tidak ditemui, jadi ini ramalan untuk seluruh negeri.',
+  ofNote:'Ramalan bertulis MetMalaysia untuk daerah (melalui data.gov.my), dikemas kini setiap hari. Ia meliputi seluruh daerah, bukan plot ini; bandingkan dengan model di atas.',
   lyChipNote:'Pemilih model ada dalam kad ini. Jika disembunyikan, model ditukar dari tetapan.',
   lyReset:'Pulihkan susunan asal', lyHidden:'Disembunyikan', lyAllHidden:'Semua bahagian tengah disembunyikan; halaman butiran tinggal bahagian atas dan bawah.',
   lyOn:'Ditunjuk', lyOff:'Disembunyi',
@@ -2326,13 +2339,13 @@ function addLocation(o, opts){
 }
 
 /* ---------- 11. Detail page ---------- */
-let D = {loc:null, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, hvar:'temp', busy:false, seq:0};
+let D = {loc:null, main:null, cmp:null, cmpIds:null, ext:null, acc:null, off:null, day:0, hvar:'temp', busy:false, seq:0};
 let detailSeq = 0;
 
 function openDetail(id){
   const loc = S.locations.find(x => x.id === id); if(!loc) return;
   /* a new location always opens on today; D.day survives everything else */
-  D = {loc, main:null, cmp:null, cmpIds:null, ext:null, acc:null, day:0, hvar:'temp', busy:false, seq:++detailSeq};
+  D = {loc, main:null, cmp:null, cmpIds:null, ext:null, acc:null, off:null, day:0, hvar:'temp', busy:false, seq:++detailSeq};
   paintHead();
   const page = $('#detail');
   page.scrollTop = 0;
@@ -2412,6 +2425,7 @@ async function loadDetail(opts){
     cache[loc.id] = main;
     paintHead(); updateCard(loc.id); updatePin(loc.id);
     paintDetail();
+    getOfficial(loc).then(r => { if(!current() || r === D.off) return; D.off = r; paintDetail(); });
     getExtras(loc).then(r => { if(!current()) return; D.ext = r; paintDetail(); })
                   .catch(() => { if(current() && !quiet){ D.ext = 'fail'; paintDetail(); } });
     fetchCompare();
@@ -3002,10 +3016,98 @@ function renderCells(){
    harvesting wants accumulated rain. So this registry is what a saved layout
    is resolved against, and adding a row here is all a new section needs to
    reach people who already rearranged their page. */
+/* ----- MetMalaysia's own forecast (metlogic.js) -----
+   The official seven days for the plot's district, to read beside the
+   models. Malaysia only: a plot elsewhere, or one whose place is not known
+   yet, gets no card. Kept for three hours per plot; MetMalaysia issues it
+   once or twice a day. */
+const OFF_TTL = 3 * 3600 * 1000;
+const offCache = {};
+const myToday = () => new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+
+async function fetchJson(url, ms){
+  const ac = new AbortController(), tm = setTimeout(() => ac.abort(), ms);
+  try{
+    const r = await fetch(url, {signal:ac.signal});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  }finally{ clearTimeout(tm); }
+}
+
+/* the plot's district, looked up now if it never was (the storm alerts look
+   up only the plots they watch) */
+async function geoFor(l){
+  if(!needsGeo(l)) return l.geo;
+  let j = null;
+  try{ j = await fetchJson(`${GEO_REV}?format=jsonv2&zoom=10&accept-language=ms&lat=${l.lat}&lon=${l.lon}`, 12000); }catch(e){}
+  l.geo = geoFrom(j, l);
+  save();
+  return l.geo;
+}
+
+/* → {place, state, days} | 'none' (not in Malaysia) | 'fail'. Opening a
+   page loads it more than once in quick succession; those share one lookup. */
+const offBusy = {};
+function getOfficial(l){
+  const key = l.lat + ',' + l.lon, hit = offCache[l.id];
+  if(hit && hit.key === key && Date.now() - hit.at < OFF_TTL) return Promise.resolve(hit.v);
+  const run = offBusy[l.id];
+  if(run && run.key === key) return run.p;
+  const p = loadOfficial(l, key).finally(() => { if(offBusy[l.id] && offBusy[l.id].p === p) delete offBusy[l.id]; });
+  offBusy[l.id] = {key, p};
+  return p;
+}
+async function loadOfficial(l, key){
+  try{
+    const g = await geoFor(l);
+    if(g.none) return 'none';
+    if(g.fail) return 'fail';
+    const places = metPlaces(g);
+    if(!places.length) return 'none';
+    for(const pl of places){
+      const days = metDays(await fetchJson(metUrl(pl.name), 15000), pl.type, myToday());
+      if(days.length){
+        const v = {place:pl.name, state:pl.type === 'St', days};
+        offCache[l.id] = {key, at:Date.now(), v};
+        return v;
+      }
+    }
+    return 'fail';
+  }catch(e){ return 'fail'; }
+}
+
+const OFF_ICON = {none:'part', cloud:'cloud', rain:'rain', storm:'storm'};
+const offT = v => nz(v) ? fT(S.units.temp === 'fahrenheit' ? v * 9 / 5 + 32 : v) : '—';
+function renderOfficial(){
+  const o = D.off;
+  if(o === 'none') return '';
+  const head = `<h4>${t('ofTitle')}${o && o.place ? `<span class="r">${esc(o.place)}</span>` : ''}</h4>`;
+  if(!o) return `<div class="glass">${head}<p class="note" style="margin:0">${t('ofLoading')}</p></div>`;
+  if(o === 'fail') return `<div class="glass">${head}<p class="note" style="margin:0">${t('ofFail')}</p></div>`;
+  const today = myToday();
+  const rows = o.days.map(d => {
+    const dt = new Date(d.date + 'T12:00:00');
+    const name = d.date === today ? t('today') : dt.toLocaleDateString(locale(), {weekday:'short'});
+    const when = metWhen(d.when, S.lang);
+    /* the three parts of the day as icons; the words are in the line above,
+       and each icon names its phrase for a long press or a screen reader */
+    const part = (lbl, ph) => `<span title="${esc(metPhrase(ph, S.lang))}" aria-label="${esc(t(lbl) + ' ' + metPhrase(ph, S.lang))}"><b>${t(lbl)}</b>${icon(OFF_ICON[metKind(ph)], 20)}</span>`;
+    return `<div class="of-day">
+      <span class="of-dn">${esc(name)}<small>${dt.getDate()}</small></span>
+      <span class="of-ic">${icon(OFF_ICON[metKind(d.sum)], 30)}</span>
+      <span class="of-tx"><span class="of-sum">${esc(metPhrase(d.sum, S.lang))}${when && metKind(d.sum) !== 'none' ? ` <small>· ${esc(when)}</small>` : ''}</span>
+        <span class="of-parts">${part('ofAm', d.am)}${part('ofPm', d.pm)}${part('ofNight', d.night)}</span></span>
+      <span class="dt"><i>${offT(d.min)}</i>${offT(d.max)}</span></div>`;
+  }).join('');
+  return `<div class="glass official">${head}${rows}
+    <p class="note" style="margin-bottom:0">${o.state ? t('ofState') + ' ' : ''}${t('ofNote')}</p></div>`;
+}
+
 const SECTIONS = [
   {id:'summary',  key:'lySummary',  render:renderSummary},
   {id:'hourly',   key:'condT',      render:renderHourStrip},
   {id:'tenday',   key:'lyTenday',   render:renderTenDay},
+  {id:'official', key:'lyOfficial', render:renderOfficial},
   {id:'cards',    key:'lyCards',    render:renderCardGrid},
   {id:'cells',    key:'lyCells',    render:renderCells},
   {id:'chartT',   key:'lyChartT',   render:renderTempChart},

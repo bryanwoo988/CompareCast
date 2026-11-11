@@ -626,6 +626,19 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 .mrow.off .mn,.mrow.off .mv{opacity:.45}
 .accbar{height:6px;border-radius:3px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:6px}
 .accbar i{display:block;height:100%;border-radius:3px}
+.official .of-day{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.1)}
+.official h4 + .of-day{border-top:0;padding-top:0}
+.of-dn{flex:0 0 46px;font-size:14px;font-weight:600;line-height:1.25}
+.of-dn small{display:block;font-size:12px;font-weight:500;color:rgba(255,255,255,.6)}
+.of-ic{flex:0 0 30px;display:flex}
+.of-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.of-sum{font-size:14.5px;font-weight:600;line-height:1.3}
+.of-sum small{font-weight:500;color:rgba(255,255,255,.7)}
+.of-parts{display:flex;gap:12px;font-size:12px}
+.of-parts span{display:flex;align-items:center;gap:3px}
+.of-parts b{font-weight:600;color:rgba(255,255,255,.55)}
+.official .dt{flex:0 0 auto;font-size:14.5px;font-weight:600;text-align:right;white-space:nowrap}
+.official .dt i{font-style:normal;color:rgba(255,255,255,.55);margin-right:6px}
 .note{font-size:13px;color:rgba(255,255,255,.78);line-height:1.6;margin:10px 2px 0}
 .big-msg{text-align:center;padding:40px 20px}
 .big-msg b{display:block;font-size:20px;font-weight:700}
@@ -938,7 +951,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
    seen, so every file always matches the page, and nothing needs a version
    number bumped by hand. Loaded in order, app.js last. */
 (function(){
-  const APP_SCRIPTS = ['daylogic.js', 'maplogic.js', 'listlogic.js', 'notifylogic.js', 'inbox.js', 'overlaylogic.js', 'summary.js',
+  const APP_SCRIPTS = ['daylogic.js', 'maplogic.js', 'listlogic.js', 'notifylogic.js', 'inbox.js', 'overlaylogic.js', 'metlogic.js', 'summary.js',
                      'layout.js', 'reqlogic.js', 'updatelogic.js', 'app.js'];
   var r = encodeURIComponent(document.lastModified || '');
   APP_SCRIPTS.forEach(function(src){
