@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.29.1';
+const APP_VERSION = '3.29.2';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.29.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.29.2', date:'2026-11-11', time:'08:56',
+   zh:['新版本通知变短了：只写版本号和「点开查看更新内容」，改了什么在打开 App 后完整显示'],
+   en:['New version notices are shorter: just the version and \u201cTap to see what\u2019s new\u201d; the changes are shown in full when the app opens'],
+   ms:['Makluman versi baharu lebih ringkas: hanya nombor versi dan \u201cKetik untuk lihat apa yang baharu\u201d; perubahan ditunjukkan sepenuhnya apabila aplikasi dibuka']},
   {v:'3.29.1', date:'2026-11-11', time:'07:49',
    zh:['「关于」新增隐私说明：写明存在手机里的是什么、同步到服务器的是什么、不存什么，以及关掉提醒后怎么处理'],
    en:['About now has a privacy note: what stays on the phone, what is synced to the server, what is not kept, and what happens when Reminders are turned off'],

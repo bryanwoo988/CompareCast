@@ -25,23 +25,22 @@ const run = (releases, calls) => ({cache:new Map(), seen:new Set(), post:async (
   fetchJson:async url => { if(calls) calls.push(url); return releases === null ? null : {v:releases[0].v, releases}; }});
 const NOW = new Date('2026-11-11T00:00:00Z');
 
-test('文案：版本号在标题，改动在内容，最后一行说点开就更新', () => {
+test('文案：标题只有版本号，内容一行说点开看改了什么；不放改动细节', () => {
   const m = updateMessage('zh', REL.slice(0, 2));
-  assert.strictEqual(m.title, '🆕 新版本 3.29.0 已推出');
-  assert.strictEqual(m.body, '• 新版本推出时会通知你\n• 修好：限流时加倍请求\n点开即可更新');
+  assert.strictEqual(m.title, '新 · 3.29.0 版已推出');
+  assert.strictEqual(m.body, '点开查看更新内容');
   assert.strictEqual(m.kind, 'app');
-  assert.strictEqual(updateMessage('en', REL.slice(0, 1)).title, '🆕 Version 3.29.0 is out');
-  const long = updateMessage('en', [{v:'4.0.0', en:['x'.repeat(200), 'b', 'c', 'd']}]);
-  assert.strictEqual(long.body.split('\n').length, 4, '最多三行改动');
-  assert.ok(long.body.split('\n')[0].length <= 82, '太长的一行要截断');
+  assert.strictEqual(updateMessage('en', REL.slice(0, 1)).title, 'New · Version 3.29.0 is out');
+  assert.strictEqual(updateMessage('ms', REL.slice(0, 1)).title, 'Baharu · Versi 3.29.0 kini tersedia');
+  assert.strictEqual(updateMessage('xx', REL.slice(0, 1)).body, 'Tap to see what\u2019s new', '不认识的语言用英文');
 });
 
-test('手机还在旧版：推一次，内容包括它错过的版本；第二次不重推', async () => {
+test('手机还在旧版：推一次，标题是最新的版本；第二次不重推', async () => {
   const env = mkEnv(), calls = [];
   const r = await runAppUpdate(env, dev({appv:'3.28.1'}), NOW, run(REL, calls));
   assert.strictEqual(r.length, 1);
   assert.strictEqual(r[0].result, 'sent');
-  assert.strictEqual(r[0].body, '• 新版本推出时会通知你\n• 修好：限流时加倍请求\n点开即可更新');
+  assert.strictEqual(r[0].title, '新 · 3.29.0 版已推出');
   assert.ok(calls[0].startsWith(VERSION_URL));
   assert.strictEqual(env.store.get('upd:device-0001'), '3.29.0');
   assert.strictEqual((await runAppUpdate(env, dev({appv:'3.28.1'}), NOW, run(REL))).length, 0);
@@ -51,9 +50,9 @@ test('手机已经打开过新版本：不推', async () => {
   assert.strictEqual((await runAppUpdate(mkEnv(), dev({appv:'3.29.0'}), NOW, run(REL))).length, 0);
 });
 
-test('旧手机没报过版本：只推最新的一版，不推整串历史', async () => {
+test('旧手机没报过版本：只推最新的一版', async () => {
   const r = await runAppUpdate(mkEnv(), dev({}), NOW, run(REL));
-  assert.strictEqual(r[0].body, '• 新版本推出时会通知你\n点开即可更新');
+  assert.strictEqual(r[0].v, '3.29.0');
 });
 
 test('关掉新版本通知、读不到 version.json、或推送失败：都不记账', async () => {
