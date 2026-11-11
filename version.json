@@ -1,6 +1,20 @@
 {
- "v": "3.29.1",
+ "v": "3.29.2",
  "releases": [
+  {
+   "v": "3.29.2",
+   "date": "2026-11-11",
+   "time": "08:56",
+   "zh": [
+    "新版本通知变短了：只写版本号和「点开查看更新内容」，改了什么在打开 App 后完整显示"
+   ],
+   "en": [
+    "New version notices are shorter: just the version and “Tap to see what’s new”; the changes are shown in full when the app opens"
+   ],
+   "ms": [
+    "Makluman versi baharu lebih ringkas: hanya nombor versi dan “Ketik untuk lihat apa yang baharu”; perubahan ditunjukkan sepenuhnya apabila aplikasi dibuka"
+   ]
+  },
   {
    "v": "3.29.1",
    "date": "2026-11-11",
@@ -127,20 +141,6 @@
    ],
    "ms": [
     "Sumber data dalam Perihal kini menyenaraikan MetMalaysia (amaran ribut petir, radar), data.gov.my, JPS (paras sungai) dan OpenStreetMap (daerah setiap lokasi)"
-   ]
-  },
-  {
-   "v": "3.26.1",
-   "date": "2026-11-08",
-   "time": "16:42",
-   "zh": [
-    "修好：河水提醒读取 JPS 数据太耗时，可能让同一轮的定时提醒和雷暴警告一起发不出去；现在只读需要的部分"
-   ],
-   "en": [
-    "Fixed: reading the JPS river data took long enough that it could stop that round’s reminders and storm warnings from going out; only the part needed is read now"
-   ],
-   "ms": [
-    "Dibaiki: membaca data sungai JPS mengambil masa terlalu lama sehingga boleh menghalang peringatan dan amaran ribut pusingan itu daripada dihantar; kini hanya bahagian yang diperlukan dibaca"
    ]
   }
  ]
