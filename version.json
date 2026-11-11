@@ -1,6 +1,20 @@
 {
- "v": "3.30.2",
+ "v": "3.31.0",
  "releases": [
+  {
+   "v": "3.31.0",
+   "date": "2026-11-11",
+   "time": "15:04",
+   "zh": [
+    "地点详情页新增「气象局官方预报」：MetMalaysia 对这个县未来 7 天的早／午／晚预报和最高／最低温，可以跟各个模型对照"
+   ],
+   "en": [
+    "Each place’s page now shows MetMalaysia’s own 7-day forecast for its district: morning, afternoon and night, with the low and high, to compare with the models"
+   ],
+   "ms": [
+    "Halaman setiap tempat kini menunjukkan ramalan 7 hari MetMalaysia untuk daerahnya: pagi, petang dan malam, dengan suhu terendah dan tertinggi, untuk dibandingkan dengan model"
+   ]
+  },
   {
    "v": "3.30.2",
    "date": "2026-11-11",
@@ -112,20 +126,6 @@
     "Apabila perkhidmatan ramalan mengehadkan permintaan, aplikasi kini memberitahu dengan jelas dan memuat semula sendiri selepas had tamat, bukan menyuruh anda menyemak sambungan",
     "Dibaiki: jika peta gagal dimuatkan, tajuk masih menunjukkan Lokasi Saya",
     "Pelayan kini menyemak paras sungai dalam pusingan tersendiri, memberi lebih ruang dalam setiap pusingan supaya makluman kurang berkemungkinan tertangguh"
-   ]
-  },
-  {
-   "v": "3.28.1",
-   "date": "2026-11-08",
-   "time": "19:05",
-   "zh": [
-    "修好：从地图页打开提醒、设置或地块详情时，地图的版权标示（Leaflet、Esri）会浮在页面上"
-   ],
-   "en": [
-    "Fixed: opening Reminders, Settings or a location from the map left the map’s credit line (Leaflet, Esri) floating over the page"
-   ],
-   "ms": [
-    "Dibaiki: membuka Peringatan, Tetapan atau sesuatu lokasi dari peta meninggalkan baris kredit peta (Leaflet, Esri) terapung di atas halaman"
    ]
   }
  ]
