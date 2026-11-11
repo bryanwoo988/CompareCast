@@ -1,6 +1,20 @@
 {
- "v": "3.30.0",
+ "v": "3.30.1",
  "releases": [
+  {
+   "v": "3.30.1",
+   "date": "2026-11-11",
+   "time": "13:53",
+   "zh": [
+    "天气图层写清楚了：雷达看的是正在下的雨，卫星看的是云；选单、时间轴和图例都有说明，最新一帧会标「最新」"
+   ],
+   "en": [
+    "The weather layers now say what they show: radar is rain falling now, satellite is cloud; the menu, timeline and legend explain it, and the newest frame is marked “latest”"
+   ],
+   "ms": [
+    "Lapisan cuaca kini menerangkan apa yang ditunjukkan: radar ialah hujan yang sedang turun, satelit ialah awan; menu, garis masa dan petunjuk menerangkannya, dan imej terbaharu ditanda “terkini”"
+   ]
+  },
   {
    "v": "3.30.0",
    "date": "2026-11-11",
@@ -118,32 +132,6 @@
     "Amaran hujan berterusan baharu: apabila MetMalaysia mengeluarkannya untuk daerah lokasi anda, anda diberitahu tahapnya (Waspada, Buruk, Bahaya) dan tempohnya; sekali lagi jika tahap naik atau dilanjutkan, bukan untuk keluaran semula yang sama",
     "Makluman lebih ringkas: nama lokasi dalam tajuk, kandungan hanya masa dan daerah, dan amaran sungai hanya nama stesen, jarak dan paras",
     "Dibaiki: lokasi di Negeri Sembilan tidak pernah menerima amaran ribut petir, dan sesetengah daerah di Sarawak dan Sabah tidak dipadankan"
-   ]
-  },
-  {
-   "v": "3.27.0",
-   "date": "2026-11-08",
-   "time": "17:22",
-   "zh": [
-    "新的底部导航栏：地点 · 地图 · ＋ · 通知 · 设置",
-    "新增「通知」：这台手机收到的每条通知都会留在这里 30 天（最多 100 条），未读的会显示数字；点一下可以打开那块地，或看完整内容",
-    "语言和使用说明搬进「设置」",
-    "更新记录现在写出每一版的日期和时间（马来西亚时间）",
-    "修好：每一页底部都有一道渐暗，最下面还露出一截白色横条"
-   ],
-   "en": [
-    "New navigation bar at the bottom: Saved · Map · + · Alerts · Settings",
-    "New Alerts tab: every notification this phone receives stays there for 30 days (100 at most), with a count of unread ones; tap one to open its location or read it in full",
-    "Language and Help have moved into Settings",
-    "The update history now shows the date and time of each version (Malaysian time)",
-    "Fixed: the bottom of every page was shaded dark, with the edge of a white bar showing below it"
-   ],
-   "ms": [
-    "Bar navigasi baharu di bawah: Lokasi · Peta · + · Makluman · Tetapan",
-    "Tab Makluman baharu: setiap makluman yang diterima telefon ini disimpan di sana selama 30 hari (paling banyak 100), dengan bilangan yang belum dibaca; ketik untuk membuka lokasinya atau membacanya sepenuhnya",
-    "Bahasa dan Panduan kini dalam Tetapan",
-    "Sejarah kemas kini kini menunjukkan tarikh dan masa setiap versi (waktu Malaysia)",
-    "Dibaiki: bahagian bawah setiap halaman berlorek gelap, dengan hujung bar putih kelihatan di bawahnya"
    ]
   }
  ]
