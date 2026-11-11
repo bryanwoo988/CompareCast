@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.29.2';
+const APP_VERSION = '3.30.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,13 @@ const APP_VERSION = '3.29.2';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.30.0', date:'2026-11-11', time:'13:36',
+   zh:['地图新增「天气图层」（左下角按钮）：MetMalaysia 雷达看过去 1 小时的雨区，日本气象厅 Himawari 卫星看过去 3 小时的云（红外或可见光）',
+       '按 ▶ 播放动画，看雨和云往哪里移动；图层默认关着，用到时才下载'],
+   en:['New weather layers on the map (button at bottom left): MetMalaysia radar shows rain over the last hour, and JMA\u2019s Himawari satellite shows cloud over the last 3 hours (infrared or visible)',
+       'Press \u25b6 to play them and see where the rain and cloud are heading; layers are off until you choose one, and only then downloaded'],
+   ms:['Lapisan cuaca baharu pada peta (butang di kiri bawah): radar MetMalaysia menunjukkan hujan sejam lepas, dan satelit Himawari JMA menunjukkan awan 3 jam lepas (inframerah atau cahaya nampak)',
+       'Tekan \u25b6 untuk memainkannya dan lihat ke mana hujan dan awan bergerak; lapisan ditutup sehingga anda memilih satu, dan hanya dimuat turun ketika itu']},
   {v:'3.29.2', date:'2026-11-11', time:'08:56',
    zh:['新版本通知变短了：只写版本号和「点开查看更新内容」，改了什么在打开 App 后完整显示'],
    en:['New version notices are shorter: just the version and \u201cTap to see what\u2019s new\u201d; the changes are shown in full when the app opens'],
@@ -535,6 +542,11 @@ zh:{
   cmpSection:'对比哪些模式', cmpD:'勾选的模式会出现在每个地点的对比图和准度核对里。',
   about:'关于', version:'版本',
   relAll:'更新记录', relTitle:'这一版有什么变化', relDone:'知道了', dataSrc:'数据来源', savedOk:'已保存', deleted:'已删除',
+  ovLayer:'天气图层', ovOff:'关', ovRadar:'雷达', ovIr:'卫星 · 红外', ovVis:'卫星 · 可见光',
+  ovMenuNote:'雷达：MetMalaysia，过去 1 小时。卫星：日本气象厅 Himawari，过去 3 小时；可见光只在白天有画面。',
+  ovLoading:'正在载入图层…', ovFail:'读不到这个图层，稍后再试。', ovAgo:m => m < 1 ? '刚刚' : `${m} 分钟前`,
+  ovRain:'小雨', ovHeavy:'大雨', ovWarm:'暖 · 低云', ovCold:'冷 · 高云（可能有雷雨）', ovDark:'暗 · 无云', ovBright:'亮 · 厚云',
+  ovPlay:'播放', ovPause:'暂停',
   privTitle:'隐私',
   privItems:['你的地点、设定和通知记录，平时都只存在这台手机里。没有账号，也不收集姓名、电邮或电话。',
     '只有开启「通知提醒」后，才会把下面这些同步到推送服务器（Cloudflare）：手机的推送地址（由 Apple 或 Google 提供）、你勾选的地块的名称、坐标和所在的区、提醒设定、语言、单位和 App 版本号。用一个随机编号识别。',
@@ -653,6 +665,11 @@ en:{
   cmpSection:'Models to compare', cmpD:'Ticked models appear in the compare chart and the accuracy check.',
   about:'About', version:'Version',
   relAll:'What\'s new', relTitle:'What changed', relDone:'Got it', dataSrc:'Data sources', savedOk:'Saved', deleted:'Removed',
+  ovLayer:'Weather layer', ovOff:'Off', ovRadar:'Radar', ovIr:'Satellite · infrared', ovVis:'Satellite · visible',
+  ovMenuNote:'Radar: MetMalaysia, the last hour. Satellite: JMA Himawari, the last 3 hours; visible shows only in daylight.',
+  ovLoading:'Loading the layer\u2026', ovFail:'Could not load this layer. Try again shortly.', ovAgo:m => m < 1 ? 'just now' : `${m} min ago`,
+  ovRain:'light', ovHeavy:'heavy', ovWarm:'warm · low cloud', ovCold:'cold · high cloud (storms likely)', ovDark:'dark · clear', ovBright:'bright · thick cloud',
+  ovPlay:'Play', ovPause:'Pause',
   privTitle:'Privacy',
   privItems:['Your locations, settings and notification history normally stay on this phone only. There is no account, and no name, email or phone number is collected.',
     'Only once you turn on Reminders are these synced to the push server (Cloudflare): the phone\u2019s push address (issued by Apple or Google), the name, coordinates and district of each location you ticked, your reminder settings, language, units and the app version. A random ID identifies the phone.',
@@ -771,6 +788,11 @@ ms:{
   cmpSection:'Model untuk dibanding', cmpD:'Model bertanda muncul dalam carta banding dan semakan ketepatan.',
   about:'Perihal', version:'Versi',
   relAll:'Apa yang baharu', relTitle:'Apa yang berubah', relDone:'Faham', dataSrc:'Sumber data', savedOk:'Disimpan', deleted:'Dibuang',
+  ovLayer:'Lapisan cuaca', ovOff:'Tutup', ovRadar:'Radar', ovIr:'Satelit · inframerah', ovVis:'Satelit · cahaya nampak',
+  ovMenuNote:'Radar: MetMalaysia, sejam lepas. Satelit: Himawari JMA, 3 jam lepas; cahaya nampak hanya pada siang hari.',
+  ovLoading:'Memuatkan lapisan\u2026', ovFail:'Lapisan ini tidak dapat dimuatkan. Cuba sebentar lagi.', ovAgo:m => m < 1 ? 'baru sahaja' : `${m} minit lalu`,
+  ovRain:'ringan', ovHeavy:'lebat', ovWarm:'panas · awan rendah', ovCold:'sejuk · awan tinggi (mungkin ribut)', ovDark:'gelap · cerah', ovBright:'terang · awan tebal',
+  ovPlay:'Main', ovPause:'Jeda',
   privTitle:'Privasi',
   privItems:['Lokasi, tetapan dan sejarah makluman anda biasanya hanya disimpan dalam telefon ini. Tiada akaun, dan tiada nama, e-mel atau nombor telefon dikumpulkan.',
     'Hanya apabila anda menghidupkan Peringatan, perkara berikut disegerakkan ke pelayan tolakan (Cloudflare): alamat tolakan telefon (dikeluarkan oleh Apple atau Google), nama, koordinat dan daerah setiap lokasi yang ditanda, tetapan peringatan, bahasa, unit dan versi aplikasi. ID rawak mengenal pasti telefon.',
@@ -1648,6 +1670,12 @@ function initMap(){
   myLayer = L.layerGroup().addTo(map);
   bindRail();
   bindMapSearch();
+  /* weather layers sit in a pane of their own: above the basemap, under
+     the pins and the map's own labels lose to them, which is the point */
+  map.createPane('wx');
+  map.getPane('wx').style.zIndex = 350;
+  map.getPane('wx').style.pointerEvents = 'none';
+  drawOvlButton();
   refreshPins();
   setTimeout(() => map.invalidateSize(), 120);
 }
@@ -1707,6 +1735,172 @@ function drawBasemapSwitch(){
       host.classList.remove('on');
       const lb = $('[data-rail="layer"]'); if(lb) lb.classList.remove('on');
     }));
+}
+
+/* ---------- 9c. Weather layers: radar and satellite ----------
+   Off unless chosen, and not remembered between visits: the map opens
+   quick and light, and a layer is fetched only when it is asked for. */
+const OVL = {kind:'off', frames:[], i:0, layer:null, sat:{}, timer:null, token:0};
+const OVL_KINDS = ['off', 'radar', 'ir', 'vis'];
+const OVL_NAME = {off:'ovOff', radar:'ovRadar', ir:'ovIr', vis:'ovVis'};
+const OVL_ICON = '<svg viewBox="0 0 24 24"><path d="m12 3 9 4.6-9 4.6-9-4.6L12 3z"/><path d="m3.6 12.4 8.4 4.3 8.4-4.3M3.6 16.9l8.4 4.3 8.4-4.3"/></svg>';
+const RADAR_ATTR = 'Radar © <a href="https://www.met.gov.my" target="_blank" rel="noopener">MetMalaysia</a>';
+const SAT_ATTR = 'Himawari · <a href="https://www.jma.go.jp/bosai/map.html#contents=himawari" target="_blank" rel="noopener">出典：気象庁ホームページ</a>';
+
+function drawOvlButton(){
+  const btn = $('#ovl-btn'), menu = $('#ovl-menu');
+  if(!btn || !menu) return;
+  btn.classList.toggle('on', OVL.kind !== 'off');
+  btn.innerHTML = OVL_ICON + `<span>${OVL.kind === 'off' ? t('ovLayer') : t(OVL_NAME[OVL.kind])}</span>`;
+  menu.innerHTML = OVL_KINDS.map(k => `<button data-ovl="${k}" class="${OVL.kind === k ? 'on' : ''}">${t(OVL_NAME[k])}</button>`).join('')
+    + `<small>${t('ovMenuNote')}</small>`;
+  btn.onclick = e => { e.stopPropagation(); menu.classList.toggle('on'); };
+  menu.querySelectorAll('[data-ovl]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    menu.classList.remove('on');
+    setOverlay(b.dataset.ovl);
+  }));
+}
+document.addEventListener('click', e => {
+  const menu = $('#ovl-menu');
+  if(menu && !e.target.closest('#ovl-menu')) menu.classList.remove('on');
+});
+
+function ovlClear(){
+  ovlPause();
+  if(map){
+    if(OVL.layer) map.removeLayer(OVL.layer);
+    Object.values(OVL.sat).forEach(l => map.removeLayer(l));
+  }
+  OVL.layer = null; OVL.sat = {}; OVL.frames = []; OVL.i = 0;
+}
+/* the hint line and the layer bar share the bottom of the map */
+function ovlShowBar(on){
+  const bar = $('#ovl-bar'), foot = $('#map-foot');
+  if(bar) bar.classList.toggle('hide', !on);
+  if(foot && !foot.classList.contains('placing')) foot.classList.toggle('hide', on);
+  ['#ovl-btn', '#ovl-menu'].forEach(s => { const n = $(s); if(n) n.classList.toggle('lift', on); });
+}
+
+async function setOverlay(kind){
+  if(!map || !OVL_KINDS.includes(kind)) return;
+  ovlClear();
+  OVL.kind = kind;
+  const token = ++OVL.token;
+  drawOvlButton();
+  if(kind === 'off'){ ovlShowBar(false); return; }
+  ovlShowBar(true);
+  $('#ovl-bar').innerHTML = `<p class="ovl-msg">${t('ovLoading')}</p>`;
+  try{
+    if(kind === 'radar') await loadRadarFrames(token);
+    else await loadSatFrames(kind, token);
+    if(token !== OVL.token) return;
+    if(!OVL.frames.length) throw new Error('no frames');
+    OVL.i = OVL.frames.length - 1;
+    showFrame(OVL.i);
+    drawOvlBar();
+  }catch(e){
+    if(token !== OVL.token) return;
+    $('#ovl-bar').innerHTML = `<p class="ovl-msg">${t('ovFail')} <button class="retry" id="ovl-retry">${t('retry')}</button></p>`;
+    $('#ovl-retry').addEventListener('click', () => setOverlay(kind));
+  }
+}
+
+/* MetMalaysia's GIF, through the push worker (it does not let other sites
+   read it), each frame turned into a transparent image of the rain alone */
+async function loadRadarFrames(token){
+  const r = await fetch(PUSH_API + '/radar', {cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP ' + r.status);
+  const lm = Date.parse(r.headers.get('Last-Modified') || '');
+  const maps = radarFrameMaps(new Uint8Array(await r.arrayBuffer()));
+  if(token !== OVL.token) return;
+  if(!maps) throw new Error('undecodable');
+  const times = radarFrameTimes(isFinite(lm) ? lm : Date.now(), maps.length);
+  const cv = document.createElement('canvas');
+  cv.width = OVL_MAP_W; cv.height = OVL_MAP_H;
+  const cx = cv.getContext('2d');
+  OVL.frames = maps.map((m, i) => {
+    cx.putImageData(new ImageData(rainRgba(m, 215), OVL_MAP_W, OVL_MAP_H), 0, 0);
+    return {ms:times[i], url:cv.toDataURL('image/png')};
+  });
+}
+
+/* JMA's Himawari tiles, the last three hours */
+async function loadSatFrames(kind, token){
+  const r = await fetch(SAT_TIMES_URL, {cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP ' + r.status);
+  const list = satFrames(await r.json(), 3);
+  if(token !== OVL.token) return;
+  OVL.frames = list.map(f => ({ms:f.ms, bt:f.bt, kind}));
+}
+
+function showFrame(i){
+  const f = OVL.frames[i];
+  if(!f || !map) return;
+  OVL.i = i;
+  if(OVL.kind === 'radar'){
+    if(OVL.layer) OVL.layer.setUrl(f.url);
+    else OVL.layer = L.imageOverlay(f.url, OVL_BOUNDS, {pane:'wx', opacity:0.9, interactive:false, attribution:RADAR_ATTR}).addTo(map);
+  } else {
+    /* one tile layer per time, kept once made, shown by opacity: swapping a
+       layer's URL blanks the map between frames while the tiles reload */
+    if(!OVL.sat[f.bt]) OVL.sat[f.bt] = L.tileLayer(satTileUrl(f.kind, f.bt),
+      {pane:'wx', maxNativeZoom:SAT_MAX_ZOOM, maxZoom:19, opacity:0, attribution:SAT_ATTR}).addTo(map);
+    Object.keys(OVL.sat).forEach(bt => OVL.sat[bt].setOpacity(bt === f.bt ? 0.72 : 0));
+  }
+  paintOvlWhen();
+}
+
+function paintOvlWhen(){
+  const f = OVL.frames[OVL.i], el2 = $('#ovl-when');
+  if(!f || !el2) return;
+  const d = new Date(f.ms), p = x => String(x).padStart(2, '0');
+  el2.innerHTML = `${esc(t('ovAgo')(Math.max(0, Math.round((Date.now() - f.ms) / 60000))))} · <b>${p(d.getHours())}:${p(d.getMinutes())}</b>`;
+  const rg = $('#ovl-range'); if(rg) rg.value = String(OVL.i);
+}
+
+function ovlLegend(){
+  if(OVL.kind === 'radar'){
+    const grad = OVL_RAIN.map((c, i) => `rgb(${c[0]},${c[1]},${c[2]}) ${Math.round(i / (OVL_RAIN.length - 1) * 100)}%`).join(',');
+    return `<span>${t('ovRain')}</span><i style="background:linear-gradient(90deg,${grad})"></i><span>${t('ovHeavy')}</span>`;
+  }
+  return OVL.kind === 'ir'
+    ? `<span>${t('ovWarm')}</span><i style="background:linear-gradient(90deg,#222,#fff)"></i><span>${t('ovCold')}</span>`
+    : `<span>${t('ovDark')}</span><i style="background:linear-gradient(90deg,#222,#fff)"></i><span>${t('ovBright')}</span>`;
+}
+
+const PLAY_SVG = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>';
+const PAUSE_SVG = '<svg viewBox="0 0 24 24"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>';
+function drawOvlBar(){
+  const bar = $('#ovl-bar'); if(!bar) return;
+  bar.innerHTML = `<p class="ovl-when" id="ovl-when"></p>
+    <div class="ovl-row">
+      <button class="ovl-play" id="ovl-play" aria-label="${t('ovPlay')}">${PLAY_SVG}</button>
+      <input class="ovl-range" id="ovl-range" type="range" min="0" max="${OVL.frames.length - 1}" step="1" value="${OVL.i}">
+    </div>
+    <div class="ovl-legend">${ovlLegend()}</div>`;
+  $('#ovl-play').addEventListener('click', () => (OVL.timer ? ovlPause() : ovlPlay()));
+  $('#ovl-range').addEventListener('input', e => { ovlPause(); showFrame(+e.target.value); });
+  paintOvlWhen();
+}
+
+/* through the frames and round again, holding on the newest a little */
+function ovlPlay(){
+  if(OVL.timer || OVL.frames.length < 2) return;
+  const btn = $('#ovl-play');
+  if(btn){ btn.innerHTML = PAUSE_SVG; btn.setAttribute('aria-label', t('ovPause')); }
+  if(OVL.i >= OVL.frames.length - 1) showFrame(0);
+  const step = () => {
+    const last = OVL.i >= OVL.frames.length - 1;
+    showFrame(last ? 0 : OVL.i + 1);
+    OVL.timer = setTimeout(step, OVL.i === OVL.frames.length - 1 ? 1600 : 650);
+  };
+  OVL.timer = setTimeout(step, 650);
+}
+function ovlPause(){
+  if(OVL.timer){ clearTimeout(OVL.timer); OVL.timer = null; }
+  const btn = $('#ovl-play');
+  if(btn){ btn.innerHTML = PLAY_SVG; btn.setAttribute('aria-label', t('ovPlay')); }
 }
 
 /* the location count used to be a chip floating on the map; on a page where
@@ -1834,6 +2028,9 @@ function exitPlace(){
   dropRail();
   const foot = $('#map-foot');
   if(foot){ foot.classList.remove('placing'); foot.textContent = t('mapHint'); }
+  /* the layer bar and button come back once the confirm bar has gone */
+  const ob = $('#ovl-btn'); if(ob) ob.classList.remove('hide');
+  ovlShowBar(OVL.kind !== 'off');
 }
 /* On a short screen — landscape, or a small phone — the vertically centred rail
    runs into the confirm bar and its bottom button becomes unpressable. Lift it
@@ -1863,6 +2060,12 @@ function syncPlaceCoords(){
 function renderPlaceBar(){
   const foot = $('#map-foot'); if(!foot) return;
   const c = map.getCenter();
+  /* the confirm bar takes the bottom of the map: the layer bar and its
+     button step aside until it is done */
+  const ob = $('#ovl-btn'); if(ob) ob.classList.add('hide');
+  const obar = $('#ovl-bar'); if(obar) obar.classList.add('hide');
+  $('#ovl-menu') && $('#ovl-menu').classList.remove('on');
+  foot.classList.remove('hide');
   foot.classList.add('placing');
   foot.innerHTML = `
     <div class="pb-top"><span id="place-coords">${c.lat.toFixed(4)}°, ${c.lng.toFixed(4)}°</span></div>
@@ -4262,7 +4465,8 @@ const SOURCES = [
   {n:'Météo-France ARPEGE', d:{zh:'法国气象局',en:'Météo-France',ms:'Météo-France'}, u:'https://meteofrance.com/'},
   {n:'JMA', d:{zh:'日本气象厅',en:'Japan Meteorological Agency',ms:'Agensi Meteorologi Jepun'}, u:'https://www.jma.go.jp/'},
   {n:'UKMO', d:{zh:'英国气象局',en:'UK Met Office',ms:'Met Office UK'}, u:'https://www.metoffice.gov.uk/'},
-  {n:'MetMalaysia', d:{zh:'马来西亚气象局 · 雷暴警告 · 全国雷达拼图（12 个雷达，每 10 分钟一帧）',en:'Malaysian Meteorological Department · thunderstorm warnings · national radar composite (12 radars, a frame every 10 minutes)',ms:'Jabatan Meteorologi Malaysia · amaran ribut petir · komposit radar kebangsaan (12 radar, satu imej setiap 10 minit)'}, u:'https://www.met.gov.my/'},
+  {n:'MetMalaysia', d:{zh:'马来西亚气象局 · 雷暴和连续降雨警告 · 地图上的雷达图层（全国 12 个雷达的拼图，每 10 分钟一帧）',en:'Malaysian Meteorological Department · thunderstorm and continuous rain warnings · the radar layer on the map (composite of 12 radars, a frame every 10 minutes)',ms:'Jabatan Meteorologi Malaysia · amaran ribut petir dan hujan berterusan · lapisan radar pada peta (komposit 12 radar, satu imej setiap 10 minit)'}, u:'https://www.met.gov.my/'},
+  {n:'JMA Himawari', d:{zh:'日本气象厅 · 地图上的卫星图层（Himawari-9，红外和可见光，每 10 分钟一张）· 出典：気象庁ホームページ',en:'Japan Meteorological Agency · the satellite layer on the map (Himawari-9, infrared and visible, every 10 minutes) · 出典：気象庁ホームページ',ms:'Agensi Meteorologi Jepun · lapisan satelit pada peta (Himawari-9, inframerah dan cahaya nampak, setiap 10 minit) · 出典：気象庁ホームページ'}, u:'https://www.jma.go.jp/bosai/map.html#contents=himawari'},
   {n:'data.gov.my', d:{zh:'马来西亚政府开放数据平台 · 提供 MetMalaysia 雷暴警告的接口',en:'Malaysian government open data portal · serves MetMalaysia\u2019s thunderstorm warnings',ms:'Portal data terbuka kerajaan Malaysia · menyediakan amaran ribut petir MetMalaysia'}, u:'https://data.gov.my/'},
   {n:'JPS Public Infobanjir', d:{zh:'灌溉与排水局 · 全国河流水位站和警戒水位',en:'Department of Irrigation and Drainage · river-level stations and their warning levels',ms:'Jabatan Pengairan dan Saliran · stesen paras sungai dan paras amarannya'}, u:'https://publicinfobanjir.water.gov.my/'},
   {n:'OpenStreetMap', d:{zh:'地块所在的州和区（Nominatim 查询）· © OpenStreetMap 贡献者',en:'The state and district of each location (Nominatim) · © OpenStreetMap contributors',ms:'Negeri dan daerah setiap lokasi (Nominatim) · © penyumbang OpenStreetMap'}, u:'https://www.openstreetmap.org/copyright'},
@@ -4357,6 +4561,7 @@ function setTab(which){
   document.body.classList.toggle('map-mode', !s);
   updateSub();
   if(s && P.on) exitPlace();
+  if(s) ovlPause();
   if(!s) openMap();
 }
 $('#tab-saved').addEventListener('click', () => setTab('saved'));
@@ -4375,6 +4580,7 @@ function applyLang(){
   if(!$('#q').value) $('#q-out').innerHTML = `<p class="searching">${t('searchEmpty')}</p>`;
   renderList(); refreshPins();
   if(map) $('#map-foot').textContent = t('mapHint');
+  if(map){ drawOvlButton(); if(OVL.frames.length) drawOvlBar(); }
   if($('#map-q')) $('#map-q').placeholder = t('mapSearchPh');
   if($('#map-rail')) bindRail();
   drawBasemapSwitch();

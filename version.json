@@ -1,6 +1,23 @@
 {
- "v": "3.29.2",
+ "v": "3.30.0",
  "releases": [
+  {
+   "v": "3.30.0",
+   "date": "2026-11-11",
+   "time": "13:36",
+   "zh": [
+    "地图新增「天气图层」（左下角按钮）：MetMalaysia 雷达看过去 1 小时的雨区，日本气象厅 Himawari 卫星看过去 3 小时的云（红外或可见光）",
+    "按 ▶ 播放动画，看雨和云往哪里移动；图层默认关着，用到时才下载"
+   ],
+   "en": [
+    "New weather layers on the map (button at bottom left): MetMalaysia radar shows rain over the last hour, and JMA’s Himawari satellite shows cloud over the last 3 hours (infrared or visible)",
+    "Press ▶ to play them and see where the rain and cloud are heading; layers are off until you choose one, and only then downloaded"
+   ],
+   "ms": [
+    "Lapisan cuaca baharu pada peta (butang di kiri bawah): radar MetMalaysia menunjukkan hujan sejam lepas, dan satelit Himawari JMA menunjukkan awan 3 jam lepas (inframerah atau cahaya nampak)",
+    "Tekan ▶ untuk memainkannya dan lihat ke mana hujan dan awan bergerak; lapisan ditutup sehingga anda memilih satu, dan hanya dimuat turun ketika itu"
+   ]
+  },
   {
    "v": "3.29.2",
    "date": "2026-11-11",
@@ -127,20 +144,6 @@
     "Bahasa dan Panduan kini dalam Tetapan",
     "Sejarah kemas kini kini menunjukkan tarikh dan masa setiap versi (waktu Malaysia)",
     "Dibaiki: bahagian bawah setiap halaman berlorek gelap, dengan hujung bar putih kelihatan di bawahnya"
-   ]
-  },
-  {
-   "v": "3.26.2",
-   "date": "2026-11-08",
-   "time": "16:54",
-   "zh": [
-    "「关于」的数据来源补上 MetMalaysia（雷暴警告、雷达）、data.gov.my、JPS（河流水位）和 OpenStreetMap（地块所在的区）"
-   ],
-   "en": [
-    "The data sources in About now list MetMalaysia (thunderstorm warnings, radar), data.gov.my, JPS (river levels) and OpenStreetMap (each location’s district)"
-   ],
-   "ms": [
-    "Sumber data dalam Perihal kini menyenaraikan MetMalaysia (amaran ribut petir, radar), data.gov.my, JPS (paras sungai) dan OpenStreetMap (daerah setiap lokasi)"
    ]
   }
  ]

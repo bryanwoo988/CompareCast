@@ -12,11 +12,11 @@
 1. 把**整个仓库**推到 GitHub，Settings → Pages → Source 选 `Deploy from a branch`，Branch 选 `main` / `/ (root)`。
 2. 等一两分钟，打开 `https://<用户名>.github.io/<仓库名>/`。
 
-App 运行需要这 16 个文件（都在根目录）。`sw.js` 里的 `SHELL_FILES` 就是这份清单；`tests/shell.test.js` 会检查清单里的文件都存在、`index.html` 加载的每个脚本都在清单里，所以清单不会和代码走样：
+App 运行需要这 17 个文件（都在根目录）。`sw.js` 里的 `SHELL_FILES` 就是这份清单；`tests/shell.test.js` 会检查清单里的文件都存在、`index.html` 加载的每个脚本都在清单里，所以清单不会和代码走样：
 
 ```
 index.html  app.js  sw.js  manifest.webmanifest
-swpolicy.js  daylogic.js  maplogic.js  listlogic.js  notifylogic.js  inbox.js  summary.js  layout.js  reqlogic.js
+swpolicy.js  daylogic.js  maplogic.js  listlogic.js  notifylogic.js  inbox.js  overlaylogic.js  summary.js  layout.js  reqlogic.js
 icon-192.png  icon-512.png  icon-maskable-512.png
 ```
 
@@ -86,6 +86,8 @@ node --test tests/*.test.js
 | Leaflet 1.9.4 | `cdnjs.cloudflare.com` | 打开地图时才载入，带完整性校验（SRI） |
 | 雷暴提醒：官方警告 | `api.data.gov.my/weather/warning/` | MetMalaysia 雷暴警告，服务器每 15 分钟读一次 |
 | 雷达提醒 | `api.met.gov.my/static/images/radar-latest.gif` | MetMalaysia 12 雷达拼图，每 10 分钟一帧，服务器每 5 分钟检查一次 |
+| 地图雷达图层 | 经推送服务器 `/radar` 转送 `api.met.gov.my/static/images/radar-latest.gif` | MetMalaysia 不允许其他网站直接读取，所以由服务器原样转送（Cloudflare 缓存 2 分钟）；手机解码，只留下雨区 |
+| 地图卫星图层 | `www.jma.go.jp/bosai/himawari/data/satimg/...` | 日本气象厅 Himawari-9 图块，手机直接读取；JMA 网站内容按「公共数据利用规约 1.0」开放，注明「出典：気象庁ホームページ」 |
 | 新版本通知 | `bryanwoo988.github.io/CompareCast/version.json` | 由 `tools/version-json.js` 从 `app.js` 的更新说明生成，服务器每 15 分钟读一次 |
 | 河水提醒 | `publicinfobanjir.water.gov.my/.../latestreadingstrendabc.json` | JPS 全国水位站（JPS 地图本身用的数据），服务器每 15 分钟读一次 |
 | 雷暴提醒：地块所在的区 | `nominatim.openstreetmap.org/reverse` | 由 App 查，每块地一次，用马来文（跟 MetMalaysia 的拼法一致） |
@@ -139,7 +141,7 @@ node --test tests/*.test.js
 
 ## Service Worker 的缓存策略
 
-- **自己的文件**（上面 16 个）：先走网络，拿不到才用缓存。所以每次打开都拿到最新版，没网络也能打开界面。新版安装时这 16 个文件必须全部缓存成功，否则放弃安装、继续用旧版——弱信号下更新到一半，不会把离线版本弄坏。
+- **自己的文件**（上面 17 个）：先走网络，拿不到才用缓存。所以每次打开都拿到最新版，没网络也能打开界面。新版安装时这 17 个文件必须全部缓存成功，否则放弃安装、继续用旧版——弱信号下更新到一半，不会把离线版本弄坏。
 - **Leaflet**：固定版本，缓存优先，只有成功的回应才会覆盖缓存。
 - **绝不缓存**：所有天气数据、地理编码、ERA5、地图瓦片。
 - **离线时**：App 开着的时候断网，会继续显示已读到的内容，并写明是几点更新的；没网络时重新打开，就没有预报可看。App 回到前台时，超过半小时的数据会自动重新读取；超过三小时的会变灰并写明多久以前。
