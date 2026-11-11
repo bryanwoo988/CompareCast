@@ -1,6 +1,20 @@
 {
- "v": "3.30.1",
+ "v": "3.30.2",
  "releases": [
+  {
+   "v": "3.30.2",
+   "date": "2026-11-11",
+   "time": "14:01",
+   "zh": [
+    "修好：地图最下面一小截被底部导航栏盖住，来源说明的第二行看不到；来源说明也缩短成一行"
+   ],
+   "en": [
+    "Fixed: the bottom of the map sat just under the navigation bar, hiding the second line of the credits; the credits are also shorter now"
+   ],
+   "ms": [
+    "Dibaiki: bahagian bawah peta terlindung sedikit oleh bar navigasi, menyembunyikan baris kedua kredit; kredit juga kini lebih pendek"
+   ]
+  },
   {
    "v": "3.30.1",
    "date": "2026-11-11",
@@ -112,26 +126,6 @@
    ],
    "ms": [
     "Dibaiki: membuka Peringatan, Tetapan atau sesuatu lokasi dari peta meninggalkan baris kredit peta (Leaflet, Esri) terapung di atas halaman"
-   ]
-  },
-  {
-   "v": "3.28.0",
-   "date": "2026-11-08",
-   "time": "18:32",
-   "zh": [
-    "新增连续降雨警告：MetMalaysia 对地块所在的区发出连续降雨警告时通知你，写出等级（注意、恶劣天气、危险）和期限；等级升高或期限延长时再通知，原样重发的不再通知",
-    "通知变短了：标题直接写地块名，内容只写时间和区名，河水通知只留站名、距离和水位数字",
-    "修好：森美兰的地块收不到雷暴警告；砂拉越和沙巴有些县的雷暴警告配对不到"
-   ],
-   "en": [
-    "New continuous rain warnings: when MetMalaysia issues one for a location’s district you are told its level (Alert, Bad weather, Danger) and how long it lasts; again if the level rises or it is extended, not for an unchanged reissue",
-    "Shorter notifications: the location is in the title, the body has just the times and the district, and river alerts keep only the station, distance and levels",
-    "Fixed: locations in Negeri Sembilan never got thunderstorm warnings, and some districts in Sarawak and Sabah were not matched"
-   ],
-   "ms": [
-    "Amaran hujan berterusan baharu: apabila MetMalaysia mengeluarkannya untuk daerah lokasi anda, anda diberitahu tahapnya (Waspada, Buruk, Bahaya) dan tempohnya; sekali lagi jika tahap naik atau dilanjutkan, bukan untuk keluaran semula yang sama",
-    "Makluman lebih ringkas: nama lokasi dalam tajuk, kandungan hanya masa dan daerah, dan amaran sungai hanya nama stesen, jarak dan paras",
-    "Dibaiki: lokasi di Negeri Sembilan tidak pernah menerima amaran ribut petir, dan sesetengah daerah di Sarawak dan Sabah tidak dipadankan"
    ]
   }
  ]
