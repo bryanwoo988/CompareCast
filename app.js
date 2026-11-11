@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.30.1';
+const APP_VERSION = '3.30.2';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.30.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.30.2', date:'2026-11-11', time:'14:01',
+   zh:['修好：地图最下面一小截被底部导航栏盖住，来源说明的第二行看不到；来源说明也缩短成一行'],
+   en:['Fixed: the bottom of the map sat just under the navigation bar, hiding the second line of the credits; the credits are also shorter now'],
+   ms:['Dibaiki: bahagian bawah peta terlindung sedikit oleh bar navigasi, menyembunyikan baris kedua kredit; kredit juga kini lebih pendek']},
   {v:'3.30.1', date:'2026-11-11', time:'13:53',
    zh:['天气图层写清楚了：雷达看的是正在下的雨，卫星看的是云；选单、时间轴和图例都有说明，最新一帧会标「最新」'],
    en:['The weather layers now say what they show: radar is rain falling now, satellite is cloud; the menu, timeline and legend explain it, and the newest frame is marked \u201clatest\u201d'],
@@ -1676,6 +1680,8 @@ function initMap(){
   if(map){ setTimeout(() => map.invalidateSize(), 80); return; }
   const c = S.locations.length ? [S.locations[0].lat, S.locations[0].lon] : [4.2105, 101.9758];
   map = L.map('map', {zoomControl:false, zoomSnap:0}).setView(c, S.locations.length ? 9 : 6);
+  /* the credit line is short on a phone: Leaflet's name without its flag */
+  map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
   setBasemap(S.basemap || 'sat');
   myLayer = L.layerGroup().addTo(map);
   bindRail();
@@ -1755,7 +1761,8 @@ const OVL_KINDS = ['off', 'radar', 'ir', 'vis'];
 const OVL_NAME = {off:'ovOff', radar:'ovRadar', ir:'ovIr', vis:'ovVis'};
 const OVL_ICON = '<svg viewBox="0 0 24 24"><path d="m12 3 9 4.6-9 4.6-9-4.6L12 3z"/><path d="m3.6 12.4 8.4 4.3 8.4-4.3M3.6 16.9l8.4 4.3 8.4-4.3"/></svg>';
 const RADAR_ATTR = 'Radar © <a href="https://www.met.gov.my" target="_blank" rel="noopener">MetMalaysia</a>';
-const SAT_ATTR = 'Himawari · <a href="https://www.jma.go.jp/bosai/map.html#contents=himawari" target="_blank" rel="noopener">出典：気象庁ホームページ</a>';
+/* JMA asks for exactly this credit; nothing more is needed beside it */
+const SAT_ATTR = '<a href="https://www.jma.go.jp/bosai/map.html#contents=himawari" target="_blank" rel="noopener">出典：気象庁ホームページ</a>';
 
 function drawOvlButton(){
   const btn = $('#ovl-btn'), menu = $('#ovl-menu');
