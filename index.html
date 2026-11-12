@@ -373,6 +373,8 @@ body.map-mode .seg button{padding:8px 0;font-size:15px}
   background:linear-gradient(180deg,rgba(9,16,40,.92) 0%,rgba(9,16,40,.86) 62%,rgba(9,16,40,.34) 88%,rgba(9,16,40,0) 100%)}
 .d-back{width:46px;height:46px;border-radius:50%;background:rgba(14,22,52,.72);display:grid;place-items:center;backdrop-filter:blur(10px)}
 .d-back svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.d-share{width:46px;height:46px;margin-left:auto;margin-right:10px;border-radius:50%;background:rgba(14,22,52,.72);display:grid;place-items:center;backdrop-filter:blur(10px)}
+.d-share svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
 .d-model{display:flex;align-items:center;gap:9px;padding:12px 18px;border-radius:24px;
   background:rgba(14,22,52,.72);backdrop-filter:blur(10px);font-size:16px;font-weight:600}
 .d-model svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round}
@@ -792,6 +794,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
 <section class="page" id="detail">
   <div class="d-bar">
     <button class="d-back" id="d-back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="d-share" id="d-share" aria-label="Share"><svg viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 13v5.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V13"/></svg></button>
     <button class="d-model" id="d-modelbtn">
       <svg viewBox="0 0 24 24"><path d="M4 8h10M18 8h2M4 16h4M12 16h8"/><circle cx="16" cy="8" r="2.2"/><circle cx="10" cy="16" r="2.2"/></svg>
       <span id="d-modelname">—</span>
@@ -951,7 +954,7 @@ svg.chart{width:100%;display:block;touch-action:pan-y}
    seen, so every file always matches the page, and nothing needs a version
    number bumped by hand. Loaded in order, app.js last. */
 (function(){
-  const APP_SCRIPTS = ['daylogic.js', 'maplogic.js', 'listlogic.js', 'notifylogic.js', 'inbox.js', 'overlaylogic.js', 'metlogic.js', 'summary.js',
+  const APP_SCRIPTS = ['daylogic.js', 'maplogic.js', 'listlogic.js', 'notifylogic.js', 'inbox.js', 'overlaylogic.js', 'metlogic.js', 'sharelogic.js', 'summary.js',
                      'layout.js', 'reqlogic.js', 'updatelogic.js', 'app.js'];
   var r = encodeURIComponent(document.lastModified || '');
   APP_SCRIPTS.forEach(function(src){
