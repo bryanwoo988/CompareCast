@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.31.1';
+const APP_VERSION = '3.32.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.31.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.32.0', date:'2026-11-13', time:'00:20',
+   zh:['地点详情页右上角新增「分享」：一键把这块地的预报做成图片，直接发 WhatsApp。图片有今天和明天每 2 小时的天气、雨量和下雨机率，接下来 5 天，以及气象局的预报'],
+   en:['New \u201cShare\u201d button at the top of each place\u2019s page: turns its forecast into a picture to send on WhatsApp, with today and tomorrow in two-hour blocks (weather, rain, chance of rain), the next five days, and MetMalaysia\u2019s forecast'],
+   ms:['Butang \u201cKongsi\u201d baharu di atas halaman setiap tempat: menjadikan ramalannya gambar untuk dihantar melalui WhatsApp, dengan hari ini dan esok setiap dua jam (cuaca, hujan, peluang hujan), lima hari seterusnya dan ramalan MetMalaysia']},
   {v:'3.31.1', date:'2026-11-12', time:'07:42',
    zh:['逐小时列表不再自己跳回「现在」：打开页面后马上滑动，之前会被后到的数据拉回去',
        '气象局官方预报更稳：没网络时查不到县，恢复网络后 1 分钟就会重试（之前要等 6 小时）；刷新失败时保留原来的预报；沙巴、砂拉越对不上县时改用省（Bahagian）预报'],
@@ -482,6 +486,8 @@ zh:{
   lyEntry:'详情页排版', lyDesc:'长按一行拖动排序，右边的开关决定显示或隐藏。顶部的温度和日期条固定不动。',
   lySummary:'一句白话结论', lyTenday:'十天', lyCards:'数据卡片', lyCells:'当天数据格',
   lyChartT:'气温对比图', lyChartP:'降雨机率图', lyAccuracy:'准确度', lyOfficial:'气象局官方预报',
+  shBtn:'分享', shToday:'今天', shTomorrow:'明天', shNext:'接下来几天', shMade:'更新于', shRain:'雨量', shChance:'下雨机率',
+  shMet:'气象局', shFoot:'模型预报，仅供参考。', shFail:'分享不成，请再试一次。', shWait:'数据还没读好，请稍等。', shSaved:'图片已存下。',
   ofTitle:'气象局官方预报', ofAm:'早', ofPm:'午', ofNight:'晚', ofLoading:'正在读取气象局预报…',
   ofFail:'暂时读不到气象局预报。', ofState:'找不到这个地点的县，显示的是范围更大的预报（右上角写着是哪里）。',
   ofNote:'MetMalaysia 的县级文字预报（经 data.gov.my），每天更新。说的是整个县，不是这块地；跟上面的模型对照着看。',
@@ -610,6 +616,8 @@ en:{
   lyEntry:'Detail page layout', lyDesc:'Press and hold a row to drag it. The switch on the right shows or hides that section. The temperature header and the date strip stay at the top.',
   lySummary:'Plain-language line', lyTenday:'Ten days', lyCards:'Data cards', lyCells:'Day figures',
   lyChartT:'Temperature comparison', lyChartP:'Rain chance chart', lyAccuracy:'Accuracy', lyOfficial:'MetMalaysia forecast',
+  shBtn:'Share', shToday:'Today', shTomorrow:'Tomorrow', shNext:'Next few days', shMade:'Updated', shRain:'Rain', shChance:'Chance of rain',
+  shMet:'MetMalaysia', shFoot:'Model forecast, for reference only.', shFail:'Could not share. Please try again.', shWait:'Still loading, please wait.', shSaved:'Picture saved.',
   ofTitle:'MetMalaysia forecast', ofAm:'AM', ofPm:'PM', ofNight:'Night', ofLoading:'Reading MetMalaysia\u2019s forecast…',
   ofFail:'MetMalaysia\u2019s forecast cannot be read right now.', ofState:'This place\u2019s district was not found, so this is the forecast for a wider area (named at the top right).',
   ofNote:'MetMalaysia\u2019s written forecast for the district (via data.gov.my), updated daily. It covers the whole district, not this plot; read it alongside the models above.',
@@ -738,6 +746,8 @@ ms:{
   lyEntry:'Susunan halaman butiran', lyDesc:'Tekan dan tahan satu baris untuk seretnya. Suis di sebelah kanan menunjuk atau menyembunyikan bahagian itu. Suhu di atas dan jalur tarikh kekal di tempatnya.',
   lySummary:'Ayat ringkas', lyTenday:'Sepuluh hari', lyCards:'Kad data', lyCells:'Angka hari itu',
   lyChartT:'Graf perbandingan suhu', lyChartP:'Graf kebarangkalian hujan', lyAccuracy:'Ketepatan', lyOfficial:'Ramalan MetMalaysia',
+  shBtn:'Kongsi', shToday:'Hari ini', shTomorrow:'Esok', shNext:'Beberapa hari lagi', shMade:'Dikemas kini', shRain:'Hujan', shChance:'Peluang hujan',
+  shMet:'MetMalaysia', shFoot:'Ramalan model, untuk rujukan sahaja.', shFail:'Tidak dapat dikongsi. Sila cuba lagi.', shWait:'Masih dimuatkan, sila tunggu.', shSaved:'Gambar disimpan.',
   ofTitle:'Ramalan MetMalaysia', ofAm:'Pagi', ofPm:'Ptg', ofNight:'Mlm', ofLoading:'Membaca ramalan MetMalaysia…',
   ofFail:'Ramalan MetMalaysia tidak dapat dibaca sekarang.', ofState:'Daerah tempat ini tidak ditemui, jadi ini ramalan untuk kawasan yang lebih luas (dinamakan di penjuru kanan atas).',
   ofNote:'Ramalan bertulis MetMalaysia untuk daerah (melalui data.gov.my), dikemas kini setiap hari. Ia meliputi seluruh daerah, bukan plot ini; bandingkan dengan model di atas.',
@@ -2380,6 +2390,7 @@ function paintHead(){
   $('#d-name').textContent = loc.name;
   $('#d-region').textContent = loc.region || coordText(loc);
   $('#d-modelname').textContent = m.short;
+  $('#d-share').setAttribute('aria-label', t('shBtn'));
   $('#d-badge').innerHTML = `<span class="dot" style="background:${m.color}"></span>${m.short}`;
   const page = $('#detail');
   page.classList.remove('rain','cloud','night','clear');
@@ -3139,6 +3150,186 @@ function officialCard(){
   return `<div class="glass official">${head}${rows}
     <p class="note" style="margin-bottom:0">${o.state ? t('ofState') + ' ' : ''}${t('ofNote')}</p></div>`;
 }
+
+/* ----- Sharing the forecast as a picture (sharelogic.js) -----
+   One tap turns the page into a PNG for WhatsApp: today and tomorrow in
+   two-hour blocks across the working day, the next five days, and
+   MetMalaysia's own line when it has arrived. Drawn from what is already on
+   the page, so it never fetches and always matches what was looked at. */
+const SH_W = 540, SH_PAD = 26, SH_FROM = 6, SH_TO = 20, SH_STEP = 2;
+const SH_FONT = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Segoe UI", Roboto, sans-serif';
+
+function svgImage(svg){
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => res(im);
+    im.onerror = rej;
+    im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '));
+  });
+}
+
+/* what goes on the picture, or null while the page has no forecast */
+function shareData(){
+  const d = D.main;
+  if(!d || !d.daily || !d.hourly || !d.daily.time || d.daily.time.length < 2) return null;
+  const m = M(D.loc.model || S.defaultModel), g = (o, k) => pick(o, k, m.id, true);
+  const ext = D.ext && D.ext !== 'fail' ? D.ext : null;
+  const h = {time:d.hourly.time, temp:g(d.hourly, 'temperature_2m'), rain:g(d.hourly, 'precipitation'),
+    code:g(d.hourly, 'weather_code'), isDay:g(d.hourly, 'is_day'),
+    prob:ext && ext.hourly ? probByTime(ext.hourly.time, ext.hourly.precipitation_probability) : null};
+  const dd = d.daily, day = dd.time;
+  const daily = {time:day, code:g(dd, 'weather_code'), min:g(dd, 'temperature_2m_min'), max:g(dd, 'temperature_2m_max'),
+    rain:g(dd, 'precipitation_sum'), prob:ext && ext.daily ? ext.daily.precipitation_probability_max : null};
+  const off = D.off && typeof D.off === 'object' ? D.off : null;
+  return {
+    name:D.loc.name, region:D.loc.region || coordText(D.loc), model:m.short, at:d._at || Date.now(),
+    days:[{date:day[0], label:t('shToday'), blocks:shareStrip(h, day[0], SH_FROM, SH_TO, SH_STEP)},
+          {date:day[1], label:t('shTomorrow'), blocks:shareStrip(h, day[1], SH_FROM, SH_TO, SH_STEP)}],
+    next:shareDays(daily, 2, 5),
+    met:off ? {place:off.place, days:off.days.filter(x => x.date === day[0] || x.date === day[1])} : null
+  };
+}
+
+/* lines of `text` that fit `w` at the context's current font */
+function wrapLines(ctx, text, w){
+  const out = []; let line = '';
+  /* Chinese has no spaces, so it breaks between characters; other
+     scripts between words */
+  const parts = /[㐀-鿿]/.test(text) ? Array.from(text) : text.split(/(\s+)/);
+  parts.forEach(ch => {
+    const next = line + ch;
+    if(line && ctx.measureText(next).width > w){ out.push(line.trimEnd()); line = ch.trimStart(); }
+    else line = next;
+  });
+  if(line.trim()) out.push(line.trim());
+  return out;
+}
+
+async function drawShare(data){
+  const kinds = new Set();
+  const kindOf = (code, isDay) => code === null ? 'cloud' : iconFor(code, isDay);
+  data.days.forEach(x => x.blocks.forEach(b => kinds.add(kindOf(b.code, b.isDay))));
+  data.next.forEach(x => kinds.add(kindOf(x.code, 1)));
+  const imgs = {};
+  await Promise.all([...kinds].map(k => svgImage(icon(k, 64)).then(im => { imgs[k] = im; }).catch(() => {})));
+
+  const W = SH_W, P = SH_PAD, colW = (W - P * 2) / Math.max(1, (SH_TO - SH_FROM) / SH_STEP);
+  const metLines = [];
+  const scratch = document.createElement('canvas').getContext('2d');
+  scratch.font = `500 14px ${SH_FONT}`;
+  if(data.met) data.met.days.forEach((x, i) => {
+    const when = metWhen(x.when, S.lang);
+    const txt = `${i === 0 ? t('shToday') : t('shTomorrow')}${S.lang === 'zh' ? '：' : ': '}${metPhrase(x.sum, S.lang)}${when && metKind(x.sum) !== 'none' ? ' · ' + when : ''}`;
+    wrapLines(scratch, txt, W - P * 2 - 24).forEach(l => metLines.push(l));
+  });
+  const H = 112 + data.days.length * 168 + 40 + data.next.length * 46 + (metLines.length ? 46 + metLines.length * 21 : 0) + 64;
+
+  const cv = document.createElement('canvas'), sc = 2;
+  cv.width = W * sc; cv.height = H * sc;
+  const c = cv.getContext('2d');
+  c.scale(sc, sc);
+  const bg = c.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#24407e'); bg.addColorStop(1, '#0d1634');
+  c.fillStyle = bg; c.fillRect(0, 0, W, H);
+  const text = (str, x, y, size, color, weight, align) => {
+    c.font = `${weight || 500} ${size}px ${SH_FONT}`; c.fillStyle = color || '#fff';
+    c.textAlign = align || 'left'; c.textBaseline = 'alphabetic'; c.fillText(str, x, y);
+  };
+  const fit = (str, w) => { let s2 = str; while(s2.length > 1 && c.measureText(s2).width > w) s2 = s2.slice(0, -2) + '…'; return s2; };
+  const card = (y, h) => {
+    c.fillStyle = 'rgba(255,255,255,.08)';
+    c.beginPath(); if(c.roundRect) c.roundRect(P - 10, y, W - P * 2 + 20, h, 16); else c.rect(P - 10, y, W - P * 2 + 20, h); c.fill();
+  };
+  const dim = 'rgba(255,255,255,.66)', blue = '#9fd4ff';
+  const pad2 = n => String(n).padStart(2, '0');
+  const dayName = (iso, opts) => new Date(iso + 'T12:00:00').toLocaleDateString(locale(), opts);
+
+  /* heading */
+  c.font = `700 28px ${SH_FONT}`;
+  text(fit(data.name, W - P * 2), P, 50, 28, '#fff', 700);
+  c.font = `500 14px ${SH_FONT}`;
+  const at = new Date(data.at);
+  text(fit(`${data.region} · ${data.model} · ${t('shMade')} ${at.toLocaleDateString(locale(), {month:'short', day:'numeric'})} ${pad2(at.getHours())}:${pad2(at.getMinutes())}`, W - P * 2),
+    P, 76, 14, dim);
+  let y = 104;
+
+  /* today and tomorrow in two-hour blocks */
+  data.days.forEach(day => {
+    text(`${day.label} · ${dayName(day.date, {month:'short', day:'numeric', weekday:'short'})}`, P, y + 14, 16, '#fff', 700);
+    y += 26;
+    card(y, 130);
+    day.blocks.forEach((b, i) => {
+      const cx = P + colW * i + colW / 2;
+      text(`${pad2(b.hour)}:00`, cx, y + 22, 13, dim, 600, 'center');
+      const im = imgs[kindOf(b.code, b.isDay)];
+      if(im) c.drawImage(im, cx - 18, y + 28, 36, 36);
+      text(fT(b.temp), cx, y + 84, 15, '#fff', 600, 'center');
+      text(b.rain !== null && b.rain >= 0.05 ? fR(b.rain).replace(/\s.*/, '') : '—', cx, y + 104, 13, b.rain >= 0.05 ? blue : dim, 600, 'center');
+      text(b.prob !== null ? b.prob + '%' : '', cx, y + 121, 12, dim, 500, 'center');
+    });
+    y += 142;
+  });
+  text(`${t('shRain')} (${uR()}) · ${t('shChance')} (%)`, W - P, y - 2, 11.5, dim, 500, 'right');
+
+  /* the next days */
+  text(t('shNext'), P, y + 24, 16, '#fff', 700);
+  y += 36;
+  card(y - 4, data.next.length * 46 + 4);
+  data.next.forEach((x, i) => {
+    const ry = y + i * 46;
+    text(dayName(x.date, {weekday:'short', month:'short', day:'numeric'}), P + 4, ry + 28, 15, '#fff', 600);
+    const im = imgs[kindOf(x.code, 1)];
+    if(im) c.drawImage(im, P + 170, ry + 6, 32, 32);
+    text(x.rain !== null && x.rain >= 0.05 ? fR(x.rain) : '—', P + 300, ry + 28, 14, x.rain >= 0.05 ? blue : dim, 600, 'right');
+    text(x.prob !== null ? x.prob + '%' : '', P + 352, ry + 28, 13, dim, 500, 'right');
+    text(`${fT(x.min)} / ${fT(x.max)}`, W - P - 4, ry + 28, 15, '#fff', 600, 'right');
+  });
+  y += data.next.length * 46 + 8;
+
+  /* MetMalaysia's own words */
+  if(metLines.length){
+    text(`${t('shMet')} · ${data.met.place}`, P, y + 26, 15, '#ffd76e', 700);
+    y += 36;
+    metLines.forEach((l, i) => text(l, P, y + 16 + i * 21, 14, '#fff', 500));
+    y += metLines.length * 21 + 10;
+  }
+
+  /* where it came from */
+  text(`${t('shFoot')} ${t('app')}`, P, y + 30, 12, dim, 500);
+  /* the height above is an upper bound; cut the picture to what was drawn */
+  const used = Math.min(H, Math.ceil(y + 50));
+  if(used >= H) return cv;
+  const out = document.createElement('canvas');
+  out.width = cv.width; out.height = used * sc;
+  out.getContext('2d').drawImage(cv, 0, 0);
+  return out;
+}
+
+let shareBusy = false;
+async function shareDetail(){
+  if(shareBusy) return;
+  const data = shareData();
+  if(!data){ toast(t('shWait')); return; }
+  shareBusy = true;
+  try{
+    const cv = await drawShare(data);
+    const blob = await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('no image')), 'image/png'));
+    const file = new File([blob], shareFileName(data.name, data.days[0].date), {type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:data.name}); }
+      catch(e){ if(e && e.name !== 'AbortError') throw e; }
+    } else {
+      /* no share sheet (most desktops): save the picture instead */
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = file.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+      toast(t('shSaved'));
+    }
+  }catch(e){ toast(t('shFail')); }
+  finally{ shareBusy = false; }
+}
+$('#d-share').addEventListener('click', shareDetail);
 
 const SECTIONS = [
   {id:'summary',  key:'lySummary',  render:renderSummary},

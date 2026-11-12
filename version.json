@@ -1,6 +1,20 @@
 {
- "v": "3.31.1",
+ "v": "3.32.0",
  "releases": [
+  {
+   "v": "3.32.0",
+   "date": "2026-11-13",
+   "time": "00:20",
+   "zh": [
+    "地点详情页右上角新增「分享」：一键把这块地的预报做成图片，直接发 WhatsApp。图片有今天和明天每 2 小时的天气、雨量和下雨机率，接下来 5 天，以及气象局的预报"
+   ],
+   "en": [
+    "New “Share” button at the top of each place’s page: turns its forecast into a picture to send on WhatsApp, with today and tomorrow in two-hour blocks (weather, rain, chance of rain), the next five days, and MetMalaysia’s forecast"
+   ],
+   "ms": [
+    "Butang “Kongsi” baharu di atas halaman setiap tempat: menjadikan ramalannya gambar untuk dihantar melalui WhatsApp, dengan hari ini dan esok setiap dua jam (cuaca, hujan, peluang hujan), lima hari seterusnya dan ramalan MetMalaysia"
+   ]
+  },
   {
    "v": "3.31.1",
    "date": "2026-11-12",
@@ -103,23 +117,6 @@
    ],
    "ms": [
     "Perihal kini mempunyai nota privasi: apa yang kekal dalam telefon, apa yang disegerakkan ke pelayan, apa yang tidak disimpan, dan apa yang berlaku apabila Peringatan dimatikan"
-   ]
-  },
-  {
-   "v": "3.29.0",
-   "date": "2026-11-11",
-   "time": "07:34",
-   "zh": [
-    "新版本推出时会通知你，写出版本号和改了什么；点开通知就会更新",
-    "开关在「通知提醒」最下面；如果你已经打开过新版本，就不会再收到这条通知"
-   ],
-   "en": [
-    "You are now notified when a new version comes out, with its number and what changed; tap the notice to update",
-    "The switch is at the bottom of Reminders; if you have already opened the new version, you are not told"
-   ],
-   "ms": [
-    "Anda kini dimaklumkan apabila versi baharu keluar, dengan nombor versi dan perubahannya; ketik makluman untuk mengemas kini",
-    "Suisnya di bahagian bawah Peringatan; jika anda sudah membuka versi baharu itu, anda tidak dimaklumkan"
    ]
   }
  ]
