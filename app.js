@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.32.0';
+const APP_VERSION = '3.32.1';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.32.0';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.32.1', date:'2026-11-13', time:'18:55',
+   zh:['警告通知改用最高优先级发送，手机省电时不会再被延后；万一迟到、警告已经结束，标题会写「已结束」'],
+   en:['Warnings are now sent at the highest priority so a phone saving power does not hold them back; if one still arrives after the warning has ended, its title says \u201cEnded\u201d'],
+   ms:['Amaran kini dihantar pada keutamaan tertinggi supaya telefon yang menjimatkan bateri tidak menangguhkannya; jika masih tiba selepas amaran tamat, tajuknya menyatakan \u201cTamat\u201d']},
   {v:'3.32.0', date:'2026-11-13', time:'00:20',
    zh:['地点详情页右上角新增「分享」：一键把这块地的预报做成图片，直接发 WhatsApp。图片有今天和明天每 2 小时的天气、雨量和下雨机率，接下来 5 天，以及气象局的预报'],
    en:['New \u201cShare\u201d button at the top of each place\u2019s page: turns its forecast into a picture to send on WhatsApp, with today and tomorrow in two-hour blocks (weather, rain, chance of rain), the next five days, and MetMalaysia\u2019s forecast'],

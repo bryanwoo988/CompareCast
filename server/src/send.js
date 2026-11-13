@@ -33,13 +33,27 @@ async function writeLedger(env, key, ids){
 
    `post` is injectable so the tests can drive every status path without a
    network; production passes nothing and it falls through to fetch. */
+/* How a push is sent. Warnings, river levels and reminders are about now:
+   Urgency high, so a phone saving power does not hold them back (a warning
+   once reached an iPhone six and a half hours late, at the default normal
+   urgency). A new-version notice can wait. A message that stops being true
+   at a known time (`until`, epoch ms) is not kept by the push service past
+   it; an hour at most otherwise. */
+function pushOptions(payload, nowMs){
+  const urgency = payload && payload.kind === 'app' ? 'normal' : 'high';
+  let ttl = 3600;
+  if(payload && typeof payload.until === 'number' && isFinite(payload.until))
+    ttl = Math.max(60, Math.min(3600, Math.floor((payload.until - nowMs) / 1000)));
+  return {ttl, urgency};
+}
+
 async function sendOne(env, dev, payload, post){
   const send = post || (async (url, init) => fetch(url, init));
   let res;
   try{
     const sub = {endpoint:dev.sub.endpoint, expirationTime:null, keys:dev.sub.keys};
     const built = await buildPushPayload(
-      {data:payload, options:{ttl:3600, urgency:'normal'}},
+      {data:payload, options:pushOptions(payload, Date.now())},
       sub,
       {subject:env.VAPID_SUBJECT, publicKey:env.VAPID_PUBLIC_KEY, privateKey:env.VAPID_PRIVATE_KEY}
     );
@@ -61,4 +75,4 @@ async function sendOne(env, dev, payload, post){
   return 'failed';
 }
 
-export {sentKey, sendOne, readLedger, writeLedger, DEDUPE_TTL};
+export {pushOptions, sentKey, sendOne, readLedger, writeLedger, DEDUPE_TTL};

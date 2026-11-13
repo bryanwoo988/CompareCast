@@ -146,6 +146,12 @@ self.addEventListener('fetch', e => {
 self.addEventListener('push', e => {
   let d = {};
   try{ d = e.data ? e.data.json() : {}; }catch(err){ d = {}; }
+  /* A push can reach the phone late (one warning arrived six and a half
+     hours after it was sent). One that has already run out says so rather
+     than reading as current; it is still shown, as iOS expects every push
+     to be. */
+  if(typeof d.until === 'number' && Date.now() > d.until && typeof d.title === 'string')
+    d.title = (typeof d.ended === 'string' && d.ended ? d.ended : 'Ended') + ' · ' + d.title;
   const title = d.title || 'CompareCast';
   /* a copy for the app's Alerts tab: iOS will not let the app read back
      notifications already shown */

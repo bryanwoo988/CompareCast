@@ -120,3 +120,26 @@ test('推送请求不跟随重定向', async () => {
   await sendOne(mkEnv(201), DEV, PAYLOAD, async (url, init) => { seen = init; return {status:201}; });
   assert.strictEqual(seen.redirect, 'manual');
 });
+
+/* A thunderstorm warning issued at 12:00 reached an iPhone at 18:46, sent at
+   12:15 with Urgency normal and a one-hour TTL. */
+const {pushOptions} = require('../server/src/send.js');
+test('warnings go out urgent, and are not kept past their end', () => {
+  const now = Date.parse('2026-11-13T12:15:00+08:00');
+  const until = Date.parse('2026-11-13T15:00:00+08:00');
+  assert.deepStrictEqual(pushOptions({title:'w', until}, now), {ttl:3600, urgency:'high'});
+  assert.deepStrictEqual(pushOptions({title:'w', until:now + 20 * 60000}, now), {ttl:1200, urgency:'high'});
+  assert.deepStrictEqual(pushOptions({title:'w', until:now - 60000}, now), {ttl:60, urgency:'high'}, 'never zero');
+  assert.deepStrictEqual(pushOptions({title:'reminder'}, now), {ttl:3600, urgency:'high'});
+  assert.deepStrictEqual(pushOptions({title:'v', kind:'app'}, now), {ttl:3600, urgency:'normal'});
+});
+
+test('the push request carries the urgency and TTL', async () => {
+  const env = mkEnv(201);
+  let seen = null;
+  await sendOne(env, DEV, {title:'w', body:'x', until:Date.now() + 600000},
+    async (url, init) => { seen = init; return {status:201}; });
+  const h = Object.fromEntries(Object.entries(seen.headers).map(([k, v]) => [k.toLowerCase(), String(v)]));
+  assert.strictEqual(h.urgency, 'high');
+  assert.ok(+h.ttl > 500 && +h.ttl <= 600, 'ttl ' + h.ttl);
+});

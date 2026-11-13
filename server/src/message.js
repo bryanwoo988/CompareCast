@@ -166,7 +166,7 @@ function messageFor(lang, win, stats, hits, rules, units, blockName){
 
 const AL = {
   zh:{
-    storm:'⚡ 雷暴警告', model:'⛈ 可能有雷雨', rain:lv => `🌧 连续降雨（${lv}）`,
+    ended:'已结束', storm:'⚡ 雷暴警告', model:'⛈ 可能有雷雨', rain:lv => `🌧 连续降雨（${lv}）`,
     rainLv:{1:'注意', 2:'恶劣天气', 3:'危险'},
     coming:'⛈ 强降雨接近', near:'⛈ 强降雨就在附近', heavy:'⛈ 强降雨',
     river:{Warning:'🌊 河水警告', Danger:'🌊 河水危险'}, rivers:'🌊 河水警报',
@@ -180,7 +180,7 @@ const AL = {
     named:(name, rest) => `${name}：${rest}`, level:(v, sev, thr) => `${v} m（${sev} ${thr} m）`
   },
   en:{
-    storm:'⚡ Thunderstorm warning', model:'⛈ Thunderstorms possible', rain:lv => `🌧 Continuous rain (${lv})`,
+    ended:'Ended', storm:'⚡ Thunderstorm warning', model:'⛈ Thunderstorms possible', rain:lv => `🌧 Continuous rain (${lv})`,
     rainLv:{1:'Alert', 2:'Bad weather', 3:'Danger'},
     coming:'⛈ Heavy rain approaching', near:'⛈ Heavy rain nearby', heavy:'⛈ Heavy rain',
     river:{Warning:'🌊 River warning', Danger:'🌊 River danger'}, rivers:'🌊 River alert',
@@ -194,7 +194,7 @@ const AL = {
     named:(name, rest) => `${name}: ${rest}`, level:(v, sev, thr) => `${v} m (${sev} ${thr} m)`
   },
   ms:{
-    storm:'⚡ Amaran ribut petir', model:'⛈ Kemungkinan ribut petir', rain:lv => `🌧 Hujan berterusan (${lv})`,
+    ended:'Tamat', storm:'⚡ Amaran ribut petir', model:'⛈ Kemungkinan ribut petir', rain:lv => `🌧 Hujan berterusan (${lv})`,
     rainLv:{1:'Waspada', 2:'Buruk', 3:'Bahaya'},
     coming:'⛈ Hujan lebat menghampiri', near:'⛈ Hujan lebat berhampiran', heavy:'⛈ Hujan lebat',
     river:{Warning:'🌊 Amaran sungai', Danger:'🌊 Bahaya sungai'}, rivers:'🌊 Amaran sungai',
@@ -266,6 +266,9 @@ function warningMessage(lang, w, plots, now){
   const msg = {title:titleFor(d, head, plots.map(p => p.name)), body:span + (where.length ? '\n' + where.join(d.sep) : ''),
                ids:plots.map(p => p.id)};
   if(plots.length > 1) msg.detail = plots.map(p => ({id:p.id, name:p.name, text:(placeOf(p.geo) ? placeOf(p.geo) + d.sep : '') + span}));
+  /* warnings are in Malaysian time; a phone that gets this late says so */
+  const until = Date.parse(String(w.to) + ':00+08:00');
+  if(isFinite(until)){ msg.until = until; msg.ended = d.ended; }
   return msg;
 }
 /* the thunderstorm-only name the tests and the cron grew up with */

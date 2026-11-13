@@ -1,6 +1,20 @@
 {
- "v": "3.32.0",
+ "v": "3.32.1",
  "releases": [
+  {
+   "v": "3.32.1",
+   "date": "2026-11-13",
+   "time": "18:55",
+   "zh": [
+    "警告通知改用最高优先级发送，手机省电时不会再被延后；万一迟到、警告已经结束，标题会写「已结束」"
+   ],
+   "en": [
+    "Warnings are now sent at the highest priority so a phone saving power does not hold them back; if one still arrives after the warning has ended, its title says “Ended”"
+   ],
+   "ms": [
+    "Amaran kini dihantar pada keutamaan tertinggi supaya telefon yang menjimatkan bateri tidak menangguhkannya; jika masih tiba selepas amaran tamat, tajuknya menyatakan “Tamat”"
+   ]
+  },
   {
    "v": "3.32.0",
    "date": "2026-11-13",
@@ -103,20 +117,6 @@
    ],
    "ms": [
     "Makluman versi baharu lebih ringkas: hanya nombor versi dan “Ketik untuk lihat apa yang baharu”; perubahan ditunjukkan sepenuhnya apabila aplikasi dibuka"
-   ]
-  },
-  {
-   "v": "3.29.1",
-   "date": "2026-11-11",
-   "time": "07:49",
-   "zh": [
-    "「关于」新增隐私说明：写明存在手机里的是什么、同步到服务器的是什么、不存什么，以及关掉提醒后怎么处理"
-   ],
-   "en": [
-    "About now has a privacy note: what stays on the phone, what is synced to the server, what is not kept, and what happens when Reminders are turned off"
-   ],
-   "ms": [
-    "Perihal kini mempunyai nota privasi: apa yang kekal dalam telefon, apa yang disegerakkan ke pelayan, apa yang tidak disimpan, dan apa yang berlaku apabila Peringatan dimatikan"
    ]
   }
  ]

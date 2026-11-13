@@ -130,3 +130,13 @@ test('旧的单地块函数结果不变', () => {
   assert.deepStrictEqual(messageFor('zh', TH, {rainProb:90}, ['rainProb'], RULES, METRIC, 'Alpha'),
     messageForWindow('zh', TH, [E('Alpha', 90)], RULES, METRIC));
 });
+
+const {warningMessage} = require('../server/src/message.js');
+test('a warning says when it stops being true, for a phone that gets it late', () => {
+  const w = {kind:'storm', issued:'2026-11-13T12:00', from:'2026-11-13T12:00', to:'2026-11-13T15:00', areas:[]};
+  const m = warningMessage('zh', w, [{id:'a', name:'Setia Alam', geo:{district:'Petaling', state:'Selangor'}}], '2026-11-13T12:15');
+  assert.strictEqual(m.until, Date.parse('2026-11-13T07:00:00Z'));
+  assert.strictEqual(m.ended, '已结束');
+  assert.strictEqual(warningMessage('en', w, [{id:'a', name:'x', geo:{}}], '2026-11-13T12:15').ended, 'Ended');
+  assert.strictEqual(warningMessage('ms', w, [{id:'a', name:'x', geo:{}}], '2026-11-13T12:15').ended, 'Tamat');
+});
