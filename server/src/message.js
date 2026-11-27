@@ -349,10 +349,25 @@ const UL = {
   en:{title:v => `New · Version ${v} is out`, tap:'Tap to see what\u2019s new'},
   ms:{title:v => `Baharu · Versi ${v} kini tersedia`, tap:'Ketik untuk lihat apa yang baharu'}
 };
+/* New posters on InfoBanjir's notice board, one message however many */
+const BL = {
+  zh:{one:'📢 InfoBanjir 新公告', many:n => `📢 InfoBanjir ${n} 则新公告`, forecast:'洪水预测', notice:'公告', tap:'点开查看海报'},
+  en:{one:'📢 New InfoBanjir notice', many:n => `📢 ${n} new InfoBanjir notices`, forecast:'Flood forecast', notice:'Notice', tap:'Tap to see the poster'},
+  ms:{one:'📢 Notis InfoBanjir baharu', many:n => `📢 ${n} notis InfoBanjir baharu`, forecast:'Ramalan banjir', notice:'Notis', tap:'Ketik untuk lihat poster'}
+};
+const boardLine = (d, x) => x.title || [d[x.kind] || d.notice].concat(x.states.length ? [x.states.join(', ')] : []).join(' · ');
+function boardMessage(lang, items){
+  if(!Array.isArray(items) || !items.length) return null;
+  const d = BL[lang] || BL.en;
+  const lines = items.slice(0, 4).map(x => boardLine(d, x));
+  if(items.length > 4) lines.push('…');
+  return {title:items.length === 1 ? d.one : d.many(items.length), body:lines.join('\n') + '\n' + d.tap, ids:[], kind:'board'};
+}
+
 function updateMessage(lang, entries){
   if(!Array.isArray(entries) || !entries.length) return null;
   const d = UL[lang] || UL.en;
   return {title:d.title(entries[0].v), body:d.tap, ids:[], kind:'app'};
 }
 
-export {updateMessage, messageFor, messageForWindow, warningMessage, stormOfficialMessage, stormModelMessage, radarMessage, floodMessage};
+export {boardMessage, boardLine, updateMessage, messageFor, messageForWindow, warningMessage, stormOfficialMessage, stormModelMessage, radarMessage, floodMessage};

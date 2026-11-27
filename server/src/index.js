@@ -4,7 +4,8 @@
    quarter hour send the reminders that have come due (cron.js). Request bodies
    carry the user's plot coordinates, so nothing here logs them. */
 import {validateSub} from './validate.js';
-import {runDevice, runStorm, runRadar, runAppUpdate} from './cron.js';
+import {runDevice, runStorm, runRadar, runAppUpdate, runBoard, localNow} from './cron.js';
+import {BOARD_URL, boardItems, fileCandidates, fileUrl, mimeOf} from './board.js';
 import {RADAR_URL, STALE_MIN, frameTime, radarGrids} from './radar.js';
 
 /* the radar has its own, faster schedule (wrangler.toml) */
@@ -62,6 +63,38 @@ async function radarProxy(env, get){
   return new Response(res.body, {status:200, headers});
 }
 
+/* InfoBanjir's notice board for the app (board.js says why it comes
+   through here). The list is kept by Cloudflare for five minutes and the
+   posters for a day, so InfoBanjir sees a handful of requests however many
+   phones look. */
+async function boardList(env, get){
+  let res;
+  try{ res = await (get || fetch)(BOARD_URL, {cf:{cacheTtl:300, cacheEverything:true}, signal:AbortSignal.timeout(15000)}); }
+  catch(e){ return reply(env, 502, {error:'upstream'}); }
+  if(!res.ok) return reply(env, 502, {error:'upstream'});
+  let list;
+  try{ list = await res.json(); }catch(e){ return reply(env, 502, {error:'upstream'}); }
+  const m = localNow('Asia/Kuala_Lumpur', new Date());
+  const now = `${m.day}T${String(Math.floor(m.min / 60)).padStart(2, '0')}:${String(m.min % 60).padStart(2, '0')}`;
+  return new Response(JSON.stringify({items:boardItems(list, now)}), {status:200,
+    headers:Object.assign({'Content-Type':'application/json', 'Cache-Control':'public, max-age=120'}, cors(env))});
+}
+async function boardFile(env, name, get){
+  const names = fileCandidates(name);
+  if(!names.length) return reply(env, 400, {error:'name'});
+  for(const n of names){
+    let res;
+    try{ res = await (get || fetch)(fileUrl(n), {cf:{cacheTtl:86400, cacheEverything:true}, signal:AbortSignal.timeout(20000)}); }
+    catch(e){ return reply(env, 502, {error:'upstream'}); }
+    /* a missing poster comes back as InfoBanjir's HTML page, sometimes 200 */
+    const type = res.headers.get('Content-Type') || '';
+    if(!res.ok || /text\/html/i.test(type)) continue;
+    return new Response(res.body, {status:200, headers:Object.assign({'Content-Type':mimeOf(name),
+      'Cache-Control':'public, max-age=86400', 'Content-Disposition':'inline'}, cors(env))});
+  }
+  return reply(env, 404, {error:'not found'});
+}
+
 async function handle(request, env, get){
   const origin = request.headers.get('Origin');
   /* same-origin tools and curl send no Origin; a browser from anywhere else
@@ -74,6 +107,10 @@ async function handle(request, env, get){
   if(url.pathname === '/radar'){
     if(request.method !== 'GET') return reply(env, 405, {error:'method'});
     return radarProxy(env, get);
+  }
+  if(url.pathname === '/board' || url.pathname === '/board/file'){
+    if(request.method !== 'GET') return reply(env, 405, {error:'method'});
+    return url.pathname === '/board' ? boardList(env, get) : boardFile(env, url.searchParams.get('n') || '', get);
   }
   if(url.pathname !== '/sub') return reply(env, 404, {error:'not found'});
   if(request.method !== 'POST' && request.method !== 'DELETE') return reply(env, 405, {error:'method'});
@@ -188,7 +225,13 @@ export const scheduled = async (event, env, ctx, opts) => {
         const sr = await runStorm(env, dev, now, run);
         storms += sr.filter(x => x.result === 'sent').length;
         failed += sr.filter(x => x.result === 'failed').length;
-        if(sr.some(x => x.result === 'expired') || floodOnly) continue;
+        if(sr.some(x => x.result === 'expired')) continue;
+        if(floodOnly){
+          const br = await runBoard(env, dev, now, run);
+          sent += br.filter(x => x.result === 'sent').length;
+          failed += br.filter(x => x.result === 'failed').length;
+          continue;
+        }
         const ur = await runAppUpdate(env, dev, now, run);
         sent += ur.filter(x => x.result === 'sent').length;
         failed += ur.filter(x => x.result === 'failed').length;

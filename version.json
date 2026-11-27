@@ -1,6 +1,23 @@
 {
- "v": "3.32.1",
+ "v": "3.33.0",
  "releases": [
+  {
+   "v": "3.33.0",
+   "date": "2026-11-27",
+   "time": "21:23",
+   "zh": [
+    "通知页新增「公告栏」：看 Public InfoBanjir 的洪水预测和洪水警告海报（全部州），以及气象局目前生效的警告，并可一键打开两个网站",
+    "InfoBanjir 有新公告时会通知你（设置 → 通知里可以关掉），点通知直接打开公告栏"
+   ],
+   "en": [
+    "New “Notice board” tab on the Alerts page: Public InfoBanjir’s flood forecast and flood warning posters (every state) and MetMalaysia’s warnings in force, with buttons to open both websites",
+    "You are told when InfoBanjir posts a new notice (can be turned off under Settings → Notifications); tapping it opens the board"
+   ],
+   "ms": [
+    "Tab “Papan notis” baharu di halaman Makluman: poster ramalan banjir dan amaran banjir Public InfoBanjir (semua negeri) serta amaran MetMalaysia yang berkuat kuasa, dengan butang untuk membuka kedua-dua laman",
+    "Anda diberitahu apabila InfoBanjir menyiarkan notis baharu (boleh dimatikan di Tetapan → Makluman); mengetiknya membuka papan notis"
+   ]
+  },
   {
    "v": "3.32.1",
    "date": "2026-11-13",
@@ -103,20 +120,6 @@
    "ms": [
     "Lapisan cuaca baharu pada peta (butang di kiri bawah): radar MetMalaysia menunjukkan hujan sejam lepas, dan satelit Himawari JMA menunjukkan awan 3 jam lepas (inframerah atau cahaya nampak)",
     "Tekan ▶ untuk memainkannya dan lihat ke mana hujan dan awan bergerak; lapisan ditutup sehingga anda memilih satu, dan hanya dimuat turun ketika itu"
-   ]
-  },
-  {
-   "v": "3.29.2",
-   "date": "2026-11-11",
-   "time": "08:56",
-   "zh": [
-    "新版本通知变短了：只写版本号和「点开查看更新内容」，改了什么在打开 App 后完整显示"
-   ],
-   "en": [
-    "New version notices are shorter: just the version and “Tap to see what’s new”; the changes are shown in full when the app opens"
-   ],
-   "ms": [
-    "Makluman versi baharu lebih ringkas: hanya nombor versi dan “Ketik untuk lihat apa yang baharu”; perubahan ditunjukkan sepenuhnya apabila aplikasi dibuka"
    ]
   }
  ]

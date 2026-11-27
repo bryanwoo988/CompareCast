@@ -125,6 +125,16 @@ node --test tests/*.test.js
 - **过滤**：只看 Warning 和 Danger；警戒线是 0 的站当作没设定（沙巴有一批这样的站被标成 Danger）；读数超过 2 小时的站不算。
 - **提醒**：地块 10 km 内的站。同一个站同一级一天只发一次，从警告升到危险会再发。
 
+## 公告栏（InfoBanjir 和气象局）
+
+代码在 `server/src/board.js`，测试在 `tests/board.test.js`。
+
+- **InfoBanjir 公告**：Public InfoBanjir 首页弹出公告用的 `floodalertannouncement.json`，每张海报有文件名、发布时间、上下架时间。多是 JPS 国家洪水预测中心（PRABN）的早期洪水预测和各州洪水警告。只显示目前上架的。
+- **为什么经过服务器**：这份列表不允许其他网站读取；海报回传的格式标示是 `application/octet-stream` 加 nosniff，有时列表写的扩展名大小写和实际文件不同（列表 `.jfif`、实际 `.JFIF`）。所以 app 读服务器的 `GET /board` 和 `GET /board/file?n=文件名`；服务器会试另一种大小写，并标上正确格式。列表在 Cloudflare 缓存 5 分钟，海报 1 天。文件名只接受普通字符和图片／PDF 扩展名，不能拿来读别的东西。
+- **州**：从文件名判断（`JPS-PRABN-TRG` 的 TRG＝登嘉楼，或文件名里的州名）。只用来显示，推送不按州过滤：全部州都推。
+- **推送**：和河水同一个 15 分钟排程。每台手机记住已通知过的海报，新海报才推；同一次有几张新的合成一条。读不到列表时什么都不改。设置里可以关（`notify.board`，app 默认开）。
+- **气象局警告**：app 直接读 data.gov.my 的 warning，只显示还没结束、在陆地上的警告（不显示海上风浪警告）。met.gov.my 从开发环境连不上，也没找到 RSS，所以只放一个按钮连到它的首页。
+
 ## 模式代号
 
 | 显示 | Open-Meteo model id | 机构 |
