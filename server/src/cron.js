@@ -3,7 +3,8 @@
    Kept apart from the HTTP entry point so it can be driven end to end with
    KV, Open-Meteo and the push service all stood in (tests/cron.test.js). */
 import {minutesOf, dueWindows, occurrence, windowIndices, aggregate, breaches} from '../../notifylogic.js';
-import {messageForWindow, warningMessage, stormModelMessage, radarMessage, floodMessage, updateMessage} from './message.js';
+import {messageForWindow, warningMessage, stormModelMessage, radarMessage, floodMessage, updateMessage, boardMessage} from './message.js';
+import {BOARD_URL, boardItems} from './board.js';
 import {cmpVersion} from '../../notifylogic.js';
 import {WARN_API, STORM_MODELS, MODEL_COOLDOWN_S, liveWarnings, plotInAreas, modelSignal, modelAlert} from './storm.js';
 import {RADAR_COOLDOWN_S, inMap, radarAt} from './radar.js';
@@ -405,4 +406,42 @@ async function runAppUpdate(env, dev, now, run){
   return [Object.assign({kind:'app', v:entries[0].v}, r)];
 }
 
-export {runDevice, runStorm, runRadar, runAppUpdate, VERSION_URL, localNow, DUE_GRACE_MIN};
+/* ---- InfoBanjir's notice board ----
+   Read with the river levels, on their quarter hour. Every poster that is
+   up is told once to each device that wants them, all states (the owner
+   asked for every state); several new at once go out as one message. The
+   ids already told are kept per device, trimmed to the posters still up. */
+const BOARD_KEEP_S = 30 * 86400;
+
+function boardLive(run, nowMyt){
+  if(!run.boardLive) run.boardLive = Promise.resolve()
+    .then(() => run.fetchJson(BOARD_URL))
+    .then(j => (Array.isArray(j) ? boardItems(j, nowMyt) : null))
+    .catch(() => null);
+  return run.boardLive;
+}
+
+async function runBoard(env, dev, now, run){
+  if(!dev || !dev.notify || dev.notify.board !== true) return [];
+  const myt = localNow(STORM_TZ, now);
+  const items = await boardLive(run, `${myt.day}T${hhmm(myt.min)}`);
+  /* a failed read is not "nothing is up": the list is left alone */
+  if(!items) return [];
+  const key = `board:${dev.id}`;
+  let told = [];
+  try{ told = JSON.parse(await env.KV.get(key) || '[]'); }catch(e){ told = []; }
+  if(!Array.isArray(told)) told = [];
+  const fresh = items.filter(x => !told.includes(x.id));
+  const up = new Set(items.map(x => x.id));
+  const keep = told.filter(id => up.has(id));
+  if(!fresh.length){
+    if(keep.length !== told.length) await env.KV.put(key, JSON.stringify(keep), {expirationTtl:BOARD_KEEP_S});
+    return [];
+  }
+  const msg = boardMessage(dev.lang, fresh);
+  const r = await deliver(env, dev, msg, `pw:board:${fresh[0].id}`.slice(0, 120), run);
+  if(r.result === 'sent') await env.KV.put(key, JSON.stringify(keep.concat(fresh.map(x => x.id))), {expirationTtl:BOARD_KEEP_S});
+  return [Object.assign({kind:'board', n:fresh.length}, r)];
+}
+
+export {runBoard, runDevice, runStorm, runRadar, runAppUpdate, VERSION_URL, localNow, DUE_GRACE_MIN};

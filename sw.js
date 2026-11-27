@@ -188,22 +188,26 @@ self.addEventListener('notificationclick', e => {
   /* A new-version notice just opens the app: opening it is what updates
      it, and the app then shows what changed itself. */
   const appOnly = data.kind === 'app';
+  /* a new InfoBanjir notice opens the notice board */
+  const board = data.kind === 'board';
   /* A reminder about several plots opens a page listing all of them in full:
      the banner only ever shows its first few lines, whatever the phone. */
-  const notice = (loc || appOnly) ? null : {title:e.notification.title, body:e.notification.body,
+  const notice = (loc || appOnly || board) ? null : {title:e.notification.title, body:e.notification.body,
                                detail:data.detail || null, more:data.more || 0, at:data.at || Date.now()};
   e.waitUntil((async () => {
     const all = await self.clients.matchAll({type:'window', includeUncontrolled:true});
     for(const c of all){
       if(!('focus' in c)) continue;
       await c.focus();
-      if(loc) c.postMessage({type:'open-loc', loc});
+      if(board) c.postMessage({type:'open-board'});
+      else if(loc) c.postMessage({type:'open-loc', loc});
       else if(notice) c.postMessage({type:'open-notice', notice});
       return;
     }
     if(!self.clients.openWindow) return;
     if(loc) return self.clients.openWindow('./?loc=' + encodeURIComponent(loc));
     if(appOnly) return self.clients.openWindow('./');
+    if(board) return self.clients.openWindow('./?board=1');
     /* too long for a URL: parked where the opening window picks it up */
     try{
       const c = await caches.open(NOTICE_CACHE);

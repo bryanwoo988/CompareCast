@@ -151,14 +151,16 @@ function validateSub(body){
   /* new-version notices need no plot: a phone that wants only those still
      registers */
   const appNotice = notify.app !== false;
-  if(!blocks.length && !appNotice) return bad('noBlocks');
+  /* InfoBanjir's notice board: every state, so it needs no plot either */
+  const board = notify.board === true;
+  if(!blocks.length && !appNotice && !board) return bad('noBlocks');
 
   return {ok:true, value:{
     id:body.id, tz:body.tz,
     lang:LANGS.includes(body.lang) ? body.lang : 'en',
     units:cleanUnits(body.units),
     sub:{endpoint:sub.endpoint, keys:{p256dh:keys.p256dh, auth:keys.auth}},
-    notify:{windows, rules:cleanRules(notify.rules), storm, app:appNotice},
+    notify:{windows, rules:cleanRules(notify.rules), storm, app:appNotice, board},
     /* the version the phone runs, so it is not told about one it has */
     appv:typeof body.appv === 'string' && /^\d+\.\d+\.\d+$/.test(body.appv) ? body.appv : undefined,
     blocks,

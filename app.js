@@ -8,7 +8,7 @@
 /* Shown in About, and kept equal to sw.js's VERSION by tests/version.test.js.
    The old hardcoded "2.0" never moved, so the one place a user looks to check
    whether an update landed was the one place that could not tell them. */
-const APP_VERSION = '3.32.1';
+const APP_VERSION = '3.33.0';
 
 /* What changed, per release.
 
@@ -16,6 +16,10 @@ const APP_VERSION = '3.32.1';
    entry here or the order slips, so a release cannot quietly ship without
    telling the user what it did. */
 const RELEASES = [
+  {v:'3.33.0', date:'2026-11-27', time:'21:23',
+   zh:['通知页新增「公告栏」：看 Public InfoBanjir 的洪水预测和洪水警告海报（全部州），以及气象局目前生效的警告，并可一键打开两个网站', 'InfoBanjir 有新公告时会通知你（设置 → 通知里可以关掉），点通知直接打开公告栏'],
+   en:['New \u201cNotice board\u201d tab on the Alerts page: Public InfoBanjir\u2019s flood forecast and flood warning posters (every state) and MetMalaysia\u2019s warnings in force, with buttons to open both websites', 'You are told when InfoBanjir posts a new notice (can be turned off under Settings \u2192 Notifications); tapping it opens the board'],
+   ms:['Tab \u201cPapan notis\u201d baharu di halaman Makluman: poster ramalan banjir dan amaran banjir Public InfoBanjir (semua negeri) serta amaran MetMalaysia yang berkuat kuasa, dengan butang untuk membuka kedua-dua laman', 'Anda diberitahu apabila InfoBanjir menyiarkan notis baharu (boleh dimatikan di Tetapan \u2192 Makluman); mengetiknya membuka papan notis']},
   {v:'3.32.1', date:'2026-11-13', time:'18:55',
    zh:['警告通知改用最高优先级发送，手机省电时不会再被延后；万一迟到、警告已经结束，标题会写「已结束」'],
    en:['Warnings are now sent at the highest priority so a phone saving power does not hold them back; if one still arrives after the warning has ended, its title says \u201cEnded\u201d'],
@@ -510,6 +514,12 @@ zh:{
   ntFrom:'起', ntTo:'止', ntAt:'提醒时间', ntCross:'此时段跨天',
   ntTzNote:(z)=>`时间按地块所在时区计算（${z}）`,
   ntModelNote:'提醒里的温度、雨量和风，用的是每个地块自己选的模式；降雨机率来自 Best Match，跟详情页一样。',
+  bdTab:'公告栏', bdInbox:'通知记录', bdTitle:'📢 InfoBanjir 公告栏', bdSwitch:'InfoBanjir 有新公告时通知我',
+  bdNote:'JPS 在 Public InfoBanjir 发的洪水预测和洪水警告海报，全部州都会通知。每 15 分钟检查一次。',
+  bdJps:'InfoBanjir 公告（JPS）', bdMet:'气象局目前的警告', bdNone:'目前没有公告。', bdMetNone:'目前没有生效的警告。',
+  bdFail:'暂时读不到，请稍后再试。', bdLoading:'正在读取…', bdOpenJps:'打开 Public InfoBanjir 网站', bdOpenMet:'打开 MetMalaysia 网站',
+  bdForecast:'洪水预测', bdNotice:'公告', bdUp:'上架', bdDown:'下架', bdValid:'有效', bdTapPoster:'点海报看大图',
+  bdSrc:'海报来自 JPS Public InfoBanjir；警告来自 MetMalaysia（经 data.gov.my）。',
   upTitle:'🆕 新版本通知', upSwitch:'App 有新版本时通知我',
   upNote:'每次推出新版本都会通知你，写出版本号和改了什么；点开通知就会更新。如果你已经打开过新版本，就不会再通知。',
   stTitle:'⚠️ 恶劣天气提醒', stIntro:'跟上面的时段无关，随时在检查：官方警告和河水每 15 分钟，雷达每 5 分钟，模式每小时。',
@@ -640,6 +650,12 @@ en:{
   ntFrom:'From', ntTo:'To', ntAt:'Notify at', ntCross:'This window crosses midnight',
   ntTzNote:(z)=>`Times are in each location's own time zone (${z})`,
   ntModelNote:'Reminder temperatures, rainfall and wind use each location\u2019s own model; chance of rain comes from Best Match, as on the detail page.',
+  bdTab:'Notice board', bdInbox:'Past notifications', bdTitle:'📢 InfoBanjir notice board', bdSwitch:'Tell me when InfoBanjir posts a notice',
+  bdNote:'The flood forecast and flood warning posters JPS puts up on Public InfoBanjir, every state. Checked every 15 minutes.',
+  bdJps:'InfoBanjir notices (JPS)', bdMet:'MetMalaysia warnings now', bdNone:'No notices right now.', bdMetNone:'No warnings in force.',
+  bdFail:'Cannot be read right now. Please try again later.', bdLoading:'Loading…', bdOpenJps:'Open the Public InfoBanjir website', bdOpenMet:'Open the MetMalaysia website',
+  bdForecast:'Flood forecast', bdNotice:'Notice', bdUp:'Up', bdDown:'Down', bdValid:'Valid', bdTapPoster:'Tap a poster to see it full size',
+  bdSrc:'Posters from JPS Public InfoBanjir; warnings from MetMalaysia (via data.gov.my).',
   upTitle:'🆕 New version notices', upSwitch:'Tell me when a new version is out',
   upNote:'You are told each time a new version comes out, with its number and what changed; tap the notice to update. If you have already opened the new version, you are not told.',
   stTitle:'⚠️ Severe weather alerts', stIntro:'Separate from the time windows above and checked all day: official warnings and rivers every 15 minutes, radar every 5 minutes, models every hour.',
@@ -770,6 +786,12 @@ ms:{
   ntFrom:'Dari', ntTo:'Hingga', ntAt:'Beritahu pada', ntCross:'Tempoh ini melepasi tengah malam',
   ntTzNote:(z)=>`Masa mengikut zon waktu lokasi itu sendiri (${z})`,
   ntModelNote:'Suhu, hujan dan angin dalam peringatan menggunakan model setiap lokasi; kebarangkalian hujan dari Best Match, sama seperti halaman butiran.',
+  bdTab:'Papan notis', bdInbox:'Makluman lepas', bdTitle:'📢 Papan notis InfoBanjir', bdSwitch:'Beritahu saya apabila InfoBanjir menyiarkan notis',
+  bdNote:'Poster ramalan banjir dan amaran banjir yang disiarkan JPS di Public InfoBanjir, semua negeri. Disemak setiap 15 minit.',
+  bdJps:'Notis InfoBanjir (JPS)', bdMet:'Amaran MetMalaysia sekarang', bdNone:'Tiada notis buat masa ini.', bdMetNone:'Tiada amaran berkuat kuasa.',
+  bdFail:'Tidak dapat dibaca sekarang. Sila cuba lagi nanti.', bdLoading:'Memuatkan…', bdOpenJps:'Buka laman Public InfoBanjir', bdOpenMet:'Buka laman MetMalaysia',
+  bdForecast:'Ramalan banjir', bdNotice:'Notis', bdUp:'Disiarkan', bdDown:'Tamat', bdValid:'Sah', bdTapPoster:'Ketik poster untuk saiz penuh',
+  bdSrc:'Poster dari JPS Public InfoBanjir; amaran dari MetMalaysia (melalui data.gov.my).',
   upTitle:'🆕 Makluman versi baharu', upSwitch:'Beritahu saya apabila versi baharu keluar',
   upNote:'Anda diberitahu setiap kali versi baharu keluar, dengan nombor versi dan perubahannya; ketik makluman untuk mengemas kini. Jika anda sudah membuka versi baharu itu, anda tidak diberitahu.',
   stTitle:'⚠️ Amaran cuaca buruk', stIntro:'Berasingan daripada tempoh masa di atas dan disemak sepanjang hari: amaran rasmi dan sungai setiap 15 minit, radar setiap 5 minit, model setiap jam.',
@@ -969,7 +991,9 @@ const NOTIFY_DEFAULTS = {
   /* which storm sources to use; each plot still has to be ticked (l.storm) */
   storm:{official:true, model:true, radar:true, flood:true},
   /* a push when a new version of the app is out */
-  app:true
+  app:true,
+  /* a push when InfoBanjir puts up a new notice (all states) */
+  board:true
 };
 const NOTIFY_RULES = ['rainProb','rainSum','tMax','tMin','wind','gust'];
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -1014,6 +1038,7 @@ function normalizeNotify(){
     flood:typeof st.flood === 'boolean' ? st.flood : NOTIFY_DEFAULTS.storm.flood
   };
   N.app = typeof N.app === 'boolean' ? N.app : NOTIFY_DEFAULTS.app;
+  N.board = typeof N.board === 'boolean' ? N.board : NOTIFY_DEFAULTS.board;
 
   /* a window that no longer exists must not keep a location subscribed to it */
   const ids = N.windows.map(w => w.id);
@@ -4265,6 +4290,9 @@ function paintNotify(){
     <div class="glass"><h4>${t('ntRules')}</h4>${renderRules()}</div>
     <div class="glass"><h4>${t('ntBlocks')}</h4>${renderMatrix()}</div>
     <div class="glass"><h4>${t('stTitle')}</h4>${renderStorm()}</div>
+    <div class="glass"><h4>${t('bdTitle')}</h4>
+      <div class="nt-rule"><span id="bd-sw">${sw(N.board)}</span><span class="rn">${t('bdSwitch')}</span></div>
+      <p class="nt-note" style="margin:4px 0 0">${t('bdNote')}</p></div>
     <div class="glass"><h4>${t('upTitle')}</h4>
       <div class="nt-rule"><span id="up-sw">${sw(N.app)}</span><span class="rn">${t('upSwitch')}</span></div>
       <p class="nt-note" style="margin:4px 0 0">${t('upNote')}</p></div>`;
@@ -4333,6 +4361,7 @@ function bindNotify(){
   }));
 
   $('#up-sw').addEventListener('click', () => { S.notify.app = !S.notify.app; redraw(); });
+  $('#bd-sw').addEventListener('click', () => { S.notify.board = !S.notify.board; redraw(); });
   $$('#nt-body [data-ss]').forEach(el2 => el2.addEventListener('click', () => {
     const k = el2.dataset.ss;
     S.notify.storm[k] = !S.notify.storm[k];
@@ -4541,7 +4570,7 @@ async function syncPush(){
   const blocks = effectiveBlocks(S.locations, S.notify.windows, S.notify.storm);
   /* with no plot to report on, a phone still registers if it wants to hear
      about new versions */
-  if(!blocks.length && !S.notify.app){
+  if(!blocks.length && !S.notify.app && !S.notify.board){
     try{ await withdrawDevice(); }
     catch(e){
       lastSyncError = (e && e.message) || 'withdraw';
@@ -4572,7 +4601,7 @@ async function syncPush(){
       lang:S.lang,
       units:S.units,
       sub:{endpoint:sub.endpoint, keys:{p256dh:keys.p256dh, auth:keys.auth}},
-      notify:{windows:S.notify.windows, rules:S.notify.rules, storm:S.notify.storm, app:S.notify.app},
+      notify:{windows:S.notify.windows, rules:S.notify.rules, storm:S.notify.storm, app:S.notify.app, board:S.notify.board},
       /* the version running here, so the server does not announce it */
       appv:APP_VERSION,
       /* the plot's own zone, so "6am" means 6am at the field — right even if
@@ -5056,15 +5085,94 @@ function inboxWhen(ms){
   if(day(d) === day(y)) return `${t('yesterday')} ${hm}`;
   return `${day(d)} ${hm}`;
 }
+/* ----- Notice board (the second tab of this sheet) -----
+   InfoBanjir's posters through the push worker (it says why), and
+   MetMalaysia's warnings in force straight from data.gov.my, with a way
+   out to both websites. Read when the tab is opened, kept two minutes. */
+const BOARD_SITE_JPS = 'https://publicinfobanjir.water.gov.my/', BOARD_SITE_MET = 'https://www.met.gov.my/';
+const WARN_URL = 'https://api.data.gov.my/weather/warning/?limit=50';
+let ibTab = 'inbox';
+const BD = {at:0, jps:null, met:null, busy:false};
+const boardFileUrl = name => PUSH_API + '/board/file?n=' + encodeURIComponent(name);
+const boardWhen = s => (typeof s === 'string' && s.length >= 16) ? `${+s.slice(8, 10)}/${+s.slice(5, 7)} ${s.slice(11, 16)}` : '';
+async function loadBoard(force){
+  if(BD.busy || (!force && Date.now() - BD.at < 120000 && BD.jps && BD.met)) return;
+  BD.busy = true;
+  const jps = fetchJson(PUSH_API + '/board', 20000).then(j => (j && Array.isArray(j.items) ? j.items : 'fail')).catch(() => 'fail');
+  const met = fetchJson(WARN_URL, 20000).then(list => {
+    if(!Array.isArray(list)) return 'fail';
+    const now = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 16);
+    /* warnings over land: the strong wind and rough seas warnings are for
+       the sea, and "No Advisory" is not a warning */
+    return list.filter(w => w && w.valid_to && String(w.valid_to).slice(0, 16) > now
+        && !/rough seas|laut bergelora|no advisory|tiada nasihat/i.test(String((w.warning_issue || {}).title_en) + ' ' + String((w.warning_issue || {}).title_bm)))
+      .sort((a, b) => String(b.warning_issue && b.warning_issue.issued).localeCompare(String(a.warning_issue && a.warning_issue.issued)));
+  }).catch(() => 'fail');
+  [BD.jps, BD.met] = await Promise.all([jps, met]);
+  BD.at = Date.now(); BD.busy = false;
+  if(openSheetId === '#sheet-inbox' && ibTab === 'board') drawInbox();
+}
+function boardHtml(){
+  const sec = (h, inner) => `<h4 class="bd-h">${h}</h4>${inner}`;
+  const jps = BD.jps === null ? `<p class="bd-note">${t('bdLoading')}</p>`
+    : BD.jps === 'fail' ? `<p class="bd-note">${t('bdFail')}</p>`
+    : !BD.jps.length ? `<p class="bd-note">${t('bdNone')}</p>`
+    : `<p class="bd-note">${t('bdTapPoster')}</p>` + BD.jps.map(x => {
+        const label = x.title || [x.kind === 'forecast' ? t('bdForecast') : t('bdNotice')].concat(x.states.length ? [x.states.join(', ')] : []).join(' · ');
+        const url = boardFileUrl(x.name);
+        return `<div class="bd-item"><b>${esc(label)}</b>
+          <small>${t('bdUp')} ${esc(boardWhen(x.at))}${x.to ? ` · ${t('bdDown')} ${esc(boardWhen(x.to))}` : ''}</small>
+          ${x.mime && x.mime.startsWith('image/')
+            ? `<a href="${esc(url)}" target="_blank" rel="noopener"><img src="${esc(url)}" alt="${esc(label)}" loading="lazy"></a>`
+            : `<a class="bd-link" href="${esc(url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`}</div>`;
+      }).join('');
+  const lang = S.lang === 'ms' ? 'bm' : 'en';
+  const met = BD.met === null ? `<p class="bd-note">${t('bdLoading')}</p>`
+    : BD.met === 'fail' ? `<p class="bd-note">${t('bdFail')}</p>`
+    : !BD.met.length ? `<p class="bd-note">${t('bdMetNone')}</p>`
+    : BD.met.map(w => {
+        const wi = w.warning_issue || {};
+        return `<div class="bd-item"><b>${esc(wi['title_' + lang] || wi.title_en || '')}</b>
+          <small>${t('bdValid')} ${esc(boardWhen(String(w.valid_from || '').replace('T', ' ')))} – ${esc(boardWhen(String(w.valid_to || '').replace('T', ' ')))}</small>
+          <p>${esc(w['text_' + lang] || w.text_en || '')}</p></div>`;
+      }).join('');
+  return sec(t('bdJps'), jps) + `<a class="cta ghost bd-out" href="${BOARD_SITE_JPS}" target="_blank" rel="noopener">${t('bdOpenJps')}</a>`
+    + sec(t('bdMet'), met) + `<a class="cta ghost bd-out" href="${BOARD_SITE_MET}" target="_blank" rel="noopener">${t('bdOpenMet')}</a>`
+    + `<p class="hint" style="margin-top:14px">${t('bdSrc')}</p>`;
+}
+function inboxTabs(){
+  return `<div class="ib-tabs"><button data-ibt="inbox" class="${ibTab === 'inbox' ? 'on' : ''}">${t('bdInbox')}</button>
+    <button data-ibt="board" class="${ibTab === 'board' ? 'on' : ''}">${t('bdTab')}</button></div>`;
+}
+function bindInboxTabs(){
+  $$('#inbox-body [data-ibt]').forEach(b => b.addEventListener('click', () => {
+    ibTab = b.dataset.ibt;
+    drawInbox();
+    if(ibTab === 'board') loadBoard();
+  }));
+}
+async function openBoard(){
+  ibTab = 'board';
+  await openInbox();
+  loadBoard(true);
+}
+
 function drawInbox(){
   const list = inboxCache;
-  $('#inbox-clear').classList.toggle('hide', !list.length);
-  $('#inbox-body').innerHTML = (list.length
+  $('#inbox-clear').classList.toggle('hide', !list.length || ibTab !== 'inbox');
+  $('#sheet-inbox h3').textContent = ibTab === 'board' ? t('bdTab') : t('inboxTitle');
+  if(ibTab === 'board'){
+    $('#inbox-body').innerHTML = inboxTabs() + boardHtml();
+    bindInboxTabs();
+    return;
+  }
+  $('#inbox-body').innerHTML = inboxTabs() + (list.length
     ? list.map((e, i) => `<button class="ib-item${e.read ? '' : ' unread'}" data-ib="${i}">
         <span class="ib-top"><b>${esc(e.title)}</b><time>${esc(inboxWhen(e.at))}</time></span>
         ${e.body ? `<p>${esc(e.body)}</p>` : ''}</button>`).join('')
     : `<p class="ib-empty">${esc(t('inboxEmpty')).split('\n').join('<br>')}</p>`)
     + `<p class="hint" style="margin-top:14px">${t('inboxNote')}</p>`;
+  bindInboxTabs();
   $$('#inbox-body [data-ib]').forEach(b => b.addEventListener('click', () => {
     const e = list[+b.dataset.ib];
     if(!e) return;
@@ -5107,6 +5215,7 @@ if('serviceWorker' in navigator)
     if(!e.data) return;
     if(e.data.type === 'open-loc') openFromNotice(String(e.data.loc || ''));
     if(e.data.type === 'open-notice') showNotice(e.data.notice);
+    if(e.data.type === 'open-board') openBoard();
     if(e.data.type === 'inbox'){ refreshInboxBadge(); if(openSheetId === '#sheet-inbox') drawInbox(); }
   });
 
@@ -5231,6 +5340,10 @@ function hideSplash(){
   resumeAfterUpdate();
   openFromNotice(new URLSearchParams(location.search).get('loc'));
   if(new URLSearchParams(location.search).get('notice')) openParkedNotice();
+  if(new URLSearchParams(location.search).get('board')){
+    try{ history.replaceState(history.state, '', location.pathname); }catch(e){}
+    openBoard();
+  }
   /* the release-notes sheet says this and more, so no toast on top of it */
   try{ sessionStorage.removeItem('pw:updated'); }catch(e){}
   if('serviceWorker' in navigator && location.protocol !== 'file:'){
